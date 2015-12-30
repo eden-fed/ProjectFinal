@@ -1,5 +1,5 @@
-﻿Build started 12/28/2015 2:31:43 PM.
-     1>Project "C:\Users\Ben-PC\Documents\MySWprojects\ProjectFinal\DGP-HW1\DGP_CODE_DIR\DGP\DGP.vcxproj" on node 2 (Rebuild target(s)).
+﻿Build started 12/30/2015 1:07:08 PM.
+     1>Project "C:\Users\Ben-PC\Documents\MySWprojects\ProjectFinal\DGP-HW1\DGP_CODE_DIR\DGP\DGP.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Ob1 /D NDEBUG /D WIN32 /D _WINDOWS /D _USRDLL /D NT_PLUGIN /D _HAS_ITERATOR_DEBUGGING=0 /D _SECURE_SCL=0 /D _SECURE_SCL_THROWS=0 /D _SECURE_SCL_DEPRECATE=0 /D _SCL_SECURE_NO_DEPRECATE /D _CRT_SECURE_NO_DEPRECATE /D TBB_USE_DEBUG=0 /D __TBB_LIB_NAME=tbb.lib /D REQUIRE_IOSTREAM /D AW_NEW_IOSTREAMS /D Bits64_ /D CGAL_NO_AUTOLINK_MPFR /D CGAL_NO_AUTOLINK_GMP /D _WINDLL /GF /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"x64\Release\\" /Fd"x64\Release\DGP.pdb" /Gd /TP /errorReport:prompt ..\Commands\colorMeshVerticesCmd.cpp ..\Commands\TriangulatePolygonCmd.cpp ..\Nodes\SpaceDeformer2D.cpp ..\stdafx.cpp ..\Utils\Limit_Util.cpp ..\Utils\MatlabGMMDataExchange.cpp ..\Utils\MatlabInterface.cpp ..\Utils\Maya_Utils.cpp ..\Utils\triangulation.cpp ..\Utils\Utilities.cpp pluginMain.cpp
          colorMeshVerticesCmd.cpp
@@ -17,6 +17,8 @@
          c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
      1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 10 has type 'size_t'
          c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>..\Commands\colorMeshVerticesCmd.cpp(239): warning C4018: '<': signed/unsigned mismatch
+     1>..\Commands\colorMeshVerticesCmd.cpp(250): warning C4018: '<': signed/unsigned mismatch
          TriangulatePolygonCmd.cpp
      1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(95): warning C4477: 'sscanf_s' : format string '%c' requires an argument of type 'int', but variadic argument 3 has type 'size_t'
          c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(95): note: this argument is used as a buffer size
@@ -194,14 +196,9 @@
          x64\Release\Utilities.obj
          x64\Release\pluginMain.obj
             Creating library Release\DGP.lib and object Release\DGP.exp
-     1>colorMeshVerticesCmd.obj : error LNK2019: unresolved external symbol "public: static class MSyntax __cdecl colorMeshVerticesCmd::syntax(void)" (?syntax@colorMeshVerticesCmd@@SA?AVMSyntax@@XZ) referenced in function "public: virtual class MStatus __cdecl colorMeshVerticesCmd::doIt(class MArgList const &)" (?doIt@colorMeshVerticesCmd@@UEAA?AVMStatus@@AEBVMArgList@@@Z)
-     1>pluginMain.obj : error LNK2001: unresolved external symbol "public: static class MSyntax __cdecl colorMeshVerticesCmd::syntax(void)" (?syntax@colorMeshVerticesCmd@@SA?AVMSyntax@@XZ)
-     1>colorMeshVerticesCmd.obj : error LNK2019: unresolved external symbol "public: static class MString __cdecl colorMeshVerticesCmd::commandName(void)" (?commandName@colorMeshVerticesCmd@@SA?AVMString@@XZ) referenced in function "public: virtual class MStatus __cdecl colorMeshVerticesCmd::doIt(class MArgList const &)" (?doIt@colorMeshVerticesCmd@@UEAA?AVMStatus@@AEBVMArgList@@@Z)
-     1>pluginMain.obj : error LNK2001: unresolved external symbol "public: static class MString __cdecl colorMeshVerticesCmd::commandName(void)" (?commandName@colorMeshVerticesCmd@@SA?AVMString@@XZ)
-     1>colorMeshVerticesCmd.obj : error LNK2019: unresolved external symbol "private: class MStatus __cdecl colorMeshVerticesCmd::ChangeColorByCurvature(class MFnMesh &,double,double,bool)" (?ChangeColorByCurvature@colorMeshVerticesCmd@@AEAA?AVMStatus@@AEAVMFnMesh@@NN_N@Z) referenced in function "public: virtual class MStatus __cdecl colorMeshVerticesCmd::doIt(class MArgList const &)" (?doIt@colorMeshVerticesCmd@@UEAA?AVMStatus@@AEBVMArgList@@@Z)
-     1>C:\Users\Ben-PC\Documents\MySWprojects\ProjectFinal\DGP-HW1\DGP_CODE_DIR\plug-ins\Release_x64_DGP.mll : fatal error LNK1120: 3 unresolved externals
-     1>Done Building Project "C:\Users\Ben-PC\Documents\MySWprojects\ProjectFinal\DGP-HW1\DGP_CODE_DIR\DGP\DGP.vcxproj" (Rebuild target(s)) -- FAILED.
+         DGP.vcxproj -> C:\Users\Ben-PC\Documents\MySWprojects\ProjectFinal\DGP-HW1\DGP_CODE_DIR\plug-ins\Release_x64_DGP.mll
+     1>Done Building Project "C:\Users\Ben-PC\Documents\MySWprojects\ProjectFinal\DGP-HW1\DGP_CODE_DIR\DGP\DGP.vcxproj" (Build target(s)).
 
-Build FAILED.
+Build succeeded.
 
-Time Elapsed 00:00:14.54
+Time Elapsed 00:00:14.22

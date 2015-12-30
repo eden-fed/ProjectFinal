@@ -1,5 +1,204 @@
-﻿Build started 12/28/2015 10:47:06 AM.
+﻿Build started 12/30/2015 1:23:40 PM.
+     1>Project "C:\Users\Ben-PC\Documents\MySWprojects\ProjectFinal\DGP-HW1\DGP_CODE_DIR\DGP\DGP.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /Zi /nologo /W3 /WX- /Od /D _DEBUG /D WIN32 /D _WINDOWS /D _USRDLL /D NT_PLUGIN /D _HAS_ITERATOR_DEBUGGING=1 /D _SECURE_SCL=0 /D _SECURE_SCL_THROWS=0 /D _SECURE_SCL_DEPRECATE=0 /D _SCL_SECURE_NO_DEPRECATE /D _CRT_SECURE_NO_DEPRECATE /D TBB_USE_DEBUG=0 /D __TBB_LIB_NAME=tbb.lib /D REQUIRE_IOSTREAM /D AW_NEW_IOSTREAMS /D Bits64_ /D CGAL_NO_AUTOLINK_MPFR /D CGAL_NO_AUTOLINK_GMP /D _WINDLL /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"x64\Debug\\" /Fd"x64\Debug\DGP.pdb" /Gd /TP /errorReport:prompt ..\Commands\colorMeshVerticesCmd.cpp ..\Commands\TriangulatePolygonCmd.cpp ..\Nodes\SpaceDeformer2D.cpp ..\stdafx.cpp ..\Utils\Limit_Util.cpp ..\Utils\MatlabGMMDataExchange.cpp ..\Utils\MatlabInterface.cpp ..\Utils\Maya_Utils.cpp ..\Utils\triangulation.cpp ..\Utils\Utilities.cpp pluginMain.cpp
+         colorMeshVerticesCmd.cpp
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(95): warning C4477: 'sscanf_s' : format string '%c' requires an argument of type 'int', but variadic argument 3 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(95): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(103): warning C4477: 'sscanf_s' : format string '%c' requires an argument of type 'int', but variadic argument 2 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(103): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 2 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 4 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 6 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 8 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 10 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>..\Commands\colorMeshVerticesCmd.cpp(239): warning C4018: '<': signed/unsigned mismatch
+     1>..\Commands\colorMeshVerticesCmd.cpp(250): warning C4018: '<': signed/unsigned mismatch
+         TriangulatePolygonCmd.cpp
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(95): warning C4477: 'sscanf_s' : format string '%c' requires an argument of type 'int', but variadic argument 3 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(95): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(103): warning C4477: 'sscanf_s' : format string '%c' requires an argument of type 'int', but variadic argument 2 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(103): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 2 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 4 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 6 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 8 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 10 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>..\Commands\TriangulatePolygonCmd.cpp(173): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+     1>..\Commands\TriangulatePolygonCmd.cpp(175): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+         SpaceDeformer2D.cpp
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(95): warning C4477: 'sscanf_s' : format string '%c' requires an argument of type 'int', but variadic argument 3 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(95): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(103): warning C4477: 'sscanf_s' : format string '%c' requires an argument of type 'int', but variadic argument 2 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(103): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 2 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 4 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 6 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 8 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 10 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>..\Nodes\SpaceDeformer2D.cpp(158): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+         stdafx.cpp
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(95): warning C4477: 'sscanf_s' : format string '%c' requires an argument of type 'int', but variadic argument 3 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(95): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(103): warning C4477: 'sscanf_s' : format string '%c' requires an argument of type 'int', but variadic argument 2 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(103): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 2 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 4 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 6 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 8 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 10 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+         Limit_Util.cpp
+         MatlabGMMDataExchange.cpp
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(95): warning C4477: 'sscanf_s' : format string '%c' requires an argument of type 'int', but variadic argument 3 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(95): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(103): warning C4477: 'sscanf_s' : format string '%c' requires an argument of type 'int', but variadic argument 2 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(103): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 2 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 4 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 6 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 8 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 10 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>..\Utils\MatlabGMMDataExchange.cpp(20): warning C4267: 'argument': conversion from 'size_t' to 'unsigned int', possible loss of data
+     1>..\Utils\MatlabGMMDataExchange.cpp(33): warning C4267: 'argument': conversion from 'size_t' to 'unsigned int', possible loss of data
+     1>..\Utils\MatlabGMMDataExchange.cpp(42): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+     1>..\Utils\MatlabGMMDataExchange.cpp(43): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+     1>..\Utils\MatlabGMMDataExchange.cpp(59): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+     1>..\Utils\MatlabGMMDataExchange.cpp(76): warning C4267: 'argument': conversion from 'size_t' to 'unsigned int', possible loss of data
+     1>..\Utils\MatlabGMMDataExchange.cpp(85): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+     1>..\Utils\MatlabGMMDataExchange.cpp(86): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+     1>..\Utils\MatlabGMMDataExchange.cpp(102): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+     1>..\Utils\MatlabGMMDataExchange.cpp(119): warning C4267: 'argument': conversion from 'size_t' to 'unsigned int', possible loss of data
+         MatlabInterface.cpp
+     1>..\Utils\MatlabInterface.cpp(715): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+     1>..\Utils\MatlabInterface.cpp(716): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+     1>..\Utils\MatlabInterface.cpp(768): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+     1>..\Utils\MatlabInterface.cpp(769): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+     1>..\Utils\MatlabInterface.cpp(807): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+     1>..\Utils\MatlabInterface.cpp(808): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+     1>..\Utils\MatlabInterface.cpp(839): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+     1>..\Utils\MatlabInterface.cpp(840): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+     1>..\Utils\MatlabInterface.cpp(568): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+         ..\Utils\MatlabInterface.cpp(54): note: see reference to function template instantiation 'int MatlabInterface::GetEngineIndexMatrix<int>(const char *,unsigned int &,unsigned int &,std::vector<int,std::allocator<int>> &,bool)' being compiled
+     1>..\Utils\MatlabInterface.cpp(569): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+     1>..\Utils\MatlabInterface.cpp(590): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+         ..\Utils\MatlabInterface.cpp(56): note: see reference to function template instantiation 'int MatlabInterface::GetEngineRealMatrix<double>(const char *,unsigned int &,unsigned int &,std::vector<double,std::allocator<_Ty>> &,bool)' being compiled
+                 with
+                 [
+                     _Ty=double
+                 ]
+     1>..\Utils\MatlabInterface.cpp(591): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+     1>..\Utils\MatlabInterface.cpp(614): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+         ..\Utils\MatlabInterface.cpp(57): note: see reference to function template instantiation 'int MatlabInterface::GetEngineComplexMatrix<double>(const char *,unsigned int &,unsigned int &,std::vector<std::complex<double>,std::allocator<_Ty>> &,bool)' being compiled
+                 with
+                 [
+                     _Ty=std::complex<double>
+                 ]
+     1>..\Utils\MatlabInterface.cpp(615): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+         Maya_Utils.cpp
+     1>..\Utils\Maya_Utils.cpp(63): warning C4018: '<': signed/unsigned mismatch
+         triangulation.cpp
+     1>..\Utils\triangulation.cpp(15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+     1>..\Utils\triangulation.cpp(109): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+         Utilities.cpp
+     1>..\Utils\Utilities.cpp(51): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+         pluginMain.cpp
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(95): warning C4477: 'sscanf_s' : format string '%c' requires an argument of type 'int', but variadic argument 3 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(95): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(103): warning C4477: 'sscanf_s' : format string '%c' requires an argument of type 'int', but variadic argument 2 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(103): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 2 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 4 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 6 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 8 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+     1>c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): warning C4477: 'sscanf_s' : format string '%s' requires an argument of type 'int', but variadic argument 10 has type 'size_t'
+         c:\users\ben-pc\documents\myswprojects\projectfinal\dgp-hw1\dgp_code_dir\gmm-4.2\include\gmm\gmm_inoutput.h(832): note: this argument is used as a buffer size
+         Generating Code...
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /Zi /nologo /W3 /WX- /Od /D _DEBUG /D WIN32 /D _WINDOWS /D _USRDLL /D NT_PLUGIN /D _HAS_ITERATOR_DEBUGGING=1 /D _SECURE_SCL=0 /D _SECURE_SCL_THROWS=0 /D _SECURE_SCL_DEPRECATE=0 /D _SCL_SECURE_NO_DEPRECATE /D _CRT_SECURE_NO_DEPRECATE /D TBB_USE_DEBUG=0 /D __TBB_LIB_NAME=tbb.lib /D REQUIRE_IOSTREAM /D AW_NEW_IOSTREAMS /D Bits64_ /D CGAL_NO_AUTOLINK_MPFR /D CGAL_NO_AUTOLINK_GMP /D _WINDLL /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"x64\Debug\\" /Fd"x64\Debug\DGP.pdb" /Gd /TC /errorReport:prompt ..\Utils\triangle.c
+         triangle.c
+     1>..\Utils\triangle.c(3659): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3659): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3665): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3665): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3672): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3672): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3679): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3679): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3688): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3688): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3695): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3695): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3702): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3702): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3708): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3708): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3713): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3713): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3718): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3718): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3753): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3753): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3759): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3759): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3766): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3766): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3775): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3775): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3782): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3782): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3789): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3789): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3796): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 1 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3796): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3805): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3805): note: consider using '%tx' in the format string
+     1>..\Utils\triangle.c(3812): warning C4477: 'printf' : format string '%lx' requires an argument of type 'unsigned long', but variadic argument 2 has type 'ptrdiff_t'
+         ..\Utils\triangle.c(3812): note: consider using '%tx' in the format string
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Ben-PC\Documents\MySWprojects\ProjectFinal\DGP-HW1\DGP_CODE_DIR\plug-ins\Debug_x64_DGP.mll" /INCREMENTAL /NOLOGO Foundation.lib OpenMaya.lib OpenMayaUI.lib OpenMayaAnim.lib OpenGL32.lib libmx.lib libeng.lib libmat.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /Debug /PDB:"Debug\DGP.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE:NO /NXCOMPAT /IMPLIB:"Debug\DGP.lib" /MACHINE:X64 /export:initializePlugin /export:uninitializePlugin /DLL x64\Debug\colorMeshVerticesCmd.obj
+         x64\Debug\TriangulatePolygonCmd.obj
+         x64\Debug\SpaceDeformer2D.obj
+         x64\Debug\stdafx.obj
+         x64\Debug\Limit_Util.obj
+         x64\Debug\MatlabGMMDataExchange.obj
+         x64\Debug\MatlabInterface.obj
+         x64\Debug\Maya_Utils.obj
+         x64\Debug\triangle.obj
+         x64\Debug\triangulation.obj
+         x64\Debug\Utilities.obj
+         x64\Debug\pluginMain.obj
+            Creating library Debug\DGP.lib and object Debug\DGP.exp
+         DGP.vcxproj -> C:\Users\Ben-PC\Documents\MySWprojects\ProjectFinal\DGP-HW1\DGP_CODE_DIR\plug-ins\Debug_x64_DGP.mll
+     1>Done Building Project "C:\Users\Ben-PC\Documents\MySWprojects\ProjectFinal\DGP-HW1\DGP_CODE_DIR\DGP\DGP.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:00.03
+Time Elapsed 00:00:14.00
