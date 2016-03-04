@@ -11,6 +11,17 @@
 #define WARNING(msg) std::cerr << "WARNING: " << msg << std::endl
 #define MESSAGE(msg) std::cerr << msg << std::endl
 
+#include <sys/stat.h>
+// from http://www.codeproject.com/KB/files/filesize.aspx
+inline static long FileSize(const char* fname)
+{
+    struct stat finfo;
+    if (stat(fname, &finfo) == 0)
+        return finfo.st_size;
+    else
+        return 0;
+}
+
 ////////////////////////////////////////////////////////////
 // Explicit instantiation of exported template methods
 
@@ -77,10 +88,8 @@ template int MatlabInterface::CopyFromComplexMatrix    <double>(mxArray *M, unsi
 
 ////////////////////////////////////////////////////////////
 
-MatlabInterface::MatlabInterface() : m_ep(NULL), mOutputStringBuffer(NULL)
+MatlabInterface::MatlabInterface() : m_A(NULL), m_b(NULL), m_x(NULL), m_ep(NULL)
 {
-	mOutputStringBuffer = new char[MAX_OUTPUT_BUFFER_SIZE];
-	memset(mOutputStringBuffer, 0, MAX_OUTPUT_BUFFER_SIZE);
     EngineOpen();
 }
 
@@ -88,14 +97,9 @@ MatlabInterface::MatlabInterface() : m_ep(NULL), mOutputStringBuffer(NULL)
 
 MatlabInterface::~MatlabInterface()
 {
+    Deinitialize();
 //  EngineClose();
-	delete[] mOutputStringBuffer;
-	mOutputStringBuffer = NULL;
-
-	//make sure that Matlab output buffer is nullified to prevent Matlab from accessing memory that is deallocated.
-	engOutputBuffer(m_ep, NULL, 0);
 }
-
 
 void
 MatlabInterface::EngineOpen()
@@ -111,31 +115,11 @@ MatlabInterface::EngineOpen()
     //
     if (!(m_ep = engOpen("\0"))) {
         ERROR("Can't start MATLAB engine");
-		return;
     }
-	//let Matlab know where to issue to textual output
-	int res = engOutputBuffer(m_ep, mOutputStringBuffer, MAX_OUTPUT_BUFFER_SIZE-1);
 
-	if(res != 0)
-	{
-		ERROR("Unable to set Matlab output buffer");
-	}
-
-	res = engSetVisible(m_ep, false); //turn the white matlab command window OFF
-
-	if(res != 0)
-	{
-		ERROR("Unable to turn off Matlab engine's white console window");
-	}
-
+	int res = engSetVisible(m_ep, false); //turn the white matlab command window OFF
 	res = engEvalString(m_ep, "desktop");  //turn the entire GUI of matlab ON
-
-	if(res != 0)
-	{
-		ERROR("Unable to turn on Matlab full GUI");
-	}
 }
-
 
 void
 MatlabInterface::EngineClose()
@@ -154,6 +138,15 @@ MatlabInterface::DestroyMatrix(mxArray *&M)
     }
 }
 
+
+
+void
+MatlabInterface::Deinitialize()
+{
+    DestroyMatrix(m_A);
+    DestroyMatrix(m_b);
+    DestroyMatrix(m_x);
+}
 
 
 // This also shifts all the values by 1 to account for the difference
@@ -178,7 +171,7 @@ MatlabInterface::CreateIndexMatrix(unsigned int m, unsigned int n, const T *vals
 }
 
 
-//this function can be applied to single or double precision floating point values (T), but either way, the created Matlab matrix will be double precision
+
 template <typename T>
 mxArray*
 MatlabInterface::CreateRealMatrix(unsigned int m, unsigned int n, const T *vals, bool colmaj)
@@ -187,69 +180,38 @@ MatlabInterface::CreateRealMatrix(unsigned int m, unsigned int n, const T *vals,
     if (vals != NULL) {
         double *pM = mxGetPr(M);
         // note that matlab expects the data in column-major order
-
-		if(colmaj) //column-major
-		{
-			int numElements = m*n;
-
-			for(int i = 0; i < numElements; i++)
-			{
-				pM[i] = (double)vals[i];
-			}
-		}
-		else //row-major
-		{
-			for (unsigned int j = 0; j < n; ++j)
-			{
-				for (unsigned int i = 0; i < m; ++i)
-				{
-					unsigned int idxM = j*m+i;
-					unsigned int idx = i*n+j;
-					pM[idxM] = double(vals[idx]);
-				}
-			}
-		}
+        for (unsigned int j = 0; j < n; ++j)
+            for (unsigned int i = 0; i < m; ++i)
+            {
+                unsigned int idxM = j*m+i;
+                unsigned int idx = colmaj ? idxM : i*n+j;
+                pM[idxM] = double(vals[idx]);
+            }
     }
     return M;
 }
 
 
-//this function can be applied to single or double precision floating point values (T), but either way, the created Matlab matrix will be double precision
+
 template <typename T>
 mxArray*
 MatlabInterface::CreateComplexMatrix(unsigned int m, unsigned int n, const std::complex<T> *vals, bool colmaj)
 {
-	mxArray *M = mxCreateDoubleMatrix(m, n, mxCOMPLEX);
-	if (vals != NULL) {
-		double *pMr = mxGetPr(M);
-		double *pMi = mxGetPi(M);
-		// note that matlab expects the data in column-major order
-
-		if(colmaj) //column-major
-		{
-			int numElements = m*n;
-
-			for(int i = 0; i < numElements; i++)
-			{
-				pMr[i] = vals[i]._Val[0];
-				pMi[i] = vals[i]._Val[1];
-			}
-		}
-		else //row-major
-		{
-			for (unsigned int j = 0; j < n; ++j)
-			{
-				for (unsigned int i = 0; i < m; ++i)
-				{
-					unsigned int idxM = j*m+i;
-					unsigned int idx = i*n+j;
-					pMr[idxM] = double(vals[idx].real());
-					pMi[idxM] = double(vals[idx].imag());
-				}
-			}
-		}
-	}
-	return M;
+    mxArray *M = mxCreateDoubleMatrix(m, n, mxCOMPLEX);
+    if (vals != NULL) {
+        double *pMr = mxGetPr(M);
+        double *pMi = mxGetPi(M);
+        // note that matlab expects the data in column-major order
+        for (unsigned int j = 0; j < n; ++j)
+            for (unsigned int i = 0; i < m; ++i)
+            {
+                unsigned int idxM = j*m+i;
+                unsigned int idx = colmaj ? idxM : i*n+j;
+                pMr[idxM] = double(vals[idx].real());
+                pMi[idxM] = double(vals[idx].imag());
+            }
+    }
+    return M;
 }
 
 
@@ -386,7 +348,7 @@ MatlabInterface::CopyFromComplexMatrix(mxArray *M, unsigned int m, unsigned int 
         {
             unsigned int idxM = j*m+i;
             unsigned int idx = colmaj ? idxM : i*n+j;
-			dest[idx] = std::complex<T>(T(pMr[idxM]), pure_real ? T(0) : T(pMi[idxM]));
+			dest[idx] = std::complex<double>(T(pMr[idxM]), pure_real ? T(0) : T(pMi[idxM]));
         }
 
     return 0;
@@ -621,44 +583,269 @@ MatlabInterface::GetEngineComplexMatrix(const char *name, unsigned int& m, unsig
 }
 
 
-//evaluate a single line. returns non-zero on error.
-int MatlabInterface::Eval(const char *matlab_code)
+// Sets up the sparse matrix that defines the LHS of the system.
+void
+MatlabInterface::SetupLHS(unsigned int n, unsigned int nonzeros, unsigned int *row_indices, unsigned int *col_indices, double *mat_entries)
 {
-	int res = engEvalString(m_ep, matlab_code);
-	if(res != 0)
-	{
-		ERROR("Error running matlab command \"" << matlab_code << "\"");
-	}
-	return res;
+    assert(n > 0);
+
+    SetEngineIndexMatrix("LS_rind", nonzeros, 1, row_indices);
+    SetEngineIndexMatrix("LS_cind", nonzeros, 1, col_indices);
+    SetEngineRealMatrix("LS_Aij" , nonzeros, 1, mat_entries);
+
+    DestroyMatrix(m_A); // in case it had been previously created
+
+    // create and retrieve the sparse matrix
+    engEvalString(m_ep, "LS_A = sparse(LS_rind, LS_cind, LS_Aij)");
+
+    //SetEngineSparseComplexMatrix("LS_A", nonzeros, row_indices, col_indices, mat_entries);
+    m_A = engGetVariable(m_ep, "LS_A");
+
+    // A should have been created just fine
+    // XXX define better error behavior here?
+    assert(m_A != NULL);
+
+    // XXX define better error behavior here?
+    assert(mxGetM(m_A) == n);
+    assert(mxGetN(m_A) == n);
 }
 
 
-void MatlabInterface::EvalToCout(const char *matlab_code)
-{
-	Eval(matlab_code);
 
-	if(mOutputStringBuffer[0] != 0)
-	{
-		std::cout << mOutputStringBuffer << std::flush;
-	}
+// Sets up the RHS vector of the system.
+void
+MatlabInterface::SetupRHS(unsigned int nb, double *b)
+{
+    DestroyMatrix(m_b); // in case it had been previously created
+//  engEvalString(m_ep, "clear LS_b;"); // clear the variable name to let the error checking happen
+
+    // create and retrieve the sparse matrix
+    engPutVariable(m_ep, "LS_b", m_b = CreateRealMatrix(nb, 1, b));
+    m_b = engGetVariable(m_ep, "LS_b");
+
+    // A should have been created just fine
+    // XXX define better error behavior here?
+    assert(m_b != NULL);
 }
 
 
-std::string MatlabInterface::EvalToString(const char *matlab_code)
+
+// Solves an n x n (square) linear system Ax=b.
+void
+MatlabInterface::SolveSparseLinearSystem(unsigned int n, unsigned int nonzeros,
+        unsigned int *row_indices, unsigned int *col_indices, double *mat_entries,
+        double *b, double *x)
 {
-	int res = Eval(matlab_code);
-	if(res != 0)
-	{
-		std::ostringstream oss;
-		oss << "ERROR: Matlab command failed with error code " << res << ".\n";
-		return oss.str();
-	}
+    assert(row_indices != NULL);
+    assert(col_indices != NULL);
+    assert(mat_entries != NULL);
+    assert(b != NULL);
+    assert(x != NULL);
 
-// 	if (buf[0] == '>' && buf[1] == '>' && buf[2] == ' ')
-// 		buf += 3;
-// 	if (buf[0] == '\n') ++buf;
+    engEvalString(m_ep, "clear LS_*;"); // clear all the variables with prefix LS_
 
-	return std::string(mOutputStringBuffer);
+    SetupLHS(n, nonzeros, row_indices, col_indices, mat_entries);
+    SetupRHS(n, b);
+
+    DestroyMatrix(m_x); // in case it had been previously created
+
+    // solve the system
+    engEvalString(m_ep, "LS_x = LS_A \\ LS_b");
+
+    // assert that the system was solved successfully
+    // XXX define better error behavior here?
+    assert(engGetVariable(m_ep, "LS_x") != NULL);
+
+    GetEngineRealMatrix("LS_x", n, 1, x, false);
+}
+
+
+// Executes a matlab script.
+// Returns non-zero on error.
+int
+MatlabInterface::LoadAndRunScript(const char *full_script_path, char *output_buffer, int buffer_size)
+{
+    assert(full_script_path != NULL);
+
+    // Use RAII ensure that on leaving this scope, the output buffer is
+    // always nullified (to prevent Matlab from accessing memory that might
+    // have already been deallocated).
+    struct cleanup {
+        Engine *m_ep;
+        cleanup(Engine *ep) : m_ep(ep) { }
+        ~cleanup() { engOutputBuffer(m_ep, NULL, 0); }
+    } cleanup_obj(m_ep);
+
+    if (output_buffer != NULL) {
+        int res = engOutputBuffer(m_ep, output_buffer, buffer_size);
+        if (res != 0) {
+            ERROR("Unable to set Matlab output buffer");
+            return res;
+        }
+    }
+
+    long size = FileSize(full_script_path);
+    if (size <= 0) {
+        ERROR("Matlab script \"" << full_script_path << "\" has size 0");
+        return -1;
+    }
+    std::ifstream fin(full_script_path, std::ios::in|std::ios::binary);
+    if (!fin.good() || !fin.is_open()) {
+        ERROR("Unable to read from matlab script \"" << full_script_path << "\"");
+        return -2;
+    }
+
+    std::string code(size+1, '\0');
+    fin.read(&code[0], size);
+    code[size] = '\0'; // unnecessary due to initialization, but being safe
+    int res = engEvalString(m_ep, code.c_str());
+    if (res != 0)
+        ERROR("Error running matlab script \"" << full_script_path << "\"");
+
+    return res;
+}
+
+
+std::string
+MatlabInterface::LoadAndRunScriptToString(const char *full_script_path)
+{
+    const int BUF_SIZE = 4096*4096;
+    // allocate on the heap to avoid running out of stack
+    std::string bufauto(BUF_SIZE+1, '\0');
+    char *buf = &bufauto[0];
+
+    int res = this->LoadAndRunScript(full_script_path, buf, BUF_SIZE);
+    if (res != 0) {
+        std::ostringstream oss;
+        oss << "ERROR: Matlab script '" << full_script_path
+            << "' failed with error code " << res << ".\n";
+        return oss.str();
+    }
+
+    if (buf[0] == '>' && buf[1] == '>' && buf[2] == ' ')
+        buf += 3;
+    if (buf[0] == '\n') ++buf;
+
+    return std::string(buf);
+}
+
+
+
+int
+MatlabInterface::RunScript(const char *script_name, char *output_buffer, int buffer_size)
+{
+    assert(script_name != NULL);
+
+    std::string script_extension = GetExtension(script_name);
+    if (script_extension.size() > 0 && script_extension != ".m")
+    {
+        ERROR("RunScript: Unknown matlab script extension '" << script_extension << "'.");
+        return -99;
+    }
+
+    std::string script_prefix = GetPrefix(script_name);
+
+    // Use RAII ensure that on leaving this scope, the output buffer is
+    // always nullified (to prevent Matlab from accessing memory that might
+    // have already been deallocated).
+    struct cleanup {
+        Engine *m_ep;
+        cleanup(Engine *ep) : m_ep(ep) { }
+        ~cleanup() { engOutputBuffer(m_ep, NULL, 0); }
+    } cleanup_obj(m_ep);
+
+    if (output_buffer != NULL) {
+        int res = engOutputBuffer(m_ep, output_buffer, buffer_size);
+        if (res != 0) {
+            ERROR("Unable to set Matlab output buffer");
+            return res;
+        }
+    }
+
+    int res;
+    engEvalString(m_ep, "clear functions;"); // to prevent Matlab from loading from cache
+    res = engEvalString(m_ep, script_prefix.c_str());
+    if (res != 0)
+        ERROR("Error running matlab script \"" << script_name << "\"");
+
+    return res;
+}
+
+std::string
+MatlabInterface::RunScriptToString(const char *script_name)
+{
+    const int BUF_SIZE = 4096*4096;
+    // allocate on the heap to avoid running out of stack
+    std::string bufauto(BUF_SIZE+1, '\0');
+    char *buf = &bufauto[0];
+
+    int res = this->RunScript(script_name, buf, BUF_SIZE);
+    if (res != 0) {
+        std::ostringstream oss;
+        oss << "ERROR: Matlab script '" << script_name
+            << "' failed with error code " << res << ".\n";
+        return oss.str();
+    }
+
+    if (buf[0] == '>' && buf[1] == '>' && buf[2] == ' ')
+        buf += 3;
+    if (buf[0] == '\n') ++buf;
+
+    return std::string(buf);
+}
+
+
+// Evaluate a single line
+// Returns non-zero on error.
+int
+MatlabInterface::Eval(const char *matlab_code, char *output_buffer, int buffer_size)
+{
+    assert(matlab_code != NULL);
+
+    // Use RAII ensure that on leaving this scope, the output buffer is
+    // always nullified (to prevent Matlab from accessing memory that might
+    // have already been deallocated).
+    struct cleanup {
+        Engine *m_ep;
+        cleanup(Engine *ep) : m_ep(ep) { }
+        ~cleanup() { engOutputBuffer(m_ep, NULL, 0); }
+    } cleanup_obj(m_ep);
+
+    if (output_buffer != NULL) {
+        int res = engOutputBuffer(m_ep, output_buffer, buffer_size);
+        if (res != 0) {
+            ERROR("Unable to set Matlab output buffer");
+            return res;
+        }
+    }
+
+    int res = engEvalString(m_ep, matlab_code);
+    if (res != 0)
+        ERROR("Error running matlab command \"" << matlab_code << "\"");
+    return res;
+}
+
+
+std::string
+MatlabInterface::EvalToString(const char *matlab_code)
+{
+    const int BUF_SIZE = 4096*4096;
+    // allocate on the heap to avoid running out of stack
+    std::string bufauto(BUF_SIZE+1, '\0');
+    char *buf = &bufauto[0];
+
+    int res = this->Eval(matlab_code, buf, BUF_SIZE);
+    if (res != 0) {
+        std::ostringstream oss;
+        oss << "ERROR: Matlab command failed with error code " << res << ".\n";
+        return oss.str();
+    }
+
+    if (buf[0] == '>' && buf[1] == '>' && buf[2] == ' ')
+        buf += 3;
+    if (buf[0] == '\n') ++buf;
+
+    return std::string(buf);
 }
 
 
@@ -862,23 +1049,89 @@ int MatlabInterface::GetEngineEncodedSparseComplexMatrix(const char* name, std::
 }
 
 
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Runs a matlab script within the specified directory where it may have
+// more helper scripts. Prints the output on the screen.
+int
+MatlabInterface::RunMatlabScript(const char *script_path, const char *script_name)
+{
+    MatlabInterface &matlab = *this;
+
+    if (!script_path) {
+        ERROR("RunMatlabScript: No script path specified.");
+        return -1;
+    }
+
+    int res = matlab.AddScriptPath(script_path);
+    if (res != 0) {
+        ERROR("Unable to add Matlab script directory to path.");
+        return res;
+    }
+
+    std::string output = matlab.RunScriptToString(script_name);
+
+    // matlab output
+    MESSAGE("MATLAB OUTPUT\n--------------------\n" << output << "--------------------" << std::endl);
+    return 0;
+}
+
+
+
+// returns the file name prefix (i.e. without the extension)
+std::string MatlabInterface::GetPrefix(const std::string &path)
+{
+	if (path.size() > 0)
+	{
+		return path.substr(0, path.find_last_of('.'));
+	}
+	else
+	{
+		return std::string("");
+	}
+}
+
+// returns the lowercase file name extension
+std::string MatlabInterface::GetExtension(const std::string &path)
+{
+	std::string extension;
+	size_t ext_start = path.find_last_of('.');
+	if (ext_start < path.length())
+	{
+		extension = path.substr(ext_start, path.length());
+	}
+	for(std::string::iterator i = extension.begin(); i != extension.end(); ++i)
+	{
+		*i = tolower(*i);
+	}
+	return extension;
+}
+
+
+
 bool MatlabInterface::GetMatrixDimensions(const char* variableName, unsigned int& m, unsigned int& n)
 {
+	#define BUFFER_SIZE (50)
+
 	m = 0;
 	n = 0;
+
+	char output[BUFFER_SIZE];
 
 	std::string command("size(");
 	command = command + variableName;
 	command = command + ")";
 
-	int res = Eval(command.c_str());
+	int res = Eval(command.c_str(), output, BUFFER_SIZE);
 	if(res != 0)
 	{
 		return false;
 	}
 	std::stringstream stream(std::stringstream::in | std::stringstream::out);
 
-	stream << mOutputStringBuffer;
+	stream << output;
 
 	std::string str1; //to capture the "ans"
 	std::string str2; //to capture the "="
@@ -894,4 +1147,14 @@ bool MatlabInterface::GetMatrixDimensions(const char* variableName, unsigned int
 	}
 
 	return true;
+}
+
+void MatlabInterface::EvalToCout(const char *matlab_code)
+{
+	Eval(matlab_code);
+
+	if(mOutputStringBuffer[0] != 0)
+	{
+		std::cout << mOutputStringBuffer << std::flush;
+	}
 }

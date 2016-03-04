@@ -4,10 +4,18 @@
 #include "Utils/STL_Macros.h"
 #include "Utils/Maya_Macros.h"
 #include "Utils/Maya_Utils.h"
-#include "../Utils/MatlabInterface.h"
+//#include "../Utils/MatlabInterface.h"
 #include "../Utils/Utilities.h"
 
 #include "colorMeshVerticesCmd.h"
+
+#define VALENCE_COLOR_SET_NAME "Valence"
+#define CURVATURE_COLOR_SET_NAME "Curvature"
+#define minShortName "-min"
+#define minLongName  "-minColor"
+#define maxShortName "-max"
+#define maxLongName  "-maxColor"
+#define PI 3.1416
 
 colorMeshVerticesCmd::colorMeshVerticesCmd()
 {
@@ -116,7 +124,7 @@ MSyntax colorMeshVerticesCmd::syntax()
 
 MString colorMeshVerticesCmd::commandName()
 {
-	return "colorMeshVertices";
+	return "colorMeshVerticesCmd";
 }
 
 //color by the velence of edges
@@ -227,7 +235,7 @@ MStatus colorMeshVerticesCmd::ChangeColorByCurvature(MFnMesh & meshFn, double mi
 		}
 
 		//now we have the curve of vertexItr
-		vertexItr.onBoundary() ? curve = 3.1416 - curve : curve = 2.0f * 3.1416 - curve; //check if we are on the edge of the surface
+		vertexItr.onBoundary() ? curve = PI - curve : curve = 2.0f * PI - curve; //check if we are on the edge of the surface
 		
 		curvatures.append(curve); //add the calculated curve to the array of curves
 		vertices.append(vertexItr.index()); //add the Id of the vertex with that curve to the array of vertices 

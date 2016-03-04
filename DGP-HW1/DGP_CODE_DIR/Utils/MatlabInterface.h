@@ -22,19 +22,26 @@ typedef struct mxArray_tag mxArray;
 class MatlabInterface
 {
 public:
+    ~MatlabInterface();
 
-	#define MAX_OUTPUT_BUFFER_SIZE (65536)
-
-	~MatlabInterface();
-
-
+	
 	// Using a SINGLETON object throughout the application
 	// Get a singleton MatlabInterface object
 	static MatlabInterface &GetEngine(bool restart = false);
 	void EngineOpen();
 	void EngineClose();
 
+	
+	void Deinitialize();
+    void SolveSparseLinearSystem(unsigned int n, unsigned int nonzeros,
+            unsigned int *row_indices, unsigned int *col_indices, double *mat_entries,
+            double *b, double *x);
+
     static void DestroyMatrix(mxArray *&M);
+
+    mxArray *getMatrixA() { return m_A; };
+    mxArray *getVectorb() { return m_b; };
+    mxArray *getVectorx() { return m_x; };
 
     // Creates a matrix in matlab.
     template <typename T>
@@ -89,9 +96,17 @@ public:
 	int GetSparseRealMatrix(const char* name, std::vector<unsigned int>& rowind, std::vector<unsigned int>& colind, std::vector<double>& vals, unsigned int& nentries, unsigned int& m, unsigned int& n);
 	int GetSparseComplexMatrix(const char* name, std::vector<unsigned int>& rowind, std::vector<unsigned int>& colind, std::vector<std::complex<double> >& vals, unsigned int& nentries, unsigned int& m, unsigned int& n);
 
-	// Eval in-place string
-	int Eval(const char *matlab_code);
-    //int Eval(const char *matlab_code, char *output_buffer = NULL, int buffer_size = 0);
+
+    // Loads and executes a matlab script. Returns non-zero on error.
+    int LoadAndRunScript(const char *full_script_path, char *output_buffer = NULL, int buffer_size = 0);
+    std::string LoadAndRunScriptToString(const char *full_script_path);
+    // Runs a matlab script that is already in the Matlab path.
+    // The ".m" extension is optional.
+    int RunScript(const char *script_name, char *output_buffer = NULL, int buffer_size = 0);
+    std::string RunScriptToString(const char *script_name);
+
+    // Eval in-place string
+    int Eval(const char *matlab_code, char *output_buffer = NULL, int buffer_size = 0);
     std::string EvalToString(const char *matlab_code);
 
 	//Eval and send the Matlab output to std::cout
@@ -99,6 +114,10 @@ public:
 
     // Add a path to the matlab directory
     int AddScriptPath(const char* path);
+
+    // Runs a matlab script within the specified directory where it may have
+    // more helper scripts. Prints the output on the screen.
+    int RunMatlabScript(const char *script_path, const char *script_name);
 
 	bool GetMatrixDimensions(const char* variableName, unsigned int& m, unsigned int& n);
 
@@ -142,7 +161,17 @@ private:
     static int CopyFromComplexMatrix(mxArray *M, unsigned int m, unsigned int n, std::complex<T> *dest, bool colmaj=false);
 
 
+    // Sets up the sparse matrix that defines the LHS of the system.
+    void SetupLHS(unsigned int n, unsigned int nonzeros, unsigned int *row_indices, unsigned int *col_indices, double *mat_entries);
+    void SetupRHS(unsigned int nb, double *b);
+	std::string GetPrefix(const std::string &path);
+	std::string GetExtension(const std::string &path);
+
+
 private:
     Engine *m_ep;
+    mxArray *m_A;
+    mxArray *m_b;
+    mxArray *m_x;
 	char* mOutputStringBuffer;
 };
