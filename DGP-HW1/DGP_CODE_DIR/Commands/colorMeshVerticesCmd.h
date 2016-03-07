@@ -1,13 +1,5 @@
 #pragma once
 
-#define VALENCE_COLOR_SET_NAME "Valence"
-#define CURVATURE_COLOR_SET_NAME "Curvature"
-#define minShortName "-min"
-#define minLongName  "-minColor"
-#define maxShortName "-max"
-#define maxLongName  "-maxColor"
-
-
 class colorMeshVerticesCmd : public MPxCommand
 {
 public:

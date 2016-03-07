@@ -7,7 +7,7 @@
 
 
 //our script uses AEimagePlaneBrowser which depends on this script so we have to source it first
-source "C:/Program Files/Autodesk/Maya2014/scripts/AETemplates/AEimagePlaneTemplate.mel";
+source "C:/Program Files/Autodesk/Maya2015/scripts/AETemplates/AEimagePlaneTemplate.mel";
 
 global proc set2DLayout()
 {

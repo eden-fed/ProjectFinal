@@ -14,7 +14,7 @@ public:
 
 	virtual MStatus deform(MDataBlock& block, MItGeometry& iter, const MMatrix& mat, unsigned int multiIndex);
 	MStatus updateCage(MFnMesh& cageMeshFn);
-	MStatus doSetup(MItGeometry& iter);
+	MStatus doSetup(MItGeometry& iter, MFnMesh& cageMeshFn);
 
 
 public:
