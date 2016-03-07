@@ -56,7 +56,7 @@ MStatus inverseMatrixCmd::doIt(const MArgList & argList)
 		MCHECKERROR(stat, "Can't access object list");
 	}
 
-/*	MatlabGMMDataExchange::SetEngineDenseMatrix("toInverse", mToInverse);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("toInverse", mToInverse);//send the matrix to matlab
 
 	//load the inverse script
 	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/matlab scripts/inverse.m");
@@ -67,7 +67,7 @@ MStatus inverseMatrixCmd::doIt(const MArgList & argList)
 	std::cerr << "before inverse " << mToInverse << std::endl;
 
 	MatlabGMMDataExchange::GetEngineDenseMatrix("toInverse", mToInverse);//get the incersed matrix from matlab
-	*/
+	
 	//std::cout <<"after inverse " << mToInverse << std::endl;
 	std::cerr << "after inverse " << mToInverse << std::endl;
 
