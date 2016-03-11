@@ -12,9 +12,9 @@ public:
 	static void* creator();
 	static MStatus initialize();
 
-	virtual MStatus deform(MDataBlock& block, MItGeometry& iter, const MMatrix& mat, unsigned int multiIndex);
+	virtual MStatus deform(MDataBlock& block, MItGeometry& iter, const MMatrix& mat, unsigned int multiIndex);//deformed position of each internal point is computed on the fly
 	MStatus updateCage(MFnMesh& cageMeshFn);
-	MStatus doSetup(MItGeometry& iter, MFnMesh& cageMeshFn);
+	MStatus doSetup(MItGeometry& iter, MFnMesh& cageMeshFn);//pre-proccessing , calculati the bary coordinates
 
 
 public:
@@ -29,6 +29,9 @@ protected:
 	bool mIsFirstTime;
 
 	GMMDenseComplexColMatrix mCageVertices; //this matrix is actually a column vector. dimensions are: n x 1
-	GMMDenseComplexColMatrix mCoordinates; //this matrix is actually a column vector. dimensions are: m x n
+	GMMDenseComplexColMatrix mCauchyCoordinates; //this matrix is actually a column vector. dimensions are: m x n
 	GMMDenseComplexColMatrix mInternalPoints; //this matrix is actually a column vector. dimensions are: m x 1
+
+	GMMDenseComplexColMatrix mCauchyCoordsForInterpolation; //dimensions are: n x n
+	GMMDenseComplexColMatrix mInterpolatedNewVertices_f; //dimensions are: n x 1
 };
