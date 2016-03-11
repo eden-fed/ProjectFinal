@@ -329,7 +329,7 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 //	int res = MatlabInterface::GetEngine().LoadAndRunScript("%DGP_CODE_DIR%/matlab scripts/interpolatedCauchy.m");
 	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/matlab scripts/interpolatedCauchy.m");
 	if (res != 0) {//error if failed to load file
-		std::cerr << "ERROR: Matlab script 'inverse.m' failed with error code " << res << std::endl;
+		std::cerr << "ERROR: Matlab script 'interpolatedCauchy.m' failed with error code " << res << std::endl;
 	}
 	MatlabGMMDataExchange::GetEngineDenseMatrix("interpolationCoordinates", mCauchyCoordsForInterpolation);//get the incersed matrix from matlab
 	
