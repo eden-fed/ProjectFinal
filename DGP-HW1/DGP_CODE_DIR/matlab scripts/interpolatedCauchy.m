@@ -1,8 +1,8 @@
 % interpolationCoordinates=inv(interpolationCoordinates);
-
+n = length(q);
 cvx_begin
-    variable f(n,1) complex
+    variable  f(n) complex
     minimize 1
-    subjecet to
+    subject to
         A * f == q
 cvx_end

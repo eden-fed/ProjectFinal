@@ -34,4 +34,7 @@ protected:
 
 	GMMDenseComplexColMatrix mCauchyCoordsForInterpolation; //dimensions are: n x n
 	GMMDenseComplexColMatrix mInterpolatedNewVertices_f; //dimensions are: n x 1
+private:
+	void SpaceDeformer2D::matlabCalcNewVerticesForInterpolation();
+
 };

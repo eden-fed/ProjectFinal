@@ -8,6 +8,7 @@
 #include "Utils/MatlabGMMDataExchange.h"
 
 #define EPS 0.001
+#define CVX_INTERPOLATION 
 
 const MTypeId SpaceDeformer2D::mTypeId(0x6723c);
 const MString SpaceDeformer2D::mTypeName("SpaceDeformer2D");
@@ -53,6 +54,16 @@ MStatus SpaceDeformer2D::initialize()
 	return MStatus::kSuccess;
 }
 
+void SpaceDeformer2D::matlabCalcNewVerticesForInterpolation() {
+	MatlabGMMDataExchange::SetEngineDenseMatrix("A", mCauchyCoordsForInterpolation);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("q", mCageVertices);//send the matrix to matlab
+
+	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/matlab scripts/interpolatedCauchy.m");
+	if (res != 0) {//error if failed to load file
+		std::cerr << "ERROR: Matlab script 'interpolatedCauchy.m' failed with error code " << res << std::endl;
+	}
+	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInterpolatedNewVertices_f);//get the incersed matrix from matlab
+}
 
 MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMatrix& mat, unsigned int multiIndex)
 {
@@ -89,11 +100,15 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 	switch (coordinateType)
 	{
 	case 0://Approximating cage-based complex Cauchy coordinates
-		gmm::mult(mCauchyCoordinates, mCageVertices, mInternalPoints);//multiply coucy coordinates with the new cage vertices and insert it to the internal points
+		gmm::mult(mCauchyCoordinates, mCageVertices, mInternalPoints);//multiply cauchy coordinates with the new cage vertices and insert it to the internal points
 		break;
 	case 1://Interpolating complex Cauchy coordinates
+		#ifdef CVX_INTERPOLATION //calculate using cvx
+		matlabCalcNewVerticesForInterpolation();
+		#else//calculate using the inverse matrix
 		gmm::mult(mCauchyCoordsForInterpolation, mCageVertices, mInterpolatedNewVertices_f);
-		gmm::mult(mCauchyCoordinates, mInterpolatedNewVertices_f, mInternalPoints);
+		#endif
+		gmm::mult(mCauchyCoordinates, mInterpolatedNewVertices_f, mInternalPoints);//get the new internal points 
 		break;
 	case 2://Point2Point coordinates
 		MGlobal::displayError("Point 2 Point deformation hasnt been implemented yet .");
@@ -119,9 +134,6 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 
 		///////////////////////////////
 		///////////////////////////////
-
-
-		//Complex c(pt[0], pt[1]);
 
 		iter.setPosition(MPoint(c.real(), c.imag(), 0.0));
 	}
@@ -159,69 +171,6 @@ MStatus SpaceDeformer2D::updateCage(MFnMesh& cageMeshFn)
 	}
 	return MS::kSuccess;
 }
-//***********************************************************************************
-
-double max(double x, double y) {
-	if (x > y) return x;
-	else return y;
-}
-double min(double x, double y) {
-	if (x < y) return x;
-	else return y;
-}
-
-int orientation(MPoint p0, MPoint p1, MPoint p2)
-{
-	//calculate cross product of (p1-p0)X (p2-p0)
-
-	int x1 = p1.x - p0.x;
-	int y1 = p1.y - p0.y;
-	int x2 = p2.x - p0.x;
-	int y2 = p2.y - p0.y;
-
-	int determinant = x1*y2 - x2*y1;
-
-	if (determinant == 0)
-		return 0;
-
-	if (determinant>0)
-		return 1;
-
-	if (determinant<0)
-		return 2;
-
-}
-
-int onsegment(MPoint p0, MPoint p1, MPoint p2)
-{
-	if (p2.x >= min(p0.x, p1.x) && p2.x <= max(p0.x, p1.x))
-		return 1;
-
-	return 0;
-}
-
-int doIntersect(MPoint p1, MPoint q1, MPoint p2, MPoint q2)
-{
-	int o1 = orientation(p1, q1, q2);
-	int o2 = orientation(p1, q1, p2);
-	int o3 = orientation(p2, q2, p1);
-	int o4 = orientation(p2, q2, q1);
-
-	if (o1 != o2&&o3 != o4)  //handles general cases
-		return 1;
-
-	if (o1 == 0 && o2 == 0 && o3 == 0 && o4 == 0)  //handles special cases when all four points are collinear
-	{
-		if (onsegment(p1, q1, p2) || onsegment(p1, q1, q2))
-			return 1;
-
-	}
-	return 0;
-
-}
-
-//***********************************************************************************
-
 
 
 MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
@@ -268,29 +217,18 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 		Edge2.normalize();
 
 		//the notmal to the vertes is the angle bisector of the two edges
-		cageVertexNormal = Edge1 + Edge2;
+		float V = (Edge1^Edge2).z;
+		if (V>=0) {//turn tight
+			cageVertexNormal = -(Edge1 + Edge2);
+		}else {//turn left
+			cageVertexNormal = Edge1 + Edge2;
+		}
+		
 		cageVertexNormal.normalize();
 		cageVertexNormal *= EPS; //epsilon to prevent points to be exactly on cage
 
 		//move the vertex,the size of epsilon in the direction of the normal
-		MPoint offset = cartCageVertices[i] + cageVertexNormal;
-		
-		//*******fix it****** check if the new edge of the cage intersects the old one, if true - choose (-normal)
-	/*	if (i != 0) {
-			MPoint cagePrev(compCageVertices[prev].real(), compCageVertices[prev].imag());
-
-			if (doIntersect(cartCageVertices[prev], cartCageVertices[i], cagePrev, offset)) {
-
-				std::cerr << "inside doIntersect in vertex " << i << std::endl;
-				std::cerr << "cageVertices[prev] = " << cartCageVertices[prev] << std::endl;
-				std::cerr << "cageVertices[i] = " << cartCageVertices[i] << std::endl;
-				std::cerr << "cagePrev = " << cagePrev << std::endl;
-				std::cerr << "offset = " << offset << std::endl;
-				std::cerr << std::endl;
-
-				offset = cartCageVertices[i] - cageVertexNormal;
-			}
-		}*/
+		MVector offset = cartCageVertices[i] + cageVertexNormal;
 		compCageVertices[i] = Complex(offset.x, offset.y);
 	}
 
@@ -322,17 +260,20 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 			mCauchyCoordsForInterpolation(i, j) = K;
 		}
 	}
+
+	#ifndef CVX_INTERPOLATION
+
 	//find the coordinates that will give us the new vertices so that the real cage point will look like interpolation
 	//we will do it using cvx
-	MatlabGMMDataExchange::SetEngineDenseMatrix("interpolationCoordinates", mCauchyCoordsForInterpolation);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("toInverse", mCauchyCoordsForInterpolation);//send the matrix to matlab
 	//load the matlab script
-//	int res = MatlabInterface::GetEngine().LoadAndRunScript("%DGP_CODE_DIR%/matlab scripts/interpolatedCauchy.m");
-	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/matlab scripts/interpolatedCauchy.m");
+//	int res = MatlabInterface::GetEngine().LoadAndRunScript("%DGP_CODE_DIR%/matlab scripts/interpolatedCauchy.m"); -----not working
+	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/matlab scripts/inverse.m");
 	if (res != 0) {//error if failed to load file
 		std::cerr << "ERROR: Matlab script 'interpolatedCauchy.m' failed with error code " << res << std::endl;
 	}
-	MatlabGMMDataExchange::GetEngineDenseMatrix("interpolationCoordinates", mCauchyCoordsForInterpolation);//get the incersed matrix from matlab
-	
+	MatlabGMMDataExchange::GetEngineDenseMatrix("toInverse", mCauchyCoordsForInterpolation);//get the incersed matrix from matlab
+	#endif
 	//////////////////////////////////////////////////
 	//calculate Cj(z) the Cauchy-Green complex barycentric coordinates
 	for (iter.reset(); !iter.isDone(); iter.next())
