@@ -124,27 +124,22 @@ global proc createBackgroundImage()
 global proc triangulateCage(int $numVertices)
 {
 	string $selectedNodes[] = `ls -selection -exactType "transform"`;
-	if(size($selectedNodes) != 1 && size($selectedNodes) != 2)
+	if(size($selectedNodes) != 1)
 	{
-		error("Select exactly one or two cages!\n");
+		error("Select exactly one cage!\n");
 	}
+
 	string $returnStr[];
 
 	string $shapes[] = `listRelatives -shapes $selectedNodes[0]`;
+	
 	string $cageShape = $shapes[0];
 
-	string $shapes2[] = `listRelatives -shapes $selectedNodes[1]`;
-	string $cageP2p = $shapes[0];
-	
 	$sourcePlug = ($cageShape + ".instObjGroups[0]");
 	$targetPlug = `connectionInfo -destinationFromSource $sourcePlug`;
 
-	//$sourcePlugp2p = ($cageP2p + ".instObjGroups[1]");
-//	$targetPlugp2p = `connectionInfo -destinationFromSource $sourcePlugp2p`;
-
 	//remove the default (probably Lambert) shader from the cage
 	disconnectAttr  $sourcePlug $targetPlug;
-	//disconnectAttr  $sourcePlugp2p $targetPlugp2p;
 
 	string $meshName = `triangulatePolygon -numWantedVertices $numVertices -subsampleBoundary true $selectedNodes[0]`;
 
@@ -190,15 +185,10 @@ global proc triangulateCage(int $numVertices)
 	string $spaceDeformer = $deformers[0];
 	
 	connectAttr ($cageShape + ".worldMesh[0]") ($spaceDeformer + ".cage");
-	connectAttr ($cageP2p + ".worldMesh[0]") ($spaceDeformer + ".p2pcage");
 
 	setAttr ($cageShape + ".displayBorders") 1;
 	setAttr ($cageShape + ".borderWidth") 14;
 	setAttr ($cageShape + ".vertexSize") 20;
-	
-	setAttr ($cageP2p + ".displayBorders") 0;
-	setAttr ($cageP2p + ".borderWidth") 0;
-	setAttr ($cageP2p + ".vertexSize") 20;
 
 	displayStyle -textured;
 

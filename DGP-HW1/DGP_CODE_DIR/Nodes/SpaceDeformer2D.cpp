@@ -14,7 +14,10 @@ const MTypeId SpaceDeformer2D::mTypeId(0x6723c);
 const MString SpaceDeformer2D::mTypeName("SpaceDeformer2D");
 
 MObject SpaceDeformer2D::mCageAttr;
+MObject SpaceDeformer2D::mCageP2pAttr;
 MObject SpaceDeformer2D::mCoordinateTypeAttr;
+
+
 
 
 
@@ -42,6 +45,11 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(addAttribute(mCageAttr));
 	CHECK_MSTATUS(attributeAffects(mCageAttr, outputGeom));
 
+	MFnTypedAttribute p2pCage;
+	mCageP2pAttr = p2pCage.create("p2pcage", "p2pcage", MFnData::kMesh, MObject::kNullObj, &stat);
+	CHECK_MSTATUS(addAttribute(mCageP2pAttr));
+	CHECK_MSTATUS(attributeAffects(mCageP2pAttr, outputGeom));
+
 	MFnEnumAttribute coordinateTypeAttr;
 	mCoordinateTypeAttr = coordinateTypeAttr.create("coordinateType", "coordinateType", 0, &stat);
 	CHECK_MSTATUS(coordinateTypeAttr.setKeyable(true));
@@ -55,15 +63,28 @@ MStatus SpaceDeformer2D::initialize()
 }
 
 void SpaceDeformer2D::matlabCalcNewVerticesForInterpolation() {
-	MatlabGMMDataExchange::SetEngineDenseMatrix("A", mCauchyCoordsForInterpolation);//send the matrix to matlab
-	MatlabGMMDataExchange::SetEngineDenseMatrix("q", mCageVertices);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("C", mCauchyCoordsOfOriginalCageVertices);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("q", mUserCageVertices);//send the matrix to matlab
 
 	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/matlab scripts/interpolatedCauchy.m");
 	if (res != 0) {//error if failed to load file
 		std::cerr << "ERROR: Matlab script 'interpolatedCauchy.m' failed with error code " << res << std::endl;
 	}
-	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInterpolatedNewVertices_f);//get the incersed matrix from matlab
+	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInterpolationGenCage_f);//get the incersed matrix from matlab
 }
+
+//**************need to calculate mCauchyCoordsOfOriginalP2P (in doSetup function) mUserP2P (in updateCage function or equivalent) , mIncreasedVertecies and mSecondDifOfIncCageVertexCoords
+void SpaceDeformer2D::matlabCalcNewVerticesForP2P() {
+	MatlabGMMDataExchange::SetEngineDenseMatrix("C", mCauchyCoordsOfOriginalP2P);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("q", mUserP2P);//send the matrix to matlab
+
+	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/matlab scripts/P2P.m");
+	if (res != 0) {//error if failed to load file
+		std::cerr << "ERROR: Matlab script 'interpolatedCauchy.m' failed with error code " << res << std::endl;
+	}
+	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mP2PGenCageVertices_f);//get the incersed matrix from matlab
+}
+
 
 MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMatrix& mat, unsigned int multiIndex)
 {
@@ -84,6 +105,18 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 	MFnMesh cageMeshFn(cageMesh, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
 
+	MDataHandle p2phandle = block.inputValue(mCageP2pAttr, &stat);
+	CHECK_MSTATUS_AND_RETURN_IT(stat);
+	if (MS::kSuccess == stat) {
+		std::cerr << "we have p2p!! " << std::endl;
+		cout.flush();
+	}
+/*	MObject p2pMesh = handle.asMesh();
+
+	MFnMesh p2pMeshFn(p2pMesh, &stat);
+	CHECK_MSTATUS_AND_RETURN_IT(stat);
+	*/
+
 	updateCage(cageMeshFn);
 
 	if (mIsFirstTime)
@@ -100,19 +133,21 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 	switch (coordinateType)
 	{
 	case 0://Approximating cage-based complex Cauchy coordinates
-		gmm::mult(mCauchyCoordinates, mCageVertices, mInternalPoints);//multiply cauchy coordinates with the new cage vertices and insert it to the internal points
+		gmm::mult(mCauchyCoordinates, mUserCageVertices, mInternalPoints);//multiply cauchy coordinates with the new cage vertices and insert it to the internal points
 		break;
 	case 1://Interpolating complex Cauchy coordinates
-		#ifdef CVX_INTERPOLATION //calculate using cvx
+#ifdef CVX_INTERPOLATION //calculate using cvx
 		matlabCalcNewVerticesForInterpolation();
-		#else//calculate using the inverse matrix
-		gmm::mult(mCauchyCoordsForInterpolation, mCageVertices, mInterpolatedNewVertices_f);
-		#endif
-		gmm::mult(mCauchyCoordinates, mInterpolatedNewVertices_f, mInternalPoints);//get the new internal points 
+#else//calculate using the inverse matrix
+		gmm::mult(mCauchyCoordsOfOriginalCageVertices, mUserCageVertices, mInterpolationGenCage_f);
+#endif
+		gmm::mult(mCauchyCoordinates, mInterpolationGenCage_f, mInternalPoints);//get the new internal points 
 		break;
 	case 2://Point2Point coordinates
-		MGlobal::displayError("Point 2 Point deformation hasnt been implemented yet .");
-		return MS::kFailure;
+		matlabCalcNewVerticesForP2P();
+		gmm::mult(mCauchyCoordinates, mP2PGenCageVertices_f, mInternalPoints);//get the new internal points 
+
+
 		break;
 	}
 	///////////////////////////////
@@ -155,8 +190,8 @@ MStatus SpaceDeformer2D::updateCage(MFnMesh& cageMeshFn)
 	int numV = vertexIndices.length();
 	assert(numV >= 3);
 
-	gmm::clear(mCageVertices);
-	gmm::resize(mCageVertices, numV, 1);
+	gmm::clear(mUserCageVertices);
+	gmm::resize(mUserCageVertices, numV, 1);
 
 	MPointArray vertexArray;
 	stat = cageMeshFn.getPoints(vertexArray);
@@ -167,18 +202,143 @@ MStatus SpaceDeformer2D::updateCage(MFnMesh& cageMeshFn)
 	{
 		MPoint p = vertexArray[i];
 		Complex c(p[0], p[1]);
-		mCageVertices(i, 0) = c;
+		mUserCageVertices(i, 0) = c;
 	}
 	return MS::kSuccess;
 }
 
+
+//***************fix*********************
+MStatus SpaceDeformer2D::updateControlPoints(MFnMesh& cageMeshFn)
+{
+	MStatus stat;
+
+	int numFaces = cageMeshFn.numPolygons(&stat);
+
+	assert(numFaces == 1);
+
+	MIntArray vertexIndices;
+	cageMeshFn.getPolygonVertices(0, vertexIndices);
+	int numV = vertexIndices.length();
+	assert(numV >= 3);
+
+	gmm::clear(mUserP2P);
+	gmm::resize(mUserP2P, numV, 1);
+
+	MPointArray vertexArray;
+	stat = cageMeshFn.getPoints(vertexArray);
+
+	assert(numV == vertexArray.length());
+
+	for (int i = 0; i < numV; i++)
+	{
+		MPoint p = vertexArray[i];
+		Complex c(p[0], p[1]);
+		mUserP2P(i, 0) = c;
+	}
+	return MS::kSuccess;
+}
+
+void populateC(GMMDenseComplexColMatrix &C, Complex* cage, int n, MPointArray& constraints, int m) {
+	for (int i = 0; i < m; i++) {
+		MPoint pt = constraints[i];
+		Complex z(pt[0], pt[1]); //cage point
+		for (int j = 0; j < n; j++) {
+			Complex K(0.0, 0.0);
+			//update K to be value of the j'th coordinate at the i'th cage point
+			int next = j + 1;
+			int prev = j - 1;
+			if (j == n - 1)
+				next = 0;
+			if (j == 0)
+				prev = n - 1;
+
+			Complex Zj = cage[j];
+			Complex Zjnext = cage[next];
+			Complex Zjprev = cage[prev];
+
+			//the cauchy-green complex barycentric coordinates equesion
+
+			Complex multiplicand1(0, (1 / (-2 * M_PI)));
+			Complex multiplicand2 = ((Zjnext - z) / (Zjnext - Zj))*log((Zjnext - z) / (Zj - z)) -
+				((Zjprev - z) / (Zj - Zjprev))*log((Zj - z) / (Zjprev - z));
+			K = multiplicand1*multiplicand2;
+
+			C(i, j) = K;
+		}
+	}
+}
+
+void populateD(GMMDenseComplexColMatrix &D, Complex* cage, int n, MPointArray& constraints, int m) {
+	for (int i = 0; i < m; i++) {
+		MPoint pt = constraints[i];
+		Complex z(pt[0], pt[1]); //cage point
+		for (int j = 0; j < n; j++) {
+			Complex K(0.0, 0.0);
+			//update K to be value of the j'th coordinate at the i'th cage point
+			int next = j + 1;
+			int prev = j - 1;
+			if (j == n - 1)
+				next = 0;
+			if (j == 0)
+				prev = n - 1;
+
+			Complex Zj = cage[j];
+			Complex Zjnext = cage[next];
+			Complex Zjprev = cage[prev];
+
+			//the cauchy-green complex barycentric coordinates equesion
+			Complex multiplicand1(0, (1 / (-2 * M_PI)));
+			Complex multiplicand2 = (((Complex)1 / ((Zjprev - z)*(Zj - z))) - ((Complex)1 / ((Zj - z)*(Zjnext - z))));
+
+
+			K = multiplicand1*multiplicand2;
+
+			D(i, j) = K;
+		}
+	}
+}
+
+void IncreaseVertecies(MPointArray& OriginalCageVertecies, MPointArray& IncreasedCageVertecies,int numOfIncreasedCageVertecies) {
+	//find the circumference of the cgae polygon
+	double circumference=0;
+	int numOfOriginalVertecies = OriginalCageVertecies.length();
+	for (int i = 0; i < numOfOriginalVertecies; i++) {
+
+		circumference += (OriginalCageVertecies[(i + 1)% numOfOriginalVertecies].distanceTo(OriginalCageVertecies[i]));
+	}
+
+	//find the segment length
+	double segmentLength = circumference / (double)numOfIncreasedCageVertecies;
+
+	for (int i = 0; i < numOfOriginalVertecies; i++) {
+		//insert the original vertex
+		IncreasedCageVertecies.append(OriginalCageVertecies[i]);
+		//find the number of new veritecies per edge
+		double numOfNewVeriteciesPerEdge = round((OriginalCageVertecies[(i + 1) % numOfOriginalVertecies].distanceTo(OriginalCageVertecies[i]))/ segmentLength)-1;
+
+		//create a vect the size of a segment in the edge direction
+		MVector vec = OriginalCageVertecies[(i + 1) % numOfOriginalVertecies] - (OriginalCageVertecies[i]);
+		vec.normalize();
+		vec = vec * (vec.length()/ (numOfNewVeriteciesPerEdge+1));
+
+		//create new points
+		for (int j = 0; j <= numOfNewVeriteciesPerEdge; j++) {
+			IncreasedCageVertecies.append((MPoint)((OriginalCageVertecies[i])+ vec));
+		}
+	}
+
+}
 
 MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 {
 	MStatus stat;
 
 	int m = iter.count(&stat); //num internal points (point of the triangulated cage)
-	int n = mCageVertices.nrows(); //num of cage vertices
+	int n = mUserCageVertices.nrows(); //num of cage vertices
+	int k = mUserP2P.nrows(); //num of control points
+
+
 
 	gmm::clear(mCauchyCoordinates);
 	gmm::resize(mCauchyCoordinates, m, n);
@@ -186,11 +346,11 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 	gmm::clear(mInternalPoints);
 	gmm::resize(mInternalPoints, m, 1);
 
-	gmm::clear(mCauchyCoordsForInterpolation);
-	gmm::resize(mCauchyCoordsForInterpolation, n, n);
+	gmm::clear(mCauchyCoordsOfOriginalCageVertices);
+	gmm::resize(mCauchyCoordsOfOriginalCageVertices, n, n);
 
-	gmm::clear(mInterpolatedNewVertices_f);
-	gmm::resize(mInterpolatedNewVertices_f, n, 1);
+	gmm::clear(mInterpolationGenCage_f);
+	gmm::resize(mInterpolationGenCage_f, n, 1);
 
 	//offset the cage by epsilon in the direction of the normal such that the triangle mesh (the image) is strictly inside the new cage
 	MPointArray cartCageVertices; //cartesian coordinates
@@ -233,91 +393,55 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 	}
 
 	//calculate the interpolation coordinates to find the new vertices
-	for (int i = 0; i < n; i++) {
-		MPoint pt = cartCageVertices[i];
-		Complex z(pt[0], pt[1]); //cage point
-		for (int j = 0; j < n; j++) {
-			Complex K(0.0, 0.0);
-			//update K to be value of the j'th coordinate at the i'th cage point
-			int next = j + 1;
-			int prev = j - 1;
-			if (j == n - 1)
-				next = 0;
-			if (j == 0)
-				prev = n - 1;
 
-			Complex Zj = compCageVertices[j];
-			Complex Zjnext = compCageVertices[next];
-			Complex Zjprev = compCageVertices[prev];
+	populateC(mCauchyCoordsOfOriginalCageVertices, compCageVertices, n, cartCageVertices, n);
 
-			//the cauchy-green complex barycentric coordinates equesion
-
-			Complex multiplicand1(0, (1 / (-2 * M_PI)));
-			Complex multiplicand2 = ((Zjnext - z) / (Zjnext - Zj))*log((Zjnext - z) / (Zj - z)) -
-				((Zjprev - z) / (Zj - Zjprev))*log((Zj - z) / (Zjprev - z));
-			K = multiplicand1*multiplicand2;
-
-			mCauchyCoordsForInterpolation(i, j) = K;
-		}
-	}
-
-	#ifndef CVX_INTERPOLATION
+#ifndef CVX_INTERPOLATION
 
 	//find the coordinates that will give us the new vertices so that the real cage point will look like interpolation
 	//we will do it using cvx
-	MatlabGMMDataExchange::SetEngineDenseMatrix("toInverse", mCauchyCoordsForInterpolation);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("toInverse", mCauchyCoordsOfOriginalCageVertices);//send the matrix to matlab
 	//load the matlab script
 //	int res = MatlabInterface::GetEngine().LoadAndRunScript("%DGP_CODE_DIR%/matlab scripts/interpolatedCauchy.m"); -----not working
 	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/matlab scripts/inverse.m");
 	if (res != 0) {//error if failed to load file
 		std::cerr << "ERROR: Matlab script 'interpolatedCauchy.m' failed with error code " << res << std::endl;
 	}
-	MatlabGMMDataExchange::GetEngineDenseMatrix("toInverse", mCauchyCoordsForInterpolation);//get the incersed matrix from matlab
-	#endif
-	//////////////////////////////////////////////////
+	MatlabGMMDataExchange::GetEngineDenseMatrix("toInverse", mCauchyCoordsOfOriginalCageVertices);//get the incersed matrix from matlab
+#endif
+
+
+
 	//calculate Cj(z) the Cauchy-Green complex barycentric coordinates
+	MPointArray internalPoints;
 	for (iter.reset(); !iter.isDone(); iter.next())
 	{
-		int i = iter.index();
-		MPoint pt = iter.position();
-
-		Complex z(pt[0], pt[1]); //internal point
-
-		mInternalPoints(i, 0) = z;
-
-		//for each  internal point i, we would like to calculat the n Cauchy coordinates (1,2,.....,n)
-		for (int j = 0; j < n; j++)
-		{
-			Complex K(0.0, 0.0);
-
-			///// add your code here //////
-			///////////////////////////////
-			//update K to be value of the j'th coordinate at the i'th internal point
-
-			int next = j + 1;
-			int prev = j - 1;
-			if (j == n - 1)
-				next = 0;
-			if (j == 0)
-				prev = n - 1;
-
-			Complex Zj = compCageVertices[j];
-			Complex Zjnext = compCageVertices[next];
-			Complex Zjprev = compCageVertices[prev];
-
-			//the cauchy-green complex barycentric coordinates equesion
-
-			Complex multiplicand1(0, (1 / (-2 * M_PI)));
-			Complex multiplicand2 = ((Zjnext - z) / (Zjnext - Zj))*log((Zjnext - z) / (Zj - z)) -
-				((Zjprev - z) / (Zj - Zjprev))*log((Zj - z) / (Zjprev - z));
-			K = multiplicand1*multiplicand2;
-
-			///////////////////////////////
-			mCauchyCoordinates(i, j) = K;
-		}
+		internalPoints.append(iter.position());
 	}
+
+	populateC(mCauchyCoordinates, compCageVertices, n, internalPoints, m);
+	
+	//********************************************************************************
+	MPointArray controlPoints;
+
+	for (int i = 0; i < k; i++) {
+		Complex c = mUserP2P(i, 0);
+		MPoint p(c.real(), c.imag());
+		controlPoints.append(p);
+	}
+
+	populateC(mCauchyCoordsOfOriginalP2P, compCageVertices, n, controlPoints, k);
+
+
+
+	IncreaseVertecies(cartCageVertices, mIncreasedVertecies, 500);
+
+	populateD(mSecondDifOfIncCageVertexCoords, compCageVertices, n, mIncreasedVertecies, mIncreasedVertecies.length());
+	//********************************************************************************
 	cout.flush();
 
 	return MS::kSuccess;
 }
+
+
 
