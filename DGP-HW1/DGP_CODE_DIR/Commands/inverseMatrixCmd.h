@@ -11,6 +11,6 @@ public:
 	static void* creator();
 	static MSyntax syntax();
 	static MString commandName();
-	virtual bool isUndoable() const;
+	virtual bool isUndoable(const MArgList & argList) const;
 
 };
