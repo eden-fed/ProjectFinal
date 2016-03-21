@@ -1,5 +1,7 @@
 #pragma once
 
+
+
 class colorMeshVerticesCmd : public MPxCommand
 {
 public:
@@ -11,6 +13,5 @@ public:
 
 private:
 	MStatus ChangeColorByValnce(MFnMesh& meshFn);
-	MStatus ChangeColorByCurvature(MFnMesh& meshFn, double min, double max, bool argumentAccepted = false);
-	bool checkIfColorSetExists(const MFnMesh& meshFn, const MString& colorSetName);
+	MStatus ChangeColorByCurvature(MFnMesh& meshFn, double min, double max);
 };

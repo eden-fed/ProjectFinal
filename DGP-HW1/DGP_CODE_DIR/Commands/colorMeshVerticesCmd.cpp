@@ -15,7 +15,6 @@
 #define minLongName  "-minColor"
 #define maxShortName "-max"
 #define maxLongName  "-maxColor"
-#define PI 3.1416
 #define IS_NOT_SET -1
 
 colorMeshVerticesCmd::colorMeshVerticesCmd()
@@ -75,23 +74,24 @@ MStatus colorMeshVerticesCmd::doIt(const MArgList & argList)
 	MString Curvature = meshFn.createColorSetWithName(CURVATURE_COLOR_SET_NAME, (MDGModifier*)0, &stat);//create a color set for curvature and get string with its name
 	meshFn.setCurrentColorSetName(Curvature);
 
-	if (argData.isFlagSet(minLongName) && argData.isFlagSet(maxLongName)) //check if the user entered min and max values
+	double min= NULL, max=NULL;
+	if (argData.isFlagSet(minLongName)) //check if the user entered min and max values
 	{
 		//check the validity of the arguments
-		double min, max;
 		min = argData.flagArgumentDouble(minLongName, 0, &stat);//Gets the value of the requested flag argument to the given flag as a double.
 		MCHECKERROR(stat, "Can't access min arg");
+	}
+
+	if (argData.isFlagSet(maxLongName)) {
 		max = argData.flagArgumentDouble(maxLongName, 0, &stat);//Gets the value of the requested flag argument to the given flag as a double.
 		MCHECKERROR(stat, "Can't access max arg");
-		if (min > max)
-		{
-			stat = MS::kFailure;
-			MCHECKERROR(stat, "minimum must be below or equal to maximum");
-		}
-		stat = ChangeColorByCurvature(meshFn, min, max, true);//create the color set by curvature with the inserted values
 	}
-	else
-	stat = ChangeColorByCurvature(meshFn, DBL_MAX, -DBL_MAX); //create the color set by curvature with default values
+	if ((min!=NULL) && (max!=NULL) && (min > max))
+	{
+	stat = MS::kFailure;
+	MCHECKERROR(stat, "min can't be higher then max");
+	}
+	stat = ChangeColorByCurvature(meshFn, min, max);//create the color set by curvature with the inserted values
 
 	MCHECKERROR(stat, "failed to create the curvature color set");
 
@@ -182,7 +182,7 @@ MStatus colorMeshVerticesCmd::ChangeColorByValnce(MFnMesh & meshFn)
 	return stat;
 }
 
-MStatus colorMeshVerticesCmd::ChangeColorByCurvature(MFnMesh & meshFn, double min, double max, bool argumentAccepted)
+MStatus colorMeshVerticesCmd::ChangeColorByCurvature(MFnMesh & meshFn, double min, double max)
 {
 
 	MStatus stat = MS::kSuccess;
@@ -235,8 +235,8 @@ MStatus colorMeshVerticesCmd::ChangeColorByCurvature(MFnMesh & meshFn, double mi
 			int vertex2 = (currentIndex + 2) % 3;
 
 			//create two vectors from the vertices to the current vertex
-			MVector vector1 = CrdOfTriangeVertecies[vertex1] - CrdOfTriangeVertecies[currentIndex];
-			MVector vector2 = CrdOfTriangeVertecies[vertex2] - CrdOfTriangeVertecies[currentIndex];
+			MVector vector1 = CrdOfTriangeVertecies[currentIndex] - CrdOfTriangeVertecies[vertex1];
+			MVector vector2 = CrdOfTriangeVertecies[currentIndex] - CrdOfTriangeVertecies[vertex2];
 			vector1.normalize();
 			vector2.normalize();
 			sumOfAngles += acos(vector1*vector2); //theta=arccos(A*B(Cos(theta))), A and B equal 1
@@ -244,28 +244,35 @@ MStatus colorMeshVerticesCmd::ChangeColorByCurvature(MFnMesh & meshFn, double mi
 
 		//check if we are on the boundy of the surface, and compute accordingly
 		if (vertexItr.onBoundary()) {
-			vertexCurvature = PI - sumOfAngles;
+			vertexCurvature = M_PI - sumOfAngles;
 		}
 		else {
-			vertexCurvature = 2.0f * PI - sumOfAngles;
+			vertexCurvature = 2.0f * M_PI - sumOfAngles;
 		}
 		
-		arrCurvaturesOfAllVertecies.append(sumOfAngles); //add the calculated vertex Curvature to the array of Curvatures
+		arrCurvaturesOfAllVertecies.append(vertexCurvature); //add the calculated vertex Curvature to the array of Curvatures
 		arrVertexIDs.append(vertexItr.index()); //add the Id of the vertex with that curve to the array of vertices 
 		vertexItr.next(); //go to the next vertex
 	}
 
-	if (!argumentAccepted) //if we didnt get the min/max arguments, find the min/max values of the angles and coose them.
+	if (min==NULL) //if we didnt get the min/max arguments, find the min/max values of the angles and coose them.
 	{
+		min = DBL_MAX;
 		for (int i = 0; i < arrCurvaturesOfAllVertecies.length(); i++)
 		{
 			if (min>arrCurvaturesOfAllVertecies[i])
 				min = arrCurvaturesOfAllVertecies[i];
-			if (max < arrCurvaturesOfAllVertecies[i]) 
+		}
+	}
+	if (max == NULL) //if we didnt get the min/max arguments, find the min/max values of the angles and coose them.
+	{
+		max = -DBL_MAX;
+		for (int i = 0; i < arrCurvaturesOfAllVertecies.length(); i++)
+		{
+			if (max < arrCurvaturesOfAllVertecies[i])
 				max = arrCurvaturesOfAllVertecies[i];
 		}
 	}
-
 	MColorArray colorOfAllVertices;//array with the veticies colors
 	colorOfAllVertices.clear();	
 
