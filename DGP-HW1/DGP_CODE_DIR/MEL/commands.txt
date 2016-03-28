@@ -1,0 +1,8 @@
+string $code_path = `getenv "DGP_CODE_DIR"`; 
+$source_command = "source \"" + $code_path + "/MEL/DGP.mel" + "\";"; 
+eval $source_command; 
+createBackgroundImage();
+
+CreatePolygonTool;
+
+triangulateCage(5000);

@@ -32,7 +32,7 @@ protected:
 	bool mIsFirstTime;
 
 	GMMDenseComplexColMatrix mUserCageVertices; //this matrix is actually a column vector. dimensions are: n x 1
-	GMMDenseComplexColMatrix mCauchyCoordinates; //this matrix is actually a column vector. dimensions are: m x n
+	GMMDenseComplexColMatrix mCauchyCoordinates; //dimensions are: m x n
 	GMMDenseComplexColMatrix mInternalPoints; //this matrix is actually a column vector. dimensions are: m x 1
 
 	GMMDenseComplexColMatrix mCauchyCoordsOfOriginalCageVertices; //dimensions are: n x n
@@ -43,7 +43,7 @@ protected:
 	GMMDenseComplexColMatrix mP2PGenCageVertices_f; //dimensions are: n x 1
 
 	MPointArray mIncreasedVertecies; //dimensions are: l x 1
-	GMMDenseComplexColMatrix mSecondDifOfIncCageVertexCoords; //dimensions are: l x n
+	GMMDenseComplexColMatrix mSecondDerOfIncCageVertexCoords; //dimensions are: l x n
 
 private:
 	void matlabCalcNewVerticesForInterpolation();

@@ -10,6 +10,9 @@
 #define EPS 0.001
 #define CVX_INTERPOLATION 
 
+#define IN
+#define OUT
+
 const MTypeId SpaceDeformer2D::mTypeId(0x6723c);
 const MString SpaceDeformer2D::mTypeName("SpaceDeformer2D");
 
@@ -73,10 +76,11 @@ void SpaceDeformer2D::matlabCalcNewVerticesForInterpolation() {
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInterpolationGenCage_f);//get the incersed matrix from matlab
 }
 
-//**************need to calculate mCauchyCoordsOfOriginalP2P (in doSetup function) mUserP2P (in updateCage function or equivalent) , mIncreasedVertecies and mSecondDifOfIncCageVertexCoords
 void SpaceDeformer2D::matlabCalcNewVerticesForP2P() {
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C", mCauchyCoordsOfOriginalP2P);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("q", mUserP2P);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("D", mSecondDerOfIncCageVertexCoords);//send the matrix to matlab
+
 
 	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/matlab scripts/P2P.m");
 	if (res != 0) {//error if failed to load file
@@ -107,17 +111,13 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 
 	MDataHandle p2phandle = block.inputValue(mCageP2pAttr, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
-	if (MS::kSuccess == stat) {
-		std::cerr << "we have p2p!! " << std::endl;
-		cout.flush();
-	}
-/*	MObject p2pMesh = handle.asMesh();
+	MObject p2pMesh = handle.asMesh();
 
 	MFnMesh p2pMeshFn(p2pMesh, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
-	*/
-
-	updateCage(cageMeshFn);
+	
+	updateCage(cageMeshFn);//populates mUserCageVertices
+	updateControlPoints(p2pMeshFn);//populates mUserP2P
 
 	if (mIsFirstTime)
 	{
@@ -208,7 +208,6 @@ MStatus SpaceDeformer2D::updateCage(MFnMesh& cageMeshFn)
 }
 
 
-//***************fix*********************
 MStatus SpaceDeformer2D::updateControlPoints(MFnMesh& cageMeshFn)
 {
 	MStatus stat;
@@ -220,7 +219,7 @@ MStatus SpaceDeformer2D::updateControlPoints(MFnMesh& cageMeshFn)
 	MIntArray vertexIndices;
 	cageMeshFn.getPolygonVertices(0, vertexIndices);
 	int numV = vertexIndices.length();
-	assert(numV >= 3);
+//	assert(numV >= 3);
 
 	gmm::clear(mUserP2P);
 	gmm::resize(mUserP2P, numV, 1);
@@ -434,9 +433,13 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 
 
 
-	IncreaseVertecies(cartCageVertices, mIncreasedVertecies, 500);
+	IncreaseVertecies(IN cartCageVertices, OUT mIncreasedVertecies, 500);
 
-	populateD(mSecondDifOfIncCageVertexCoords, compCageVertices, n, mIncreasedVertecies, mIncreasedVertecies.length());
+	int l = mIncreasedVertecies.length();
+	gmm::clear(mSecondDerOfIncCageVertexCoords);
+	gmm::resize(mSecondDerOfIncCageVertexCoords, l, n);
+
+	populateD(OUT mSecondDerOfIncCageVertexCoords, compCageVertices, n, mIncreasedVertecies, l);
 	//********************************************************************************
 	cout.flush();
 

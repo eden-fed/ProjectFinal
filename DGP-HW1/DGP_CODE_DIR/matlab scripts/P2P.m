@@ -1,7 +1,7 @@
 n=size(C,2); %row length
-l=length(increasedVertecies);
-D=ones(l,n);
- 
+
+%l=length(increasedVertecies);
+%D=ones(l,n);
 %iterate over vector increasedVertecies
 % i=0;
 % for z = increasedVertecies
