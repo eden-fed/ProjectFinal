@@ -57,16 +57,16 @@ bool inverseMatrixCmd::isUndoable(const MArgList & argList) const
 	MatlabGMMDataExchange::SetEngineDenseMatrix("matToInverse", matToInverse);//send the matrix to matlab
 
 	//load the issingular script
-	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/Ben-PC/Documents/MySWprojects/DGP/DGP-Ben/matlab scripts/isSingular.m");
+	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/eden/Documents/MySWProjects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/matlab scripts/isSingular.m");
 	if (res != 0) {//error if failed to load file
-		std::cerr << "ERROR: Matlab script 'inverse.m' failed with error code " << res << std::endl;
+		std::cerr << "ERROR: Matlab script 'is singular.m' failed with error code " << res << std::endl;
 	}
 
 	std::cerr << "before singularity check " << matToInverse << std::endl;
 
 	MatlabGMMDataExchange::GetEngineDenseMatrix("isInvertable", isInvertable);//get the incersed matrix from matlab
 
-	std::cerr << "after singularity check " << isInvertable << std::endl;
+	std::cerr << "result of singularity check " << isInvertable << std::endl;
 	cout.flush();
 
 	if (isInvertable(0,0)==0)
@@ -102,18 +102,17 @@ MStatus inverseMatrixCmd::doIt(const MArgList & argList)
 		MCHECKERROR(stat, "Can't access object list");
 	}
 
-	MatlabGMMDataExchange::SetEngineDenseMatrix("matToInverse", matToInverse);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("toInverse", matToInverse);//send the matrix to matlab
 
 	//load the inverse script
-	//int res = MatlabInterface::GetEngine().LoadAndRunScript("%DGP_CODE_DIR%/matlab scripts/inverse.m");
-	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/Ben-PC/Documents/MySWprojects/DGP/DGP-Ben/matlab scripts/inverse.m");
+	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/eden/Documents/MySWProjects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/matlab scripts/inverse.m");
 	if (res != 0) {//error if failed to load file
 		std::cerr << "ERROR: Matlab script 'inverse.m' failed with error code " << res << std::endl;
 	}
 
 	std::cerr << "before inverse " << matToInverse << std::endl;
 
-	MatlabGMMDataExchange::GetEngineDenseMatrix("inversedMat", inveresedMat);//get the incersed matrix from matlab
+	MatlabGMMDataExchange::GetEngineDenseMatrix("toInverse", inveresedMat);//get the incersed matrix from matlab
 	
 	//std::cout <<"after inverse " << mToInverse << std::endl;
 	std::cerr << "after inverse " << inveresedMat << std::endl;
