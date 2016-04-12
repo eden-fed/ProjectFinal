@@ -100,7 +100,7 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 	float env = envData.asFloat();
 
 	MDataHandle coordHandle = block.inputValue(mCoordinateTypeAttr, &stat);
-	short coordinateType = coordHandle.asShort();
+	long coordinateType = coordHandle.asLong();
 
 	MDataHandle handle = block.inputValue(mCageAttr, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
@@ -111,7 +111,7 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 
 	MDataHandle p2phandle = block.inputValue(mCageP2pAttr, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
-	MObject p2pMesh = handle.asMesh();
+	MObject p2pMesh = p2phandle.asMesh();
 
 	MFnMesh p2pMeshFn(p2pMesh, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
@@ -350,6 +350,9 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 
 	gmm::clear(mInterpolationGenCage_f);
 	gmm::resize(mInterpolationGenCage_f, n, 1);
+
+	gmm::clear(mCauchyCoordsOfOriginalP2P);
+	gmm::resize(mCauchyCoordsOfOriginalP2P, k, n);
 
 	//offset the cage by epsilon in the direction of the normal such that the triangle mesh (the image) is strictly inside the new cage
 	MPointArray cartCageVertices; //cartesian coordinates
