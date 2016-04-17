@@ -48,5 +48,6 @@ protected:
 private:
 	void matlabCalcNewVerticesForInterpolation();
 	void matlabCalcNewVerticesForP2P();
+	std::string RelativeToFullPath(char* relPath);
 
 };

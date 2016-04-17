@@ -70,7 +70,8 @@ void SpaceDeformer2D::matlabCalcNewVerticesForInterpolation() {
 	MatlabGMMDataExchange::SetEngineDenseMatrix("q", mUserCageVertices);//send the matrix to matlab
 
 //	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/eden/Documents/MySWProjects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/interpolatedCauchy.m");
-	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/matlab scripts/interpolatedCauchy.m");
+	
+	int res = MatlabInterface::GetEngine().LoadAndRunScript(RelativeToFullPath("\\matlab scripts\\interpolatedCauchy.m").c_str());
 	if (res != 0) {//error if failed to load file
 		std::cerr << "ERROR: Matlab script 'interpolatedCauchy.m' failed with error code " << res << std::endl;
 	}
@@ -81,8 +82,8 @@ void SpaceDeformer2D::matlabCalcNewVerticesForP2P() {
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C", mCauchyCoordsOfOriginalP2P);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("q", mUserP2P);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("D", mSecondDerOfIncCageVertexCoords);//send the matrix to matlab
-
-	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/matlab scripts/P2P.m");
+	
+	int res = MatlabInterface::GetEngine().LoadAndRunScript(RelativeToFullPath("\\matlab scripts\\P2P.m").c_str());
 	//int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/eden/Documents/MySWProjects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/matlab scripts/P2P.m");
 	if (res != 0) {//error if failed to load file
 		std::cerr << "ERROR: Matlab script 'interpolatedCauchy.m' failed with error code " << res << std::endl;
@@ -90,9 +91,27 @@ void SpaceDeformer2D::matlabCalcNewVerticesForP2P() {
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mP2PGenCageVertices_f);//get the incersed matrix from matlab
 }
 
+std::string SpaceDeformer2D::RelativeToFullPath(char* relPath) {
+	//please enter path like this "\\matlab scripts\\inverse.m"
+	char *libvar;
+	libvar = getenv("DGP_CODE_DIR");
+	std::string str1(libvar);
+	std::string str2(relPath);
+	return str1 + str2;
+}
 
 MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMatrix& mat, unsigned int multiIndex)
 {
+
+	/* Get the value of the LIB environment variable. */
+	/*char *libvar;
+	libvar = getenv("DGP_CODE_DIR");
+	std::string str(libvar);
+	std::cerr << "good directory" << str +"\\matlab scripts\\inverse.m";*/
+
+
+
+	//*******************************************************************************
 	MStatus stat;
 
 	MDataHandle envData = block.inputValue(envelope, &stat);
@@ -406,7 +425,8 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 	MatlabGMMDataExchange::SetEngineDenseMatrix("toInverse", mCauchyCoordsOfOriginalCageVertices);//send the matrix to matlab
 	//load the matlab script
 //	int res = MatlabInterface::GetEngine().LoadAndRunScript("%DGP_CODE_DIR%/matlab scripts/interpolatedCauchy.m"); -----not working
-	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/matlab scripts/inverse.m");
+	
+	int res = MatlabInterface::GetEngine().LoadAndRunScript(RelativeToFullPath("\\matlab scripts\\inverse.m").c_str());
 	if (res != 0) {//error if failed to load file
 		std::cerr << "ERROR: Matlab script 'interpolatedCauchy.m' failed with error code " << res << std::endl;
 	}
