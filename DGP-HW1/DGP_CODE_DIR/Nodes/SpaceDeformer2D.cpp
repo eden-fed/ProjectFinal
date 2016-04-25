@@ -19,6 +19,7 @@ const MString SpaceDeformer2D::mTypeName("SpaceDeformer2D");
 MObject SpaceDeformer2D::mCageAttr;
 MObject SpaceDeformer2D::mCageP2pAttr;
 MObject SpaceDeformer2D::mCoordinateTypeAttr;
+MObject SpaceDeformer2D::mNumOfSegmentsAttr;
 
 
 
@@ -61,6 +62,13 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Cauchy Interpolation", 1));
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Point to point", 2));
 	CHECK_MSTATUS(attributeAffects(mCoordinateTypeAttr, outputGeom));
+
+	MFnNumericAttribute numOfSegmentsAttr;
+	mNumOfSegmentsAttr = numOfSegmentsAttr.create("numOfSegments", "numOfSegments", MFnNumericData::kInt, 1000, &stat);
+	CHECK_MSTATUS(numOfSegmentsAttr.setKeyable(true));
+	CHECK_MSTATUS(addAttribute(mNumOfSegmentsAttr));
+	CHECK_MSTATUS(attributeAffects(mNumOfSegmentsAttr, outputGeom));
+
 
 	return MStatus::kSuccess;
 }
@@ -121,6 +129,9 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 
 	MDataHandle coordHandle = block.inputValue(mCoordinateTypeAttr, &stat);
 	long coordinateType = coordHandle.asLong();
+
+	MDataHandle segHandle = block.inputValue(mNumOfSegmentsAttr, &stat);
+	mNumOfSegments = segHandle.asInt();
 
 	MDataHandle handle = block.inputValue(mCageAttr, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
@@ -457,7 +468,7 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 
 
 
-	IncreaseVertecies(IN cartCageVertices, OUT mIncreasedVertecies, 500);
+	IncreaseVertecies(IN cartCageVertices, OUT mIncreasedVertecies, mNumOfSegments);
 
 	int l = mIncreasedVertecies.length();
 	gmm::clear(mSecondDerOfIncCageVertexCoords);
