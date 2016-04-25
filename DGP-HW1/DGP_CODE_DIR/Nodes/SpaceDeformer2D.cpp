@@ -13,6 +13,8 @@
 #define IN
 #define OUT
 
+#define NUM_OF_POLYGONS 1
+
 const MTypeId SpaceDeformer2D::mTypeId(0x6723c);
 const MString SpaceDeformer2D::mTypeName("SpaceDeformer2D");
 
@@ -64,7 +66,7 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(attributeAffects(mCoordinateTypeAttr, outputGeom));
 
 	MFnNumericAttribute numOfSegmentsAttr;
-	mNumOfSegmentsAttr = numOfSegmentsAttr.create("numOfSegments", "numOfSegments", MFnNumericData::kInt, 1000, &stat);
+	mNumOfSegmentsAttr = numOfSegmentsAttr.create("numOfSegments", "numOfSegments", MFnNumericData::kInt, 500, &stat);
 	CHECK_MSTATUS(numOfSegmentsAttr.setKeyable(true));
 	CHECK_MSTATUS(addAttribute(mNumOfSegmentsAttr));
 	CHECK_MSTATUS(attributeAffects(mNumOfSegmentsAttr, outputGeom));
@@ -99,6 +101,38 @@ void SpaceDeformer2D::matlabCalcNewVerticesForP2P() {
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mP2PGenCageVertices_f);//get the incersed matrix from matlab
 }
 
+
+void IncreaseVertecies(IN MPointArray& OriginalCageVertecies,OUT MPointArray& IncreasedCageVertecies,IN int numOfIncreasedCageVertecies) {
+	//find the circumference of the cgae polygon
+	double circumference = 0;
+	int numOfOriginalVertecies = OriginalCageVertecies.length();
+	for (int i = 0; i < numOfOriginalVertecies; i++) {
+
+		circumference += (OriginalCageVertecies[(i + 1) % numOfOriginalVertecies].distanceTo(OriginalCageVertecies[i]));
+	}
+
+	//find the segment length
+	double segmentLength = circumference / (double)numOfIncreasedCageVertecies;
+
+	for (int i = 0; i < numOfOriginalVertecies; i++) {
+		//insert the original vertex
+		IncreasedCageVertecies.append(OriginalCageVertecies[i]);
+		//find the number of new veritecies per edge
+		double numOfNewVeriteciesPerEdge = round((OriginalCageVertecies[(i + 1) % numOfOriginalVertecies].distanceTo(OriginalCageVertecies[i])) / segmentLength) - 1;
+
+		//create a vect the size of a segment in the edge direction
+		MVector vec = OriginalCageVertecies[(i + 1) % numOfOriginalVertecies] - (OriginalCageVertecies[i]);
+		vec.normalize();
+		vec = vec * (vec.length() / (numOfNewVeriteciesPerEdge + 1));
+
+		//create new points
+		for (int j = 0; j <= numOfNewVeriteciesPerEdge; j++) {
+			IncreasedCageVertecies.append((MPoint)((OriginalCageVertecies[i]) + vec));
+		}
+	}
+
+}
+
 std::string SpaceDeformer2D::RelativeToFullPath(char* relPath) {
 	//please enter path like this "\\matlab scripts\\inverse.m"
 	char *libvar;
@@ -111,15 +145,6 @@ std::string SpaceDeformer2D::RelativeToFullPath(char* relPath) {
 MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMatrix& mat, unsigned int multiIndex)
 {
 
-	/* Get the value of the LIB environment variable. */
-	/*char *libvar;
-	libvar = getenv("DGP_CODE_DIR");
-	std::string str(libvar);
-	std::cerr << "good directory" << str +"\\matlab scripts\\inverse.m";*/
-
-
-
-	//*******************************************************************************
 	MStatus stat;
 
 	MDataHandle envData = block.inputValue(envelope, &stat);
@@ -146,7 +171,24 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 
 	MFnMesh p2pMeshFn(p2pMesh, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
-	
+
+	MPointArray originalCage, increasedCage;
+	cageMeshFn.getPoints(originalCage);
+
+	IncreaseVertecies(originalCage, increasedCage, mNumOfSegments);
+
+	int increasedCageLength = increasedCage.length();
+
+	MIntArray increasedCageConnectivity(increasedCageLength,0);
+	for (int i = 1; i < increasedCageLength; i++) {
+		increasedCageConnectivity[i] = i;
+	}
+
+	MFnMesh increasedMesh;
+	increasedMesh.create(increasedCageLength, NUM_OF_POLYGONS, increasedCage, increasedCageLength, increasedCageConnectivity);
+
+	int meshLengthAfter = cageMeshFn.numVertices();
+
 	updateCage(cageMeshFn);//populates mUserCageVertices
 	updateControlPoints(p2pMeshFn);//populates mUserP2P
 
@@ -329,36 +371,6 @@ void populateD(GMMDenseComplexColMatrix &D, Complex* cage, int n, MPointArray& c
 	}
 }
 
-void IncreaseVertecies(MPointArray& OriginalCageVertecies, MPointArray& IncreasedCageVertecies,int numOfIncreasedCageVertecies) {
-	//find the circumference of the cgae polygon
-	double circumference=0;
-	int numOfOriginalVertecies = OriginalCageVertecies.length();
-	for (int i = 0; i < numOfOriginalVertecies; i++) {
-
-		circumference += (OriginalCageVertecies[(i + 1)% numOfOriginalVertecies].distanceTo(OriginalCageVertecies[i]));
-	}
-
-	//find the segment length
-	double segmentLength = circumference / (double)numOfIncreasedCageVertecies;
-
-	for (int i = 0; i < numOfOriginalVertecies; i++) {
-		//insert the original vertex
-		IncreasedCageVertecies.append(OriginalCageVertecies[i]);
-		//find the number of new veritecies per edge
-		double numOfNewVeriteciesPerEdge = round((OriginalCageVertecies[(i + 1) % numOfOriginalVertecies].distanceTo(OriginalCageVertecies[i]))/ segmentLength)-1;
-
-		//create a vect the size of a segment in the edge direction
-		MVector vec = OriginalCageVertecies[(i + 1) % numOfOriginalVertecies] - (OriginalCageVertecies[i]);
-		vec.normalize();
-		vec = vec * (vec.length()/ (numOfNewVeriteciesPerEdge+1));
-
-		//create new points
-		for (int j = 0; j <= numOfNewVeriteciesPerEdge; j++) {
-			IncreasedCageVertecies.append((MPoint)((OriginalCageVertecies[i])+ vec));
-		}
-	}
-
-}
 
 MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 {
@@ -468,7 +480,7 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 
 
 
-	IncreaseVertecies(IN cartCageVertices, OUT mIncreasedVertecies, mNumOfSegments);
+	IncreaseVertecies(IN cartCageVertices, OUT mIncreasedVertecies,IN mNumOfSegments);
 
 	int l = mIncreasedVertecies.length();
 	gmm::clear(mSecondDerOfIncCageVertexCoords);
