@@ -66,12 +66,16 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(attributeAffects(mCoordinateTypeAttr, outputGeom));
 
 	MFnNumericAttribute numOfSegmentsAttr;
-	mNumOfSegmentsAttr = numOfSegmentsAttr.create("numOfSegments", "numOfSegments", MFnNumericData::kInt, 500, &stat);
+	mNumOfSegmentsAttr = numOfSegmentsAttr.create("numOfSegments(setA)", "numOfSegments(setA)", MFnNumericData::kInt, 500, &stat);
 	CHECK_MSTATUS(numOfSegmentsAttr.setKeyable(true));
 	CHECK_MSTATUS(addAttribute(mNumOfSegmentsAttr));
 	CHECK_MSTATUS(attributeAffects(mNumOfSegmentsAttr, outputGeom));
 
-
+	MFnNumericAttribute numOfInitialSegmentsAttr;
+	mNumOfInitialSegmentsAttr = numOfInitialSegmentsAttr.create("numOfInitialSegments(n)", "numOfInitialSegments(n)", MFnNumericData::kInt, 50, &stat);
+	CHECK_MSTATUS(numOfInitialSegmentsAttr.setKeyable(true));
+	CHECK_MSTATUS(addAttribute(mNumOfInitialSegmentsAttr));
+	CHECK_MSTATUS(attributeAffects(mNumOfInitialSegmentsAttr, outputGeom));
 	return MStatus::kSuccess;
 }
 
@@ -155,8 +159,11 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 	MDataHandle coordHandle = block.inputValue(mCoordinateTypeAttr, &stat);
 	long coordinateType = coordHandle.asLong();
 
-	MDataHandle segHandle = block.inputValue(mNumOfSegmentsAttr, &stat);
-	mNumOfSegments = segHandle.asInt();
+	MDataHandle segHandleA = block.inputValue(mNumOfSegmentsAttr, &stat);
+	mNumOfSegmentsA = segHandleA.asInt();
+
+	MDataHandle segHandleN = block.inputValue(mNumOfInitialSegmentsAttr, &stat);
+	mNumOfInitialSegmentsN = segHandleN.asInt();
 
 	MDataHandle handle = block.inputValue(mCageAttr, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
@@ -175,7 +182,7 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 	MPointArray originalCage, increasedCage;
 	cageMeshFn.getPoints(originalCage);
 
-	IncreaseVertecies(originalCage, increasedCage, mNumOfSegments);
+	IncreaseVertecies(originalCage, increasedCage, mNumOfInitialSegmentsN);
 
 	int increasedCageLength = increasedCage.length();
 
@@ -480,7 +487,7 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 
 
 
-	IncreaseVertecies(IN cartCageVertices, OUT mIncreasedVertecies,IN mNumOfSegments);
+	IncreaseVertecies(IN cartCageVertices, OUT mIncreasedVertecies,IN mNumOfSegmentsA);
 
 	int l = mIncreasedVertecies.length();
 	gmm::clear(mSecondDerOfIncCageVertexCoords);

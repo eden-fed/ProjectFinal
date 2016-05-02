@@ -28,11 +28,13 @@ protected:
 	static MObject mCageP2pAttr;
 	static MObject mCoordinateTypeAttr;
 	static MObject mNumOfSegmentsAttr;
+	static MObject mNumOfInitialSegmentsAttr;
 
 
 protected:
 	bool mIsFirstTime;
-	int mNumOfSegments;
+	int mNumOfSegmentsA;
+	int mNumOfInitialSegmentsN;
 
 	GMMDenseComplexColMatrix mUserCageVertices; //this matrix is actually a column vector. dimensions are: n x 1
 	GMMDenseComplexColMatrix mCauchyCoordinates; //dimensions are: m x n
