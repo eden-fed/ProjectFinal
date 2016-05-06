@@ -20,7 +20,10 @@ MObject SpaceDeformer2D::mCageAttr;
 MObject SpaceDeformer2D::mCageP2pAttr;
 MObject SpaceDeformer2D::mCoordinateTypeAttr;
 MObject SpaceDeformer2D::mNumOfSegmentsAttr;
-
+MObject SpaceDeformer2D::mNlargeAttr;
+MObject SpaceDeformer2D::mkAttr;
+MObject SpaceDeformer2D::mSigmaaAttr;
+MObject SpaceDeformer2D::msigmabAttr;
 
 
 
@@ -61,14 +64,38 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Cauchy", 0));
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Cauchy Interpolation", 1));
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Point to point", 2));
+	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection H Space", 3));
 	CHECK_MSTATUS(attributeAffects(mCoordinateTypeAttr, outputGeom));
 
 	MFnNumericAttribute numOfSegmentsAttr;
-	mNumOfSegmentsAttr = numOfSegmentsAttr.create("numOfSegments", "numOfSegments", MFnNumericData::kInt, 500, &stat);
+	mNumOfSegmentsAttr = numOfSegmentsAttr.create("numOfSegmentsA", "numOfSegmentsA", MFnNumericData::kInt, 500, &stat);
 	CHECK_MSTATUS(numOfSegmentsAttr.setKeyable(true));
 	CHECK_MSTATUS(addAttribute(mNumOfSegmentsAttr));
 	CHECK_MSTATUS(attributeAffects(mNumOfSegmentsAttr, outputGeom));
 
+	MFnNumericAttribute nLargeAttr;
+	mNlargeAttr = nLargeAttr.create("numOfSegmentsN", "nLarge", MFnNumericData::kInt, 50, &stat);
+	CHECK_MSTATUS(nLargeAttr.setKeyable(true));
+	CHECK_MSTATUS(addAttribute(mNlargeAttr));
+	CHECK_MSTATUS(attributeAffects(mNlargeAttr, outputGeom));
+
+	MFnNumericAttribute kAttr;
+	mkAttr = kAttr.create("k", "k", MFnNumericData::kDouble, 0.6, &stat);
+	CHECK_MSTATUS(kAttr.setKeyable(true));
+	CHECK_MSTATUS(addAttribute(mkAttr));
+	CHECK_MSTATUS(attributeAffects(mkAttr, outputGeom));
+
+	MFnNumericAttribute sigmaaAttr;
+	mSigmaaAttr = sigmaaAttr.create("Sigma(a)", "Sigma(a)", MFnNumericData::kDouble, 2, &stat);
+	CHECK_MSTATUS(sigmaaAttr.setKeyable(true));
+	CHECK_MSTATUS(addAttribute(mSigmaaAttr));
+	CHECK_MSTATUS(attributeAffects(mSigmaaAttr, outputGeom));
+
+	MFnNumericAttribute sigmabAttr;
+	msigmabAttr = sigmabAttr.create("sigma(b)", "sigma(b)", MFnNumericData::kDouble, 0.5, &stat);
+	CHECK_MSTATUS(sigmabAttr.setKeyable(true));
+	CHECK_MSTATUS(addAttribute(msigmabAttr));
+	CHECK_MSTATUS(attributeAffects(msigmabAttr, outputGeom));
 
 	return MStatus::kSuccess;
 }
@@ -92,11 +119,30 @@ void SpaceDeformer2D::matlabCalcNewVerticesForP2P() {
 	MatlabGMMDataExchange::SetEngineDenseMatrix("D", mSecondDerOfIncCageVertexCoords);//send the matrix to matlab
 	
 	int res = MatlabInterface::GetEngine().LoadAndRunScript(RelativeToFullPath("\\matlab scripts\\P2P.m").c_str());
-	//int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/eden/Documents/MySWProjects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/matlab scripts/P2P.m");
 	if (res != 0) {//error if failed to load file
-		std::cerr << "ERROR: Matlab script 'interpolatedCauchy.m' failed with error code " << res << std::endl;
+		std::cerr << "ERROR: Matlab script 'P2P.m' failed with error code " << res << std::endl;
 	}
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mP2PGenCageVertices_f);//get the incersed matrix from matlab
+}
+GMMDenseColMatrix doubleToGmmMat(const double value)
+{
+	GMMDenseColMatrix retVal(1, 1);
+	retVal(0, 0) = value;
+	return retVal;
+}
+
+void SpaceDeformer2D::matlabCalcLforHprojection()
+{
+	MatlabGMMDataExchange::SetEngineDenseMatrix("Ctag", mFirstDerOfIncCageVertexCoords);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("k", doubleToGmmMat(this->k));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("Sigma", doubleToGmmMat(this->SigmaA));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("sigma", doubleToGmmMat(this->sigmaB));//send the matrix to matlab
+
+	int res = MatlabInterface::GetEngine().LoadAndRunScript(RelativeToFullPath("\\matlab scripts\\projectToH.m").c_str());
+	if (res != 0) {//error if failed to load file
+		std::cerr << "ERROR: Matlab script 'projectToH.m' failed with error code " << res << std::endl;
+	}
+
 }
 
 std::string SpaceDeformer2D::RelativeToFullPath(char* relPath) {
@@ -107,48 +153,54 @@ std::string SpaceDeformer2D::RelativeToFullPath(char* relPath) {
 	std::string str2(relPath);
 	return str1 + str2;
 }
-
-MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMatrix& mat, unsigned int multiIndex)
-{
-
-	/* Get the value of the LIB environment variable. */
-	/*char *libvar;
-	libvar = getenv("DGP_CODE_DIR");
-	std::string str(libvar);
-	std::cerr << "good directory" << str +"\\matlab scripts\\inverse.m";*/
-
-
-
-	//*******************************************************************************
+MStatus SpaceDeformer2D::getData(IN MDataBlock& block,OUT MObject& cageMesh,OUT MObject& p2pMesh) {
 	MStatus stat;
 
 	MDataHandle envData = block.inputValue(envelope, &stat);
 	if (MS::kSuccess != stat) return stat;
 
-	float env = envData.asFloat();
+	env = envData.asFloat();
 
 	MDataHandle coordHandle = block.inputValue(mCoordinateTypeAttr, &stat);
-	long coordinateType = coordHandle.asLong();
+	coordinateType = coordHandle.asLong();
 
-	MDataHandle segHandle = block.inputValue(mNumOfSegmentsAttr, &stat);
-	int newValue = segHandle.asInt();//now we cant really change the num of segments because it is in doSetup
-	/*trying to fix it- if the attribute changed -> call doSetup , 
-	  did not worked because the cage and the control poins are in different positions
-	if (newValue != mNumOfSegments) { 
-		mIsFirstTime = true;
-	}*/
-	mNumOfSegments = newValue;
+	MDataHandle segAHandle = block.inputValue(mNumOfSegmentsAttr, &stat);
+	mNumOfSegmentsA = segAHandle.asInt();//we can only change this value in the first time (doSetup)
 
+	MDataHandle segNHandle = block.inputValue(mNlargeAttr, &stat);
+	mNLarge = segNHandle.asInt();//we can only change this value in the first time (doSetup)
+
+	MDataHandle kHandle = block.inputValue(mkAttr, &stat);
+	k = kHandle.asDouble();
+
+	MDataHandle sigmaAHandle = block.inputValue(mSigmaaAttr, &stat);
+	SigmaA = sigmaAHandle.asDouble();
+
+	MDataHandle sigmaBHandle = block.inputValue(msigmabAttr, &stat);
+	sigmaB = sigmaBHandle.asDouble();
+	
 	MDataHandle handle = block.inputValue(mCageAttr, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
-	MObject cageMesh = handle.asMesh();
-
-	MFnMesh cageMeshFn(cageMesh, &stat);
-	CHECK_MSTATUS_AND_RETURN_IT(stat);
+	cageMesh = handle.asMesh();
 
 	MDataHandle p2phandle = block.inputValue(mCageP2pAttr, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
-	MObject p2pMesh = p2phandle.asMesh();
+	p2pMesh = p2phandle.asMesh();
+
+	return stat;
+}
+
+
+MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMatrix& mat, unsigned int multiIndex)
+{
+	MStatus stat;
+	MObject cageMesh;
+	MObject p2pMesh;
+	stat = getData(block, cageMesh, p2pMesh);
+	MCHECKERROR(stat, "couls not get the data block");
+
+	MFnMesh cageMeshFn(cageMesh, &stat);
+	CHECK_MSTATUS_AND_RETURN_IT(stat);
 
 	MFnMesh p2pMeshFn(p2pMesh, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
@@ -163,8 +215,6 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 		mIsFirstTime = false;
 	}
 
-	///// add your code here //////
-	///////////////////////////////
 	//compute the deformation of all the internal points. This is done by simply multiplying the coordinate matrix by the cage vertices vector
 	MatlabInterface::GetEngine().Eval("clear");
 	switch (coordinateType)
@@ -183,7 +233,9 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 	case 2://Point2Point coordinates
 		matlabCalcNewVerticesForP2P();
 		gmm::mult(mCauchyCoordinatesIncForP2P, mP2PGenCageVertices_f, mInternalPoints);//get the new internal points 
-
+		break;
+	case 3:
+		matlabCalcLforHprojection();
 		break;
 	}
 	///////////////////////////////
@@ -325,6 +377,37 @@ void populateD(GMMDenseComplexColMatrix &D, Complex* cage, int n, MPointArray& c
 			//the cauchy-green complex barycentric coordinates equesion
 			Complex multiplicand1(0, (1 / (-2 * M_PI)));
 			Complex multiplicand2 = (((Complex)1 / ((Zjprev - z)*(Zj - z))) - ((Complex)1 / ((Zj - z)*(Zjnext - z))));
+
+
+			K = multiplicand1*multiplicand2;
+
+			D(i, j) = K;
+		}
+	}
+}
+
+void populateCtag(GMMDenseComplexColMatrix &D, Complex* cage, int n, MPointArray& constraints, int m) {
+	for (int i = 0; i < m; i++) {
+		MPoint pt = constraints[i];
+		Complex z(pt[0], pt[1]); //cage point
+		for (int j = 0; j < n; j++) {
+			Complex K(0.0, 0.0);
+			//update K to be value of the j'th coordinate at the i'th cage point
+			int next = j + 1;
+			int prev = j - 1;
+			if (j == n - 1)
+				next = 0;
+			if (j == 0)
+				prev = n - 1;
+
+			Complex Zj = cage[j];
+			Complex Zjnext = cage[next];
+			Complex Zjprev = cage[prev];
+
+			//the cauchy-green complex barycentric coordinates equesion
+			Complex multiplicand1(0, (1 / (-2 * M_PI)));
+			Complex multiplicand2 = (((Complex)1 / (Zjnext - Zj))*log((Zj - z) / (Zjnext - z)) +
+									((Complex)1 / (Zj - Zjprev))*log((Zj - z) / (Zjprev - z)));
 
 
 			K = multiplicand1*multiplicand2;
@@ -491,17 +574,15 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 	//********************************************************************************
 	//increase cage vertices for p2p - initial setup
 
-	int nLarge = 50;
-
 	Complex* IncreasedCompCageVertecies=NULL;// = new Complex[nLarge];
 
-	IncreaseVertecies(IN compCageVertices,IN n, OUT &IncreasedCompCageVertecies, nLarge);//nLarge might change in this func
+	IncreaseVertecies(IN compCageVertices,IN n, OUT &IncreasedCompCageVertecies, mNLarge);//nLarge might change in this func
 
 	gmm::clear(mCauchyCoordinatesIncForP2P);
-	gmm::resize(mCauchyCoordinatesIncForP2P, m, nLarge);
+	gmm::resize(mCauchyCoordinatesIncForP2P, m, mNLarge);
 	
 	
-	populateC(mCauchyCoordinatesIncForP2P, IncreasedCompCageVertecies, nLarge, internalPoints, m);
+	populateC(mCauchyCoordinatesIncForP2P, IncreasedCompCageVertecies, mNLarge, internalPoints, m);
 
 	//*******************************************************************************
 	MPointArray controlPoints;
@@ -513,18 +594,27 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 	}
 
 	gmm::clear(mCauchyCoordsOfOriginalP2P);
-	gmm::resize(mCauchyCoordsOfOriginalP2P, k, nLarge);
-	populateC(mCauchyCoordsOfOriginalP2P, IncreasedCompCageVertecies, nLarge, controlPoints, k);
+	gmm::resize(mCauchyCoordsOfOriginalP2P, k, mNLarge);
+	populateC(mCauchyCoordsOfOriginalP2P, IncreasedCompCageVertecies, mNLarge, controlPoints, k);
 
 
 
-	IncreaseVertecies(IN cartCageVertices, OUT mIncreasedVertecies_a, mNumOfSegments);
+	IncreaseVertecies(IN cartCageVertices, OUT mIncreasedVertecies_a, mNumOfSegmentsA);
 
 	int l = mIncreasedVertecies_a.length();
 	gmm::clear(mSecondDerOfIncCageVertexCoords);
-	gmm::resize(mSecondDerOfIncCageVertexCoords, l, nLarge);
+	gmm::resize(mSecondDerOfIncCageVertexCoords, l, mNLarge);
 
-	populateD(OUT mSecondDerOfIncCageVertexCoords, IncreasedCompCageVertecies, nLarge, mIncreasedVertecies_a, l);
+	populateD(OUT mSecondDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, mIncreasedVertecies_a, l);
+
+	//********************************************************************************
+	//calculate the first derivative of the cauchy grenn coords for the projection to H 
+	//the matrix Ctag need to be l x nLarge
+
+	gmm::clear(mFirstDerOfIncCageVertexCoords);
+	gmm::resize(mFirstDerOfIncCageVertexCoords, l, mNLarge);
+
+	populateCtag(OUT mFirstDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, mIncreasedVertecies_a, l);
 
 	//********************************************************************************
 	cout.flush();

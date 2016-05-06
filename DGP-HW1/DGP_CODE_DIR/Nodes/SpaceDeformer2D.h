@@ -11,7 +11,7 @@ public:
 
 	static void* creator();
 	static MStatus initialize();
-
+	MStatus getData(MDataBlock& block, MObject& cageMesh, MObject& p2pMesh);
 	virtual MStatus deform(MDataBlock& block, MItGeometry& iter, const MMatrix& mat, unsigned int multiIndex);//deformed position of each internal point is computed on the fly
 	MStatus updateCage(MFnMesh& cageMeshFn);
 	MStatus updateControlPoints(MFnMesh& cageMeshFn);
@@ -28,11 +28,21 @@ protected:
 	static MObject mCageP2pAttr;
 	static MObject mCoordinateTypeAttr;
 	static MObject mNumOfSegmentsAttr;
+	static MObject mNlargeAttr;
+	static MObject mkAttr;
+	static MObject mSigmaaAttr;
+	static MObject msigmabAttr;
 
 
 protected:
 	bool mIsFirstTime;
-	int mNumOfSegments;
+	float env;
+	long coordinateType;
+	int mNumOfSegmentsA;
+	int mNLarge;
+	double k;
+	double SigmaA;
+	double sigmaB;
 
 	GMMDenseComplexColMatrix mUserCageVertices; //this matrix is actually a column vector. dimensions are: n x 1
 	GMMDenseComplexColMatrix mCauchyCoordinates; //dimensions are: m x n
@@ -53,9 +63,12 @@ protected:
 	MPointArray mIncreasedVertecies_a; //dimensions are: l x 1
 	GMMDenseComplexColMatrix mSecondDerOfIncCageVertexCoords; //dimensions are: l x nLarge
 
+	GMMDenseComplexColMatrix mFirstDerOfIncCageVertexCoords; //dimensions are: l x nLarge
+
 private:
 	void matlabCalcNewVerticesForInterpolation();
 	void matlabCalcNewVerticesForP2P();
+	void matlabCalcLforHprojection();
 	std::string RelativeToFullPath(char* relPath);
 
 };
