@@ -64,7 +64,7 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(attributeAffects(mCoordinateTypeAttr, outputGeom));
 
 	MFnNumericAttribute numOfSegmentsAttr;
-	mNumOfSegmentsAttr = numOfSegmentsAttr.create("numOfSegments", "numOfSegments", MFnNumericData::kInt, 1000, &stat);
+	mNumOfSegmentsAttr = numOfSegmentsAttr.create("numOfSegments", "numOfSegments", MFnNumericData::kInt, 500, &stat);
 	CHECK_MSTATUS(numOfSegmentsAttr.setKeyable(true));
 	CHECK_MSTATUS(addAttribute(mNumOfSegmentsAttr));
 	CHECK_MSTATUS(attributeAffects(mNumOfSegmentsAttr, outputGeom));
@@ -131,7 +131,13 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 	long coordinateType = coordHandle.asLong();
 
 	MDataHandle segHandle = block.inputValue(mNumOfSegmentsAttr, &stat);
-	mNumOfSegments = segHandle.asInt();
+	int newValue = segHandle.asInt();//now we cant really change the num of segments because it is in doSetup
+	/*trying to fix it- if the attribute changed -> call doSetup , 
+	  did not worked because the cage and the control poins are in different positions
+	if (newValue != mNumOfSegments) { 
+		mIsFirstTime = true;
+	}*/
+	mNumOfSegments = newValue;
 
 	MDataHandle handle = block.inputValue(mCageAttr, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
@@ -176,8 +182,7 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 		break;
 	case 2://Point2Point coordinates
 		matlabCalcNewVerticesForP2P();
-		gmm::mult(mCauchyCoordinates, mP2PGenCageVertices_f, mInternalPoints);//get the new internal points 
-
+		gmm::mult(mCauchyCoordinatesIncForP2P, mP2PGenCageVertices_f, mInternalPoints);//get the new internal points 
 
 		break;
 	}
@@ -333,6 +338,7 @@ void IncreaseVertecies(MPointArray& OriginalCageVertecies, MPointArray& Increase
 	//find the circumference of the cgae polygon
 	double circumference=0;
 	int numOfOriginalVertecies = OriginalCageVertecies.length();
+
 	for (int i = 0; i < numOfOriginalVertecies; i++) {
 
 		circumference += (OriginalCageVertecies[(i + 1)% numOfOriginalVertecies].distanceTo(OriginalCageVertecies[i]));
@@ -344,20 +350,49 @@ void IncreaseVertecies(MPointArray& OriginalCageVertecies, MPointArray& Increase
 	for (int i = 0; i < numOfOriginalVertecies; i++) {
 		//insert the original vertex
 		IncreasedCageVertecies.append(OriginalCageVertecies[i]);
-		//find the number of new veritecies per edge
-		double numOfNewVeriteciesPerEdge = round((OriginalCageVertecies[(i + 1) % numOfOriginalVertecies].distanceTo(OriginalCageVertecies[i]))/ segmentLength)-1;
 
-		//create a vect the size of a segment in the edge direction
+		//find the number of new veritecies per edge
+		double edgeLength = (OriginalCageVertecies[(i + 1) % numOfOriginalVertecies].distanceTo(OriginalCageVertecies[i]));
+		double numOfSegmentsPerEdge = round(edgeLength / segmentLength);//the number of vertices in the edge is #seg-1
+
+		//find the size of a segment in this edge
+		double segmentLengthInEdge = edgeLength / numOfSegmentsPerEdge;
+
+		//create a vector the size of a segment in the edge direction
 		MVector vec = OriginalCageVertecies[(i + 1) % numOfOriginalVertecies] - (OriginalCageVertecies[i]);
 		vec.normalize();
-		vec = vec * (vec.length()/ (numOfNewVeriteciesPerEdge+1));
+		vec = vec * segmentLengthInEdge;
 
-		//create new points
-		for (int j = 0; j <= numOfNewVeriteciesPerEdge; j++) {
-			IncreasedCageVertecies.append((MPoint)((OriginalCageVertecies[i])+ vec));
+		//create new points 
+		for (int j = 1; j < numOfSegmentsPerEdge; j++) {
+			IncreasedCageVertecies.append((MPoint)((OriginalCageVertecies[i])+ j*vec));
 		}
 	}
 
+}
+
+
+void IncreaseVertecies(Complex* OriginalCompCageVertecies, int OrigCageSize, Complex** IncreasedCompCageVertecies, int& numOfIncreasedCageVertecies) {
+	MPointArray OriginalCartCageVertecies;
+	MPointArray IncreasedCageVertecies;
+
+	for (int i = 0; i < OrigCageSize; i++) {
+		Complex c = OriginalCompCageVertecies[i];
+		MPoint p(c.real(), c.imag());
+		OriginalCartCageVertecies.append(p);
+	}
+
+	IncreaseVertecies(OriginalCartCageVertecies, IncreasedCageVertecies, numOfIncreasedCageVertecies);
+
+	int length1 = OriginalCartCageVertecies.length();
+	numOfIncreasedCageVertecies = IncreasedCageVertecies.length();
+
+	*IncreasedCompCageVertecies = new Complex[numOfIncreasedCageVertecies];
+
+	for (int i = 0; i < numOfIncreasedCageVertecies; i++) {
+		Complex c(IncreasedCageVertecies[i].x, IncreasedCageVertecies[i].y);
+		(*IncreasedCompCageVertecies)[i] = c;
+	}
 }
 
 MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
@@ -382,8 +417,6 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 	gmm::clear(mInterpolationGenCage_f);
 	gmm::resize(mInterpolationGenCage_f, n, 1);
 
-	gmm::clear(mCauchyCoordsOfOriginalP2P);
-	gmm::resize(mCauchyCoordsOfOriginalP2P, k, n);
 
 	//offset the cage by epsilon in the direction of the normal such that the triangle mesh (the image) is strictly inside the new cage
 	MPointArray cartCageVertices; //cartesian coordinates
@@ -426,7 +459,7 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 	}
 
 	//calculate the interpolation coordinates to find the new vertices
-
+	
 	populateC(mCauchyCoordsOfOriginalCageVertices, compCageVertices, n, cartCageVertices, n);
 
 #ifndef CVX_INTERPOLATION
@@ -456,6 +489,21 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 	populateC(mCauchyCoordinates, compCageVertices, n, internalPoints, m);
 	
 	//********************************************************************************
+	//increase cage vertices for p2p - initial setup
+
+	int nLarge = 50;
+
+	Complex* IncreasedCompCageVertecies=NULL;// = new Complex[nLarge];
+
+	IncreaseVertecies(IN compCageVertices,IN n, OUT &IncreasedCompCageVertecies, nLarge);//nLarge might change in this func
+
+	gmm::clear(mCauchyCoordinatesIncForP2P);
+	gmm::resize(mCauchyCoordinatesIncForP2P, m, nLarge);
+	
+	
+	populateC(mCauchyCoordinatesIncForP2P, IncreasedCompCageVertecies, nLarge, internalPoints, m);
+
+	//*******************************************************************************
 	MPointArray controlPoints;
 
 	for (int i = 0; i < k; i++) {
@@ -464,19 +512,24 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 		controlPoints.append(p);
 	}
 
-	populateC(mCauchyCoordsOfOriginalP2P, compCageVertices, n, controlPoints, k);
+	gmm::clear(mCauchyCoordsOfOriginalP2P);
+	gmm::resize(mCauchyCoordsOfOriginalP2P, k, nLarge);
+	populateC(mCauchyCoordsOfOriginalP2P, IncreasedCompCageVertecies, nLarge, controlPoints, k);
 
 
 
-	IncreaseVertecies(IN cartCageVertices, OUT mIncreasedVertecies, mNumOfSegments);
+	IncreaseVertecies(IN cartCageVertices, OUT mIncreasedVertecies_a, mNumOfSegments);
 
-	int l = mIncreasedVertecies.length();
+	int l = mIncreasedVertecies_a.length();
 	gmm::clear(mSecondDerOfIncCageVertexCoords);
-	gmm::resize(mSecondDerOfIncCageVertexCoords, l, n);
+	gmm::resize(mSecondDerOfIncCageVertexCoords, l, nLarge);
 
-	populateD(OUT mSecondDerOfIncCageVertexCoords, compCageVertices, n, mIncreasedVertecies, l);
+	populateD(OUT mSecondDerOfIncCageVertexCoords, IncreasedCompCageVertecies, nLarge, mIncreasedVertecies_a, l);
+
 	//********************************************************************************
 	cout.flush();
+	delete[] compCageVertices;
+	delete[] IncreasedCompCageVertecies;
 
 	return MS::kSuccess;
 }

@@ -42,11 +42,16 @@ protected:
 	GMMDenseComplexColMatrix mInterpolationGenCage_f; //dimensions are: n x 1
 
 	GMMDenseComplexColMatrix mUserP2P; //dimentions are k x 1
-	GMMDenseComplexColMatrix mCauchyCoordsOfOriginalP2P; //dimensions are: k x n
-	GMMDenseComplexColMatrix mP2PGenCageVertices_f; //dimensions are: n x 1
+	GMMDenseComplexColMatrix mCauchyCoordsOfOriginalP2P; //dimensions are: k x nLarge
+	GMMDenseComplexColMatrix mP2PGenCageVertices_f; //dimensions are: nLarge x 1
 
-	MPointArray mIncreasedVertecies; //dimensions are: l x 1
-	GMMDenseComplexColMatrix mSecondDerOfIncCageVertexCoords; //dimensions are: l x n
+	//************
+	MPointArray mIncreasedVerteciesInitial_n; //dimensions are: l x 1
+	GMMDenseComplexColMatrix mCauchyCoordinatesIncForP2P; //dimensions are: m x nLarge
+	//*************
+
+	MPointArray mIncreasedVertecies_a; //dimensions are: l x 1
+	GMMDenseComplexColMatrix mSecondDerOfIncCageVertexCoords; //dimensions are: l x nLarge
 
 private:
 	void matlabCalcNewVerticesForInterpolation();
