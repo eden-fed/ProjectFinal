@@ -24,6 +24,7 @@ MObject SpaceDeformer2D::mNlargeAttr;
 MObject SpaceDeformer2D::mkAttr;
 MObject SpaceDeformer2D::mSigmaaAttr;
 MObject SpaceDeformer2D::msigmabAttr;
+MObject SpaceDeformer2D::mZ0Attr;
 
 
 
@@ -97,6 +98,11 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(addAttribute(msigmabAttr));
 	CHECK_MSTATUS(attributeAffects(msigmabAttr, outputGeom));
 
+	MFnNumericAttribute z0Attr;
+	mZ0Attr = z0Attr.create("z0", "z0", MFnNumericData::k3Float, 0.5, &stat);
+	CHECK_MSTATUS(z0Attr.setKeyable(true));
+	CHECK_MSTATUS(addAttribute(mZ0Attr));
+	CHECK_MSTATUS(attributeAffects(mZ0Attr, outputGeom));
 	return MStatus::kSuccess;
 }
 
@@ -135,7 +141,7 @@ void SpaceDeformer2D::matlabCalcLforHprojection()
 {
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Ctag", mFirstDerOfIncCageVertexCoords);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("k", doubleToGmmMat(this->k));//send the matrix to matlab
-	MatlabGMMDataExchange::SetEngineDenseMatrix("Sigma", doubleToGmmMat(this->SigmaA));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("SIGMA", doubleToGmmMat(this->SigmaA));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("sigma", doubleToGmmMat(this->sigmaB));//send the matrix to matlab
 
 	int res = MatlabInterface::GetEngine().LoadAndRunScript(RelativeToFullPath("\\matlab scripts\\projectToH.m").c_str());
@@ -179,6 +185,10 @@ MStatus SpaceDeformer2D::getData(IN MDataBlock& block,OUT MObject& cageMesh,OUT 
 	MDataHandle sigmaBHandle = block.inputValue(msigmabAttr, &stat);
 	sigmaB = sigmaBHandle.asDouble();
 	
+	MDataHandle z0Handle = block.inputValue(mZ0Attr, &stat);
+	float3& z0= z0Handle.asFloat3();
+	mz0[0] = z0[0]; mz0[1] = z0[1]; mz0[2] = z0[2];//for some reason this is the only way it works
+
 	MDataHandle handle = block.inputValue(mCageAttr, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
 	cageMesh = handle.asMesh();
@@ -597,24 +607,24 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 	gmm::resize(mCauchyCoordsOfOriginalP2P, k, mNLarge);
 	populateC(mCauchyCoordsOfOriginalP2P, IncreasedCompCageVertecies, mNLarge, controlPoints, k);
 
-
+	MPointArray mIncreasedVertecies_a; //dimensions are: a x 1
 
 	IncreaseVertecies(IN cartCageVertices, OUT mIncreasedVertecies_a, mNumOfSegmentsA);
 
-	int l = mIncreasedVertecies_a.length();
+	int a = mIncreasedVertecies_a.length();
 	gmm::clear(mSecondDerOfIncCageVertexCoords);
-	gmm::resize(mSecondDerOfIncCageVertexCoords, l, mNLarge);
+	gmm::resize(mSecondDerOfIncCageVertexCoords, a, mNLarge);
 
-	populateD(OUT mSecondDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, mIncreasedVertecies_a, l);
+	populateD(OUT mSecondDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, mIncreasedVertecies_a, a);
 
 	//********************************************************************************
 	//calculate the first derivative of the cauchy grenn coords for the projection to H 
-	//the matrix Ctag need to be l x nLarge
+	//the matrix Ctag need to be a x nLarge
 
 	gmm::clear(mFirstDerOfIncCageVertexCoords);
-	gmm::resize(mFirstDerOfIncCageVertexCoords, l, mNLarge);
+	gmm::resize(mFirstDerOfIncCageVertexCoords, a, mNLarge);
 
-	populateCtag(OUT mFirstDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, mIncreasedVertecies_a, l);
+	populateCtag(OUT mFirstDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, mIncreasedVertecies_a, a);
 
 	//********************************************************************************
 	cout.flush();

@@ -32,6 +32,7 @@ protected:
 	static MObject mkAttr;
 	static MObject mSigmaaAttr;
 	static MObject msigmabAttr;
+	static MObject mZ0Attr;
 
 
 protected:
@@ -43,6 +44,7 @@ protected:
 	double k;
 	double SigmaA;
 	double sigmaB;
+	float3 mz0;
 
 	GMMDenseComplexColMatrix mUserCageVertices; //this matrix is actually a column vector. dimensions are: n x 1
 	GMMDenseComplexColMatrix mCauchyCoordinates; //dimensions are: m x n
@@ -56,14 +58,12 @@ protected:
 	GMMDenseComplexColMatrix mP2PGenCageVertices_f; //dimensions are: nLarge x 1
 
 	//************
-	MPointArray mIncreasedVerteciesInitial_n; //dimensions are: l x 1
 	GMMDenseComplexColMatrix mCauchyCoordinatesIncForP2P; //dimensions are: m x nLarge
 	//*************
 
-	MPointArray mIncreasedVertecies_a; //dimensions are: l x 1
-	GMMDenseComplexColMatrix mSecondDerOfIncCageVertexCoords; //dimensions are: l x nLarge
+	GMMDenseComplexColMatrix mSecondDerOfIncCageVertexCoords; //dimensions are: a x nLarge
 
-	GMMDenseComplexColMatrix mFirstDerOfIncCageVertexCoords; //dimensions are: l x nLarge
+	GMMDenseComplexColMatrix mFirstDerOfIncCageVertexCoords; //dimensions are: a x nLarge
 
 private:
 	void matlabCalcNewVerticesForInterpolation();
