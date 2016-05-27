@@ -5,6 +5,9 @@
 
 a=size(Ctag,1);
 n=size(Ctag,2);
+
+Cz0=C(Z0index,:);
+
 R=2.*ones(a,1);
 
 cvx_begin

@@ -31,12 +31,15 @@ MObject SpaceDeformer2D::mZ0Attr;
 
 SpaceDeformer2D::SpaceDeformer2D() : mIsFirstTime(true)
 {
-
+	mCompCageVertices = NULL;
+	mNumOfSegmentsAOld = mNumOfSegmentsA = 0;
+	mNLargeOld = mNLarge = 0;
 }
 
 SpaceDeformer2D::~SpaceDeformer2D()
 {
-
+	if (mCompCageVertices!=NULL)
+		delete[] mCompCageVertices;
 }
 
 void* SpaceDeformer2D::creator()
@@ -143,6 +146,8 @@ void SpaceDeformer2D::matlabCalcLforHprojection()
 	MatlabGMMDataExchange::SetEngineDenseMatrix("k", doubleToGmmMat(this->k));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("SIGMA", doubleToGmmMat(this->SigmaA));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("sigma", doubleToGmmMat(this->sigmaB));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0index", doubleToGmmMat(this->mZ0index));//send the matrix to matlab
+
 
 	int res = MatlabInterface::GetEngine().LoadAndRunScript(RelativeToFullPath("\\matlab scripts\\projectToH.m").c_str());
 	if (res != 0) {//error if failed to load file
@@ -187,7 +192,7 @@ MStatus SpaceDeformer2D::getData(IN MDataBlock& block,OUT MObject& cageMesh,OUT 
 	
 	MDataHandle z0Handle = block.inputValue(mZ0Attr, &stat);
 	float3& z0= z0Handle.asFloat3();
-	mz0[0] = z0[0]; mz0[1] = z0[1]; mz0[2] = z0[2];//for some reason this is the only way it works
+	mz0[0] = z0[0]; mz0[1] = z0[1]; mz0[2] = 0;
 
 	MDataHandle handle = block.inputValue(mCageAttr, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
@@ -203,10 +208,12 @@ MStatus SpaceDeformer2D::getData(IN MDataBlock& block,OUT MObject& cageMesh,OUT 
 
 MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMatrix& mat, unsigned int multiIndex)
 {
+		
 	MStatus stat;
 	MObject cageMesh;
 	MObject p2pMesh;
 	stat = getData(block, cageMesh, p2pMesh);
+
 	MCHECKERROR(stat, "couls not get the data block");
 
 	MFnMesh cageMeshFn(cageMesh, &stat);
@@ -241,10 +248,14 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 		gmm::mult(mCauchyCoordinates, mInterpolationGenCage_f, mInternalPoints);//get the new internal points 
 		break;
 	case 2://Point2Point coordinates
+		//runtime
+		runTimeDoSetup();
 		matlabCalcNewVerticesForP2P();
 		gmm::mult(mCauchyCoordinatesIncForP2P, mP2PGenCageVertices_f, mInternalPoints);//get the new internal points 
 		break;
 	case 3:
+		//runtime
+		runTimeDoSetup();
 		matlabCalcLforHprojection();
 		break;
 	}
@@ -492,46 +503,45 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 {
 	MStatus stat;
 
-	int m = iter.count(&stat); //num internal points (point of the triangulated cage)
-	int n = mUserCageVertices.nrows(); //num of cage vertices
-	int k = mUserP2P.nrows(); //num of control points
+	mNumOfInternalPoints = iter.count(&stat); //num internal points (point of the triangulated cage)
+	mNumOfCageVerticies = mUserCageVertices.nrows(); //num of cage vertices
+	mNumOfControlPoints = mUserP2P.nrows(); //num of control points
 
 
 
 	gmm::clear(mCauchyCoordinates);
-	gmm::resize(mCauchyCoordinates, m, n);
+	gmm::resize(mCauchyCoordinates, mNumOfInternalPoints, mNumOfCageVerticies);
 
 	gmm::clear(mInternalPoints);
-	gmm::resize(mInternalPoints, m, 1);
+	gmm::resize(mInternalPoints, mNumOfInternalPoints, 1);
 
 	gmm::clear(mCauchyCoordsOfOriginalCageVertices);
-	gmm::resize(mCauchyCoordsOfOriginalCageVertices, n, n);
+	gmm::resize(mCauchyCoordsOfOriginalCageVertices, mNumOfCageVerticies, mNumOfCageVerticies);
 
 	gmm::clear(mInterpolationGenCage_f);
-	gmm::resize(mInterpolationGenCage_f, n, 1);
+	gmm::resize(mInterpolationGenCage_f, mNumOfCageVerticies, 1);
 
 
 	//offset the cage by epsilon in the direction of the normal such that the triangle mesh (the image) is strictly inside the new cage
-	MPointArray cartCageVertices; //cartesian coordinates
-	cageMeshFn.getPoints(cartCageVertices);//extract the cage vertecies from the mesh object
-	Complex* compCageVertices = new Complex[n];//complex coordinates
+	cageMeshFn.getPoints(mCartCageVertices);//extract the cage vertecies from the mesh object
+	this->mCompCageVertices = new Complex[mNumOfCageVerticies];//complex coordinates
 
 	//iterate through the cage vertecies and move all vertecies eps outwards
-	for (int i = 0; i < n; i++)
+	for (int i = 0; i < mNumOfCageVerticies; i++)
 	{
 		int next = i + 1;
 		int prev = i - 1;
-		if (i == n - 1)
+		if (i == mNumOfCageVerticies - 1)
 			next = 0;
 		if (i == 0)
-			prev = n - 1;
+			prev = mNumOfCageVerticies - 1;
 
 
 		MVector cageVertexNormal;//the normal to the vertex
 
 		//Creating the neighbor edges to the cage vertex
-		MVector Edge1 = cartCageVertices[i] - cartCageVertices[prev];
-		MVector Edge2 = cartCageVertices[i] - cartCageVertices[next];
+		MVector Edge1 = mCartCageVertices[i] - mCartCageVertices[prev];
+		MVector Edge2 = mCartCageVertices[i] - mCartCageVertices[next];
 		Edge1.normalize();
 		Edge2.normalize();
 
@@ -547,13 +557,13 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 		cageVertexNormal *= EPS; //epsilon to prevent points to be exactly on cage
 
 		//move the vertex,the size of epsilon in the direction of the normal
-		MVector offset = cartCageVertices[i] + cageVertexNormal;
-		compCageVertices[i] = Complex(offset.x, offset.y);
+		MVector offset = mCartCageVertices[i] + cageVertexNormal;
+		mCompCageVertices[i] = Complex(offset.x, offset.y);
 	}
 
 	//calculate the interpolation coordinates to find the new vertices
 	
-	populateC(mCauchyCoordsOfOriginalCageVertices, compCageVertices, n, cartCageVertices, n);
+	populateC(mCauchyCoordsOfOriginalCageVertices, mCompCageVertices, mNumOfCageVerticies, mCartCageVertices, mNumOfCageVerticies);
 
 #ifndef CVX_INTERPOLATION
 
@@ -573,49 +583,79 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 
 
 	//calculate Cj(z) the Cauchy-Green complex barycentric coordinates
-	MPointArray internalPoints;
 	for (iter.reset(); !iter.isDone(); iter.next())
 	{
-		internalPoints.append(iter.position());
+		this->mInternalPoints_MPoint.append(iter.position());
 	}
 
-	populateC(mCauchyCoordinates, compCageVertices, n, internalPoints, m);
+	populateC(mCauchyCoordinates, mCompCageVertices, mNumOfCageVerticies, this->mInternalPoints_MPoint, mNumOfInternalPoints);
+
+
 	
-	//********************************************************************************
-	//increase cage vertices for p2p - initial setup
-
-	Complex* IncreasedCompCageVertecies=NULL;// = new Complex[nLarge];
-
-	IncreaseVertecies(IN compCageVertices,IN n, OUT &IncreasedCompCageVertecies, mNLarge);//nLarge might change in this func
-
-	gmm::clear(mCauchyCoordinatesIncForP2P);
-	gmm::resize(mCauchyCoordinatesIncForP2P, m, mNLarge);
-	
-	
-	populateC(mCauchyCoordinatesIncForP2P, IncreasedCompCageVertecies, mNLarge, internalPoints, m);
-
-	//*******************************************************************************
-	MPointArray controlPoints;
-
-	for (int i = 0; i < k; i++) {
+	//runTimeDoSetup();
+	for (int i = 0; i < mNumOfControlPoints; i++) {
 		Complex c = mUserP2P(i, 0);
 		MPoint p(c.real(), c.imag());
-		controlPoints.append(p);
+		mInitialcontrolPoints.append(p);
 	}
+	return MS::kSuccess;
+}
+
+
+
+int SpaceDeformer2D::findClosestInternalPointsToZ0() {
+	MPoint Z0(mz0[0], mz0[1], mz0[2],0);
+	double minDist = DBL_MAX;
+	int index=0;
+
+	for (int i = 0; i < mInternalPoints_MPoint.length(); i++ ) {
+		MPoint tempPoint = mInternalPoints_MPoint[i];
+		double tempDist = sqrt((Z0.x - tempPoint.x) *(Z0.x - tempPoint.x) + (Z0.y - tempPoint.y) *(Z0.y - tempPoint.y));
+
+		if (tempDist < minDist) {
+			minDist = tempDist;
+			index = i;
+		}
+	}
+	return index;
+}
+
+
+MStatus SpaceDeformer2D::runTimeDoSetup() {
+	if (mNumOfSegmentsAOld == mNumOfSegmentsA && mNLargeOld == mNLarge) {
+		return MS::kSuccess;
+	}
+	mNumOfSegmentsAOld = mNumOfSegmentsA;
+	mNLargeOld = mNLarge;
+
+	mZ0index = findClosestInternalPointsToZ0();
+
+	Complex* IncreasedCompCageVertecies = NULL;// = new Complex[nLarge];
+
+	IncreaseVertecies(IN mCompCageVertices, IN mNumOfCageVerticies, OUT &IncreasedCompCageVertecies, mNLarge);//nLarge might change in this func
+
+	gmm::clear(mCauchyCoordinatesIncForP2P);
+	gmm::resize(mCauchyCoordinatesIncForP2P, mNumOfInternalPoints, mNLarge);
+
+
+	populateC(OUT mCauchyCoordinatesIncForP2P, IncreasedCompCageVertecies, mNLarge, this->mInternalPoints_MPoint, mNumOfInternalPoints);
+
+	//*******************************************************************************
+	//calculate D & C matrices for P2P
 
 	gmm::clear(mCauchyCoordsOfOriginalP2P);
-	gmm::resize(mCauchyCoordsOfOriginalP2P, k, mNLarge);
-	populateC(mCauchyCoordsOfOriginalP2P, IncreasedCompCageVertecies, mNLarge, controlPoints, k);
+	gmm::resize(mCauchyCoordsOfOriginalP2P, mNumOfControlPoints, mNLarge);
+	populateC(mCauchyCoordsOfOriginalP2P, IncreasedCompCageVertecies, mNLarge, mInitialcontrolPoints, mNumOfControlPoints);
 
-	MPointArray mIncreasedVertecies_a; //dimensions are: a x 1
+	MPointArray increasedVertecies_a; //dimensions are: a x 1
+	
+	IncreaseVertecies(IN mCartCageVertices, OUT increasedVertecies_a, mNumOfSegmentsA);
 
-	IncreaseVertecies(IN cartCageVertices, OUT mIncreasedVertecies_a, mNumOfSegmentsA);
-
-	int a = mIncreasedVertecies_a.length();
+	int a = increasedVertecies_a.length();
 	gmm::clear(mSecondDerOfIncCageVertexCoords);
 	gmm::resize(mSecondDerOfIncCageVertexCoords, a, mNLarge);
 
-	populateD(OUT mSecondDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, mIncreasedVertecies_a, a);
+	populateD(OUT mSecondDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, increasedVertecies_a, a);
 
 	//********************************************************************************
 	//calculate the first derivative of the cauchy grenn coords for the projection to H 
@@ -624,15 +664,10 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 	gmm::clear(mFirstDerOfIncCageVertexCoords);
 	gmm::resize(mFirstDerOfIncCageVertexCoords, a, mNLarge);
 
-	populateCtag(OUT mFirstDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, mIncreasedVertecies_a, a);
+	populateCtag(OUT mFirstDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, increasedVertecies_a, a);
 
 	//********************************************************************************
 	cout.flush();
-	delete[] compCageVertices;
 	delete[] IncreasedCompCageVertecies;
-
 	return MS::kSuccess;
 }
-
-
-

@@ -19,6 +19,7 @@ public:
 	MStatus doSetup(MItGeometry& iter, MFnMesh& cageMeshFn);//pre-proccessing , calculati the bary coordinates
 
 
+
 public:
 	const static MTypeId mTypeId;
 	const static MString mTypeName;
@@ -34,17 +35,28 @@ protected:
 	static MObject msigmabAttr;
 	static MObject mZ0Attr;
 
-
-protected:
 	bool mIsFirstTime;
 	float env;
 	long coordinateType;
 	int mNumOfSegmentsA;
 	int mNLarge;
+	int mNumOfSegmentsAOld;
+	int mNLargeOld;
 	double k;
 	double SigmaA;
 	double sigmaB;
 	float3 mz0;
+	int mZ0index;
+
+	int mNumOfInternalPoints;
+	int mNumOfCageVerticies;
+	int mNumOfControlPoints;
+	MPointArray mCartCageVertices; //cartesian coordinates
+	Complex* mCompCageVertices;
+	MPointArray mInternalPoints_MPoint; //mpoint array for runtime dosetup
+	MPointArray mInitialcontrolPoints;
+
+
 
 	GMMDenseComplexColMatrix mUserCageVertices; //this matrix is actually a column vector. dimensions are: n x 1
 	GMMDenseComplexColMatrix mCauchyCoordinates; //dimensions are: m x n
@@ -70,5 +82,7 @@ private:
 	void matlabCalcNewVerticesForP2P();
 	void matlabCalcLforHprojection();
 	std::string RelativeToFullPath(char* relPath);
+	MStatus runTimeDoSetup();
+	int findClosestInternalPointsToZ0();
 
 };
