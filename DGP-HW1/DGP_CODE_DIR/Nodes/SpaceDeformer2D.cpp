@@ -139,20 +139,44 @@ GMMDenseColMatrix doubleToGmmMat(const double value)
 	retVal(0, 0) = value;
 	return retVal;
 }
-
+GMMDenseComplexColMatrix compToGmmMat(const Complex value)
+{
+	GMMDenseComplexColMatrix retVal(1, 1);
+	retVal(0, 0) = value;
+	return retVal;
+}
+GMMDenseComplexColMatrix compPointArrayToGmmMat(const MPointArray array)
+{
+	int numV = array.length();
+	GMMDenseComplexColMatrix retVal(numV, 1);
+	for (int i = 0; i < numV; i++)
+	{
+		MPoint p = array[i];
+		Complex c(p[0], p[1]);
+		retVal(i, 0) = c;
+	}
+	return retVal;
+}
 void SpaceDeformer2D::matlabCalcLforHprojection()
 {
+	MatlabGMMDataExchange::SetEngineDenseMatrix("C_tempAN", mTempCauchyCoordsOfSetAOnN);//****temp****
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Ctag", mFirstDerOfIncCageVertexCoords);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeM", mCauchyCoordinatesIncForP2P);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeA", mIncCageVertexCoords);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("k", doubleToGmmMat(this->k));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("SIGMA", doubleToGmmMat(this->SigmaA));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("sigma", doubleToGmmMat(this->sigmaB));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0index", doubleToGmmMat(this->mZ0index));//send the matrix to matlab
-
+	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0", compToGmmMat(mZ0onMesh));
+	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVertices);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map", compPointArrayToGmmMat(mCartCageVertices));//send the matrix to matlab
 
 	int res = MatlabInterface::GetEngine().LoadAndRunScript(RelativeToFullPath("\\matlab scripts\\projectToH.m").c_str());
 	if (res != 0) {//error if failed to load file
 		std::cerr << "ERROR: Matlab script 'projectToH.m' failed with error code " << res << std::endl;
 	}
+
+	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the incersed matrix from matlab
 
 }
 
@@ -192,7 +216,7 @@ MStatus SpaceDeformer2D::getData(IN MDataBlock& block,OUT MObject& cageMesh,OUT 
 	
 	MDataHandle z0Handle = block.inputValue(mZ0Attr, &stat);
 	float3& z0= z0Handle.asFloat3();
-	mz0[0] = z0[0]; mz0[1] = z0[1]; mz0[2] = 0;
+	mZ0NotOnMesh[0] = z0[0]; mZ0NotOnMesh[1] = z0[1]; mZ0NotOnMesh[2] = 0;
 
 	MDataHandle handle = block.inputValue(mCageAttr, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
@@ -208,11 +232,22 @@ MStatus SpaceDeformer2D::getData(IN MDataBlock& block,OUT MObject& cageMesh,OUT 
 
 MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMatrix& mat, unsigned int multiIndex)
 {
-		
+
 	MStatus stat;
 	MObject cageMesh;
 	MObject p2pMesh;
 	stat = getData(block, cageMesh, p2pMesh);
+
+	//*****************
+	//retriving the mesh from the data block
+	MArrayDataHandle hInput = block.outputArrayValue(input, &stat);
+	CHECK_MSTATUS_AND_RETURN_IT(stat)
+		stat = hInput.jumpToElement(multiIndex);
+	CHECK_MSTATUS_AND_RETURN_IT(stat)
+		MObject oInputGeom = hInput.outputValue().child(inputGeom).asMesh();
+	MFnMesh fnInputMesh(oInputGeom);
+
+	//*****************
 
 	MCHECKERROR(stat, "couls not get the data block");
 
@@ -221,19 +256,21 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 
 	MFnMesh p2pMeshFn(p2pMesh, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
-	
+
 	updateCage(cageMeshFn);//populates mUserCageVertices
 	updateControlPoints(p2pMeshFn);//populates mUserP2P
 
 	if (mIsFirstTime)
 	{
+		MatlabInterface::GetEngine().Eval("clear");
 		stat = doSetup(iter, cageMeshFn);
+		runTimeDoSetup();
+		preprocessingIntegral(fnInputMesh, oInputGeom);
 		CHECK_MSTATUS_AND_RETURN_IT(stat);
 		mIsFirstTime = false;
 	}
 
 	//compute the deformation of all the internal points. This is done by simply multiplying the coordinate matrix by the cage vertices vector
-	MatlabInterface::GetEngine().Eval("clear");
 	switch (coordinateType)
 	{
 	case 0://Approximating cage-based complex Cauchy coordinates
@@ -581,17 +618,18 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 #endif
 
 
-
 	//calculate Cj(z) the Cauchy-Green complex barycentric coordinates
 	for (iter.reset(); !iter.isDone(); iter.next())
 	{
-		this->mInternalPoints_MPoint.append(iter.position());
+		this->mInternalPoints_MPoint.append(iter.position());//fill the MPoint array
+		//fill the complex array
+		Complex c(iter.position().x, iter.position().y);
+		mInternalPoints(iter.index(), 0) = c;
+
 	}
 
 	populateC(mCauchyCoordinates, mCompCageVertices, mNumOfCageVerticies, this->mInternalPoints_MPoint, mNumOfInternalPoints);
 
-
-	
 	//runTimeDoSetup();
 	for (int i = 0; i < mNumOfControlPoints; i++) {
 		Complex c = mUserP2P(i, 0);
@@ -604,8 +642,9 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 
 
 int SpaceDeformer2D::findClosestInternalPointsToZ0() {
-	MPoint Z0(mz0[0], mz0[1], mz0[2],0);
+	MPoint Z0(mZ0NotOnMesh[0], mZ0NotOnMesh[1], mZ0NotOnMesh[2],0);
 	double minDist = DBL_MAX;
+	MPoint z0Point;
 	int index=0;
 
 	for (int i = 0; i < mInternalPoints_MPoint.length(); i++ ) {
@@ -613,10 +652,12 @@ int SpaceDeformer2D::findClosestInternalPointsToZ0() {
 		double tempDist = sqrt((Z0.x - tempPoint.x) *(Z0.x - tempPoint.x) + (Z0.y - tempPoint.y) *(Z0.y - tempPoint.y));
 
 		if (tempDist < minDist) {
+			z0Point = tempPoint;
 			minDist = tempDist;
 			index = i;
 		}
 	}
+	mZ0onMesh = Complex(z0Point.x, z0Point.y);
 	return index;
 }
 
@@ -664,10 +705,54 @@ MStatus SpaceDeformer2D::runTimeDoSetup() {
 	gmm::clear(mFirstDerOfIncCageVertexCoords);
 	gmm::resize(mFirstDerOfIncCageVertexCoords, a, mNLarge);
 
+	gmm::clear(mIncCageVertexCoords);
+	gmm::resize(mIncCageVertexCoords, a, mNLarge);
+
+	populateC(OUT mIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, increasedVertecies_a, a);
 	populateCtag(OUT mFirstDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, increasedVertecies_a, a);
+
+	//*********************************** temp ***************************************
+	gmm::clear(mTempCauchyCoordsOfSetAOnN);
+	gmm::resize(mTempCauchyCoordsOfSetAOnN, a, mNumOfCageVerticies);
+
+	populateC(mTempCauchyCoordsOfSetAOnN, mCompCageVertices, mNumOfCageVerticies, increasedVertecies_a, a);
 
 	//********************************************************************************
 	cout.flush();
 	delete[] IncreasedCompCageVertecies;
 	return MS::kSuccess;
 }
+MStatus SpaceDeformer2D::preprocessingIntegral(MFnMesh& inputMesh, MObject InputGeom) {
+	MStatus stat;
+	int numEdges1 = inputMesh.numEdges();
+	int numVertices1 = inputMesh.numVertices();
+	
+	//create adjacency matrix
+	GMMSparseRowMatrix adjacencyMatrix(mNumOfInternalPoints, mNumOfInternalPoints);
+	MItMeshEdge edgesItr(InputGeom);//edge iterator for the mesh
+	int numEdges = edgesItr.count();
+
+	while (!edgesItr.isDone()) {
+		int2 connectedvertices; 
+		inputMesh.getEdgeVertices(edgesItr.index(), connectedvertices);
+
+		adjacencyMatrix(connectedvertices[0], connectedvertices[1]) = 1;
+		adjacencyMatrix(connectedvertices[1], connectedvertices[0]) = 1;
+		edgesItr.next();
+
+	}
+
+	//send values to matlab
+	MatlabGMMDataExchange::SetEngineSparseMatrix("adjacencyGraph", adjacencyMatrix);
+	MatlabGMMDataExchange::SetEngineDenseMatrix("vertices", mInternalPoints);
+	MatlabGMMDataExchange::SetEngineDenseMatrix("rootVertexIndex", doubleToGmmMat(this->mZ0index));//send the matrix to matlab
+
+	int res = MatlabInterface::GetEngine().LoadAndRunScript(RelativeToFullPath("\\matlab scripts\\preprocessingIntegral.m").c_str());
+	if (res != 0) {//error if failed to load file
+		std::cerr << "ERROR: Matlab script 'preprocessingIntegral.m' failed with error code " << res << std::endl;
+	}
+	//MatlabGMMDataExchange::GetEngineDenseMatrix("adjacencyGraph", mCauchyCoordsOfOriginalCageVertices);//get the incersed matrix from matlab
+	return stat;
+}
+
+

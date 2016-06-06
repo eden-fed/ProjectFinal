@@ -45,8 +45,9 @@ protected:
 	double k;
 	double SigmaA;
 	double sigmaB;
-	float3 mz0;
+	float3 mZ0NotOnMesh;
 	int mZ0index;
+	Complex mZ0onMesh;
 
 	int mNumOfInternalPoints;
 	int mNumOfCageVerticies;
@@ -72,10 +73,12 @@ protected:
 	//************
 	GMMDenseComplexColMatrix mCauchyCoordinatesIncForP2P; //dimensions are: m x nLarge
 	//*************
-
+	GMMDenseComplexColMatrix mIncCageVertexCoords; //dimensions are: a x nLarge
 	GMMDenseComplexColMatrix mSecondDerOfIncCageVertexCoords; //dimensions are: a x nLarge
-
 	GMMDenseComplexColMatrix mFirstDerOfIncCageVertexCoords; //dimensions are: a x nLarge
+	//******************************
+	GMMDenseComplexColMatrix mTempCauchyCoordsOfSetAOnN; //dimensions are: a x n
+
 
 private:
 	void matlabCalcNewVerticesForInterpolation();
@@ -84,5 +87,5 @@ private:
 	std::string RelativeToFullPath(char* relPath);
 	MStatus runTimeDoSetup();
 	int findClosestInternalPointsToZ0();
-
+	MStatus preprocessingIntegral(MFnMesh& inputMesh, MObject InputGeom);
 };
