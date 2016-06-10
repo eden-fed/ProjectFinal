@@ -1,23 +1,42 @@
-% clearvars -except s edgeVectors_gpu
 % clc
-%*************step 3:solve 13 - obtain r, psi(z)******************
-
 a=size(Ctag,1);
 n=size(Ctag,2);
+k=(SIGMA-sigma)/(SIGMA+sigma);
+%*************step 2:Evaluate gz and gz_gag******************
+% cageVerteciesAfterMap
+% cageVerteciesB4Map
+% 
+deltaS=cageVerteciesB4Map-circshift(cageVerteciesB4Map,1);
+deltaD=cageVerteciesAfterMap-circshift(cageVerteciesAfterMap,1);
 
-%Z0=0.495826+1i*0.741235;
-% Z0=0.407+0.426*1i;
+gpuArray(deltaS);
+gpuArray(deltaD);
 
+[ out1,out2 ] = arrayfun(@calcGzAndGzGag,deltaS,deltaD);
+
+gz=gather(out1);
+gz_gag=gather(out2);
+
+%this shouldnt be done on the gpu
+gz_enc=repelem(gz,NumOfVerticesInEdges);
+gz_gag_enc=repelem(gz_gag,NumOfVerticesInEdges);
+
+
+
+%*************step 3:solve 13 - obtain r, psi(z)******************
 Cz0=C_sizeM(Z0index,:);
 
-%R=2.*ones(a,1);
-%R=abs(C_tempAN*cageVerteciesAfterMap);
-R=ones(a,1);
+%R=abs(Ctag_tempAN*cageVerteciesAfterMap);
+abs_gz=abs(gz_enc);
+conj_gs_gag=conj(gz_gag_enc);
+% abs_gz=ones(a,1);
+% conj_gs_gag=zeros(a,1);
 
+tic
 cvx_begin
     variable  psai(n) complex;
     variable r(a);
-    minimize((r-R)'*(r-R)+(Ctag*psai)'*(Ctag*psai));
+    minimize((r-abs_gz)'*(r-abs_gz)+(Ctag*psai-conj_gs_gag)'*(Ctag*psai-conj_gs_gag));
     subject to
 		Cz0*psai == zeros(size(Cz0*psai));
         abs(Ctag*psai)<=k*r;
@@ -25,16 +44,17 @@ cvx_begin
         abs(Ctag*psai)<=k-sigma;
 cvx_end
 
+time1=toc;
 %*************step 4:solve 15 - obtain l(z)******************
-
+tic
 cvx_begin
     variable  l(n) complex;
     minimize((real(C_sizeA*l)-log(r))'*(real(C_sizeA*l)-log(r)));
     subject to
-        %imag(Cz0*l)==mean(angle(cageVerteciesB4Map-mean(cageVerteciesB4Map))-angle(cageVerteciesAfterMap-mean(cageVerteciesAfterMap)));
-        imag(Cz0*l)==0;
+        imag(Cz0*l)==mean(angle(cageVerteciesB4Map-mean(cageVerteciesB4Map))-angle(cageVerteciesAfterMap-mean(cageVerteciesAfterMap)));
+      %  imag(Cz0*l)==0;
 cvx_end
-
+time2=toc;
 %*************step 5:find derivative of phi(z)******************
 PHItag=exp(C_sizeM*l);
 
@@ -47,9 +67,8 @@ if(exist('treeCumSum', 'file') ~= 3)
 end
 
 PHI_Z0=Z0+mean(cageVerteciesAfterMap)-mean(cageVerteciesB4Map);
-
 %calc the integral on the edges
-partialCalc_gpu=(gpuArray(PHItag(endIndices)) + gpuArray(PHItag(startIndices)))./2;
+partialCalc_gpu=gpuArray(PHItag(endIndices)) + gpuArray(PHItag(startIndices));
 integral_on_edges_gpu=partialCalc_gpu.*edgeVectors_gpu;
 integral_on_edges=gather(integral_on_edges_gpu);
 % % 
@@ -57,6 +76,7 @@ integral_on_edges=gather(integral_on_edges_gpu);
 % integral_on_edges=partialCalc.*edgeVectors;
 
 % find the integral on all the spanning tree
+PHI_Z0=PHI_Z0+0.000000000000000001i;
 PHI = treeCumSum(uint32(Z0index), PHI_Z0, integral_on_edges, startIndices, endIndices);
 
 %*************step 7:find f******************

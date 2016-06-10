@@ -30,7 +30,7 @@ protected:
 	static MObject mCoordinateTypeAttr;
 	static MObject mNumOfSegmentsAttr;
 	static MObject mNlargeAttr;
-	static MObject mkAttr;
+	//static MObject mkAttr;
 	static MObject mSigmaaAttr;
 	static MObject msigmabAttr;
 	static MObject mZ0Attr;
@@ -42,7 +42,7 @@ protected:
 	int mNLarge;
 	int mNumOfSegmentsAOld;
 	int mNLargeOld;
-	double k;
+	//double k;
 	double SigmaA;
 	double sigmaB;
 	float3 mZ0NotOnMesh;
@@ -77,8 +77,9 @@ protected:
 	GMMDenseComplexColMatrix mSecondDerOfIncCageVertexCoords; //dimensions are: a x nLarge
 	GMMDenseComplexColMatrix mFirstDerOfIncCageVertexCoords; //dimensions are: a x nLarge
 	//******************************
-	GMMDenseComplexColMatrix mTempCauchyCoordsOfSetAOnN; //dimensions are: a x n
+	GMMDenseComplexColMatrix mTempTagCauchyCoordsOfSetAOnN; //dimensions are: a x n
 
+	GMMDenseColMatrix mNumOfVerticesInEdges;//dimensions are: numOfEdges x 1
 
 private:
 	void matlabCalcNewVerticesForInterpolation();
@@ -88,4 +89,6 @@ private:
 	MStatus runTimeDoSetup();
 	int findClosestInternalPointsToZ0();
 	MStatus preprocessingIntegral(MFnMesh& inputMesh, MObject InputGeom);
+	void IncreaseVertecies(Complex* OriginalCompCageVertecies, int OrigCageSize, Complex** IncreasedCompCageVertecies, int& numOfIncreasedCageVertecies);
+	void IncreaseVertecies(MPointArray& OriginalCageVertecies, MPointArray& IncreasedCageVertecies, int numOfIncreasedCageVertecies, bool countNumOfVerticesInEdges);
 };
