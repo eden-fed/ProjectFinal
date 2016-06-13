@@ -5,4 +5,14 @@ createBackgroundImage();
 
 CreatePolygonTool;
 
+spaceLocator -p 0 0 0;
+
 triangulateCage(5000);
+
+
+*******************************************
+string $selectedNodes[] = `ls -selection -exactType "float3"`;
+// Result: polySurface3.vtx[607] // 
+
+print $selectedNodes[0];
+polySurface3.vtx[607]
