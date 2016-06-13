@@ -163,7 +163,7 @@ void SpaceDeformer2D::matlabCalcLforHprojection()
 	MatlabGMMDataExchange::SetEngineDenseMatrix("internalPoints", mInternalPoints);//**for debuging**
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdges", mNumOfVerticesInEdges);//send the matrix to matlab
-	MatlabGMMDataExchange::SetEngineDenseMatrix("Ctag_tempAN", mTempTagCauchyCoordsOfSetAOnN);//****temp****
+	MatlabGMMDataExchange::SetEngineDenseMatrix("Ctag_tempAN", mTempTagCauchyCoordsOfSetAOnN);//****for debuging****
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Ctag", mFirstDerOfIncCageVertexCoords);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeM", mCauchyCoordinatesIncForP2P);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeA", mIncCageVertexCoords);//send the matrix to matlab

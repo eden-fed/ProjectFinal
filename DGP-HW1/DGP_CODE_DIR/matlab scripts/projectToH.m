@@ -9,13 +9,18 @@ k=(SIGMA-sigma)/(SIGMA+sigma);
 deltaS=cageVerteciesB4Map-circshift(cageVerteciesB4Map,1);
 deltaD=cageVerteciesAfterMap-circshift(cageVerteciesAfterMap,1);
 
-gpuArray(deltaS);
-gpuArray(deltaD);
+deltaS=circshift(deltaS,size(deltaS,1)-1);
+deltaD=circshift(deltaD,size(deltaD,1)-1);
 
-[ out1,out2 ] = arrayfun(@calcGzAndGzGag,deltaS,deltaD);
+%gpuArray(deltaS);
+%gpuArray(deltaD);
 
-gz=gather(out1);
-gz_gag=gather(out2);
+%[ out1,out2 ] = arrayfun(@calcGzAndGzGag,deltaS,deltaD);
+gz=0.5*((deltaD.*(abs(deltaS)+abs(deltaD)))./(deltaS.*abs(deltaD)));
+gz_gag=(-0.5)*((deltaD.*(abs(deltaS)-abs(deltaD)))./(deltaS.*abs(deltaD)));
+
+%gz=gather(out1);
+%gz_gag=gather(out2);
 
 %this shouldnt be done on the gpu
 gz_enc=repelem(gz,NumOfVerticesInEdges);
@@ -29,6 +34,8 @@ Cz0=C_sizeM(Z0index,:);
 %R=abs(Ctag_tempAN*cageVerteciesAfterMap);
 abs_gz=abs(gz_enc);
 conj_gs_gag=conj(gz_gag_enc);
+
+
 % abs_gz=ones(a,1);
 % conj_gs_gag=zeros(a,1);
 
@@ -41,7 +48,7 @@ cvx_begin
 		Cz0*psai == zeros(size(Cz0*psai));
         abs(Ctag*psai)<=k*r;
         abs(Ctag*psai)<=SIGMA-r;
-        abs(Ctag*psai)<=k-sigma;
+        abs(Ctag*psai)<=r-sigma;
 cvx_end
 
 time1=toc;
