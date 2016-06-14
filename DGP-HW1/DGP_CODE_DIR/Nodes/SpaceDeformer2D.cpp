@@ -242,7 +242,10 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 	MObject cageMesh;
 	MObject p2pMesh;
 	stat = getData(block, cageMesh, p2pMesh);
-
+	MCHECKERROR(stat, "could not get the data block");
+	if (cageMesh.isNull() || p2pMesh.isNull()) {
+		return stat;
+	}
 	//*****************
 	//retriving the mesh from the data block
 	MArrayDataHandle hInput = block.outputArrayValue(input, &stat);
@@ -254,7 +257,6 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 
 	//*****************
 
-	MCHECKERROR(stat, "couls not get the data block");
 
 	MFnMesh cageMeshFn(cageMesh, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
