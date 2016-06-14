@@ -10,8 +10,8 @@
 //flags
 #define kNumVerticesShort       "-v"
 #define kNumVerticesLong        "-numWantedVertices"
-#define kSubsampleBoundaryShort "-s"
-#define kSubsampleBoundaryLong  "-subsampleBoundary"
+#define kSubsampleBoundaryShort "-s"// גרסא קצרה
+#define kSubsampleBoundaryLong  "-subsampleBoundary" // גרסא ארוכה
 
 
 
@@ -43,7 +43,7 @@ MStatus TriangulatePolygonCmd::doIt(const MArgList& argList)
 	MStatus stat = MS::kSuccess;
 
 	//test Matlab engine
-	MatlabInterface::GetEngine().EvalToCout("test=1");
+	std::string matlabResString = MatlabInterface::GetEngine().EvalToString("test=1");
 
 	MSyntax commandSyntax = syntax();
 	MArgDatabase argData(commandSyntax, argList, &stat);
@@ -257,7 +257,7 @@ MSyntax TriangulatePolygonCmd::syntax()
 	stat = commandSyntax.setObjectType(MSyntax::kSelectionList, 1, 1); //expect exactly one object
 	MCHECKERRORNORET(stat, "Can't create Syntax object for this command");
 
-	commandSyntax.useSelectionAsDefault(true);
+	commandSyntax.useSelectionAsDefault(true);// אם לא בחרתי כלום תבחר מתוך רשימת האובייקטים
 
 	return commandSyntax;
 }

@@ -63,6 +63,9 @@
     <ClCompile Include="..\Commands\colorMeshVerticesCmd.cpp">
       <Filter>Maya Commands</Filter>
     </ClCompile>
+    <ClCompile Include="..\Commands\inverseMatrixCmd.cpp">
+      <Filter>Maya Commands</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Commands\TriangulatePolygonCmd.h">
@@ -108,6 +111,9 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="..\Commands\colorMeshVerticesCmd.h">
+      <Filter>Maya Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Commands\inverseMatrixCmd.h">
       <Filter>Maya Commands</Filter>
     </ClInclude>
   </ItemGroup>

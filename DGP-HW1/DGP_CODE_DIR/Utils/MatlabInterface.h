@@ -109,9 +109,6 @@ public:
     int Eval(const char *matlab_code, char *output_buffer = NULL, int buffer_size = 0);
     std::string EvalToString(const char *matlab_code);
 
-	//Eval and send the Matlab output to std::cout
-	void EvalToCout(const char *matlab_code);
-
     // Add a path to the matlab directory
     int AddScriptPath(const char* path);
 
@@ -173,5 +170,4 @@ private:
     mxArray *m_A;
     mxArray *m_b;
     mxArray *m_x;
-	char* mOutputStringBuffer;
 };

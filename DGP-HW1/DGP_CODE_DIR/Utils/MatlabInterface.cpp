@@ -1148,13 +1148,3 @@ bool MatlabInterface::GetMatrixDimensions(const char* variableName, unsigned int
 
 	return true;
 }
-
-void MatlabInterface::EvalToCout(const char *matlab_code)
-{
-	Eval(matlab_code);
-
-	if(mOutputStringBuffer[0] != 0)
-	{
-		std::cout << mOutputStringBuffer << std::flush;
-	}
-}

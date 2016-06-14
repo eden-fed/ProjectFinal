@@ -124,11 +124,10 @@ global proc createBackgroundImage()
 global proc triangulateCage(int $numVertices)
 {
 	string $selectedNodes[] = `ls -selection -exactType "transform"`;
-	if(size($selectedNodes) != 3)
+	if(size($selectedNodes) != 1 && size($selectedNodes) != 2)
 	{
-		error("Select exactly two cages and one locator!\n");
+		error("Select exactly one or two cages!\n");
 	}
-	
 	string $returnStr[];
 
 	string $shapes[] = `listRelatives -shapes $selectedNodes[0]`;
@@ -137,8 +136,6 @@ global proc triangulateCage(int $numVertices)
 	string $shapes2[] = `listRelatives -shapes $selectedNodes[1]`;
 	string $cageP2p = $shapes2[0];
 	
-	string $locatorZ0 = $selectedNodes[2];
-
 	$sourcePlug = ($cageShape + ".instObjGroups[0]");
 	$targetPlug = `connectionInfo -destinationFromSource $sourcePlug`;
 
@@ -155,15 +152,7 @@ global proc triangulateCage(int $numVertices)
 	select -clear;
 	select $meshName;
 	hyperShade -assign lambert1 $meshName;
-//***********************
-//	print ("****select Z0 - a vertex of the mesh****\n");
-//	string $selectedVertex[];
-//	do
-//	{
-//	string $selectedVertex[] = `ls -selection -exactType "float3"`;
-//	}while ( size($selectedVertex)==0)
-//	print ($selectedVertex[0] + "\n");
-//***********************
+
 	string $imagePlaneNames[] = `listConnections -destination 0 -source 1 topShape.imagePlane[0]`;
 	$imageName = getAttr ($imagePlaneNames[0] + ".imageName");
 
@@ -202,8 +191,6 @@ global proc triangulateCage(int $numVertices)
 	
 	connectAttr ($cageShape + ".worldMesh[0]") ($spaceDeformer + ".cage");
 	connectAttr ($cageP2p + ".worldMesh[0]") ($spaceDeformer + ".p2pcage");
-	connectAttr ($locatorZ0+".translate") ($spaceDeformer + ".z0");
-
 
 	setAttr ($cageShape + ".displayBorders") 1;
 	setAttr ($cageShape + ".borderWidth") 14;
