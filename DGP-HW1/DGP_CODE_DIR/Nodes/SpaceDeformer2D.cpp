@@ -10,6 +10,8 @@
 #define EPS 0.001
 #define CVX_INTERPOLATION 
 
+#define IS_NUMERIC_ZERO(a) (abs(a)<0.000001?1:0)
+
 #define IN
 #define OUT
 
@@ -595,7 +597,9 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 
 		//the notmal to the vertes is the angle bisector of the two edges
 		float V = (Edge1^Edge2).z;
-		if (V>=0) {//turn tight
+		if (IS_NUMERIC_ZERO(V)) {//no turn
+			cageVertexNormal = MVector(-Edge2.y, Edge2.x);
+		}else if (V>0) {//turn right
 			cageVertexNormal = -(Edge1 + Edge2);
 		}else {//turn left
 			cageVertexNormal = Edge1 + Edge2;
