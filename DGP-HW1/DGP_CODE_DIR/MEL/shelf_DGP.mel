@@ -293,5 +293,113 @@ global proc shelf_DGP () {
         -commandRepeatable 1
         -flat 1
     ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "string $code_path = `getenv \"DGP_CODE_DIR\"`; \n$source_command = \"source \\\"\" + $code_path + \"/MEL/DGP.mel\" + \"\\\";\"; \neval $source_command; \ncreateBackgroundImage();" 
+        -enableBackground 0
+        -align "center" 
+        -label "string $code_path = `getenv \"DGP_CODE_DIR\"`; \n$source_command = ..." 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -imageOverlayLabel "1" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "string $code_path = `getenv \"DGP_CODE_DIR\"`; \n$source_command = \"source \\\"\" + $code_path + \"/MEL/DGP.mel\" + \"\\\";\"; \neval $source_command; \ncreateBackgroundImage();" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "CreatePolygonTool;\n" 
+        -enableBackground 0
+        -align "center" 
+        -label "CreatePolygonTool;\n" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -imageOverlayLabel "2" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "CreatePolygonTool;\n" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "spaceLocator -p 0 0 0;\n" 
+        -enableBackground 0
+        -align "center" 
+        -label "spaceLocator -p 0 0 0;\n" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -imageOverlayLabel "3" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "spaceLocator -p 0 0 0;\n" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "triangulateCage(5000);\n" 
+        -enableBackground 0
+        -align "center" 
+        -label "triangulateCage(5000);\n" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -imageOverlayLabel "4" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "commandButton.png" 
+        -image1 "commandButton.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "triangulateCage(5000);\n" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
 
 } 
