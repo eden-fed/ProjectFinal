@@ -57,6 +57,7 @@ protected:
 	MPointArray mInternalPoints_MPoint; //mpoint array for runtime dosetup
 	MPointArray mInitialcontrolPoints;
 
+	MObject mcageMesh;
 
 
 	GMMDenseComplexColMatrix mUserCageVertices; //this matrix is actually a column vector. dimensions are: n x 1
@@ -91,4 +92,6 @@ private:
 	MStatus preprocessingIntegral(MFnMesh& inputMesh, MObject InputGeom);
 	void IncreaseVertecies(Complex* OriginalCompCageVertecies, int OrigCageSize, Complex** IncreasedCompCageVertecies, int& numOfIncreasedCageVertecies);
 	void IncreaseVertecies(MPointArray& OriginalCageVertecies, MPointArray& IncreasedCageVertecies, int numOfIncreasedCageVertecies, bool countNumOfVerticesInEdges);
+	MStatus showIncVertecies(MPointArray& IncreasedCageVertecies);
+
 };

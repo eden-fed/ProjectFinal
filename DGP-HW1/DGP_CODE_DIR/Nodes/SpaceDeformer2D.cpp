@@ -186,6 +186,24 @@ void SpaceDeformer2D::matlabCalcLforHprojection()
 
 }
 
+MStatus SpaceDeformer2D::showIncVertecies(MPointArray& IncreasedCageVertecies) {
+	int facesNum = 1;
+	int verticesNum = IncreasedCageVertecies.length();
+	MIntArray polygonCounts(facesNum, verticesNum);
+
+	MIntArray polygonConnects(verticesNum);//array of vertex connections for each polygon
+	for (int i = 0; i < verticesNum; i++)
+		polygonConnects[i] = i;
+
+	MFnMesh reconstructed(mcageMesh);
+	reconstructed.create(verticesNum, facesNum, IncreasedCageVertecies, polygonCounts, polygonConnects);
+
+	//Update the reconstructed mesh to appear in the maya GUI
+	MCHECKERROR(reconstructed.updateSurface(), "faild to update the surface.");
+
+}
+
+
 std::string SpaceDeformer2D::RelativeToFullPath(char* relPath) {
 	//please enter path like this "\\matlab scripts\\inverse.m"
 	char *libvar;
@@ -241,11 +259,11 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 {
 
 	MStatus stat;
-	MObject cageMesh;
+	//MObject cageMesh;
 	MObject p2pMesh;
-	stat = getData(block, cageMesh, p2pMesh);
+	stat = getData(block, mcageMesh, p2pMesh);
 	MCHECKERROR(stat, "could not get the data block");
-	if (cageMesh.isNull() || p2pMesh.isNull()) {
+	if (mcageMesh.isNull() || p2pMesh.isNull()) {
 		return stat;
 	}
 	//*****************
@@ -260,7 +278,7 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 	//*****************
 
 
-	MFnMesh cageMeshFn(cageMesh, &stat);
+	MFnMesh cageMeshFn(mcageMesh, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
 
 	MFnMesh p2pMeshFn(p2pMesh, &stat);
@@ -547,6 +565,10 @@ void SpaceDeformer2D::IncreaseVertecies(Complex* OriginalCompCageVertecies, int 
 		Complex c(IncreasedCageVertecies[i].x, IncreasedCageVertecies[i].y);
 		(*IncreasedCompCageVertecies)[i] = c;
 	}
+
+	//*****temp for test*****
+	showIncVertecies(IncreasedCageVertecies);
+
 }
 
 MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
@@ -737,7 +759,7 @@ MStatus SpaceDeformer2D::runTimeDoSetup() {
 	populateCtag(mTempTagCauchyCoordsOfSetAOnN, mCompCageVertices, mNumOfCageVerticies, increasedVertecies_a, a);
 
 	//********************************************************************************
-	cout.flush();
+
 	delete[] IncreasedCompCageVertecies;
 	return MS::kSuccess;
 }

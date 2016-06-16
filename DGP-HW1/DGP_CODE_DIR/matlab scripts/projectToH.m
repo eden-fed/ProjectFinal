@@ -54,12 +54,16 @@ cvx_end
 time1=toc;
 %*************step 4:solve 15 - obtain l(z)******************
 tic
+% normB4map=cageVerteciesB4Map/norm(cageVerteciesB4Map);
+% normAfterMap=cageVerteciesAfterMap/norm(cageVerteciesAfterMap);
 cvx_begin
     variable  l(n) complex;
     minimize((real(C_sizeA*l)-log(r))'*(real(C_sizeA*l)-log(r)));
     subject to
-        imag(Cz0*l)==mean(angle(cageVerteciesB4Map-mean(cageVerteciesB4Map))-angle(cageVerteciesAfterMap-mean(cageVerteciesAfterMap)));
-      %  imag(Cz0*l)==0;
+        %imag(Cz0*l)==mean(angle(normB4map-mean(normB4map))-angle(normAfterMap-mean(normAfterMap)));
+        %imag(Cz0*l)==2*mean(angle(cageVerteciesB4Map-cageVerteciesAfterMap));
+      %  imag(Cz0*l)==2*mean(angle(cageVerteciesB4Map-cageVerteciesAfterMap));
+        imag(Cz0*l)==0;
 cvx_end
 time2=toc;
 %*************step 5:find derivative of phi(z)******************
@@ -74,13 +78,11 @@ if(exist('treeCumSum', 'file') ~= 3)
 end
 
 PHI_Z0=Z0+mean(cageVerteciesAfterMap)-mean(cageVerteciesB4Map);
+%PHI_Z0=Z0;
 %calc the integral on the edges
 partialCalc_gpu=gpuArray(PHItag(endIndices)) + gpuArray(PHItag(startIndices));
 integral_on_edges_gpu=partialCalc_gpu.*edgeVectors_gpu;
 integral_on_edges=gather(integral_on_edges_gpu);
-% % 
-% partialCalc=(PHItag(endIndices) + PHItag(startIndices))./2;
-% integral_on_edges=partialCalc.*edgeVectors;
 
 % find the integral on all the spanning tree
 PHI_Z0=PHI_Z0+0.000000000000000001i;
@@ -89,3 +91,57 @@ PHI = treeCumSum(uint32(Z0index), PHI_Z0, integral_on_edges, startIndices, endIn
 %*************step 7:find f******************
 PSI=C_sizeM*psai;
 f=PHI+conj(PSI);
+
+% %######################################################################################################################
+% %find f for cage in size a
+% %*************step 5:find derivative of phi(z)******************
+% PHItag=exp(C_sizeA*l);
+% 
+% %*************step 6:find phi(z) - integral******************
+% %PHI_Z0=Z0+mean(cageVerteciesAfterMap)-mean(cageVerteciesB4Map);
+% PHI_rootPointOnCage=cageVerteciesB4Map(1);
+% %calc the integral on the edges
+% partialCalc_gpu=gpuArray(PHItag(endIndices)) + gpuArray(PHItag(startIndices));
+% integral_on_edges_gpu=partialCalc_gpu.*edgeVectors_gpu;
+% integral_on_edges=gather(integral_on_edges_gpu);
+% 
+% % find the integral on all the spanning tree
+% PHI_rootPointOnCage=PHI_rootPointOnCage+0.000000000000000001i;
+% PHI = treeCumSum(1, PHI_rootPointOnCage, integral_on_edges, startIndices, endIndices);
+% 
+% %*************step 7:find f******************
+% PSI=C_sizeA*psai;
+% f_on_cage=PHI+conj(PSI);
+% %######################################################################################################################
+
+%************determine rotation and translation**************
+%create p - deformed cage (f)
+% p=zeros(size(f,1),2);%convert the complex vector to matrix
+% p(:,1)=real(f);
+% p(:,2)=imag(f);
+% 
+% %create q - user sampled cage
+% %start and end vertecies for each edge
+% startVertex=cageVerteciesAfterMap;
+% endVertex=circshift(cageVerteciesAfterMap,size(cageVerteciesAfterMap,1)-1);
+% %create sampled Cage Vertecies After Map
+% sampledCageVerteciesAfterMap=zeros(a,1);
+% 
+% jj=1;
+% for ii=1:length(NumOfVerticesInEdges)
+%     temp=linspace(startVertex(ii),endVertex(ii),NumOfVerticesInEdges(ii));
+%     Len=length(temp);
+%     sampledCageVerteciesAfterMap(jj:jj+Len-1)=temp;
+%     jj=jj+Len;
+% end
+% 
+% %convert the complex vector to matrix
+% q=zeros(size(sampledCageVerteciesAfterMap,1),2);
+% q(:,1)=real(sampledCageVerteciesAfterMap);
+% q(:,2)=imag(sampledCageVerteciesAfterMap);
+% 
+% %calc rotation and translation
+% [ R,T ] = CalcTranslationAndRotation4H( p , q);
+% 
+% f_cartezian=p*R+T;
+% f=f_cartezian(:,1)+1i*f_cartezian(:,2);
