@@ -52,15 +52,15 @@ protected:
 	int mNumOfInternalPoints;
 	int mNumOfCageVerticies;
 	int mNumOfControlPoints;
-	MPointArray mCartCageVertices; //cartesian coordinates
-	Complex* mCompCageVertices;
+	MPointArray mCartCageVerticesNos; //cartesian coordinates
+	Complex* mCompCageVerticesWos;
 	MPointArray mInternalPoints_MPoint; //mpoint array for runtime dosetup
 	MPointArray mInitialcontrolPoints;
 
 	MObject mcageMesh;
 
 
-	GMMDenseComplexColMatrix mUserCageVertices; //this matrix is actually a column vector. dimensions are: n x 1
+	GMMDenseComplexColMatrix mUserCageVerticesNos; //this matrix is actually a column vector. dimensions are: n x 1
 	GMMDenseComplexColMatrix mCauchyCoordinates; //dimensions are: m x n
 	GMMDenseComplexColMatrix mInternalPoints; //this matrix is actually a column vector. dimensions are: m x 1
 
