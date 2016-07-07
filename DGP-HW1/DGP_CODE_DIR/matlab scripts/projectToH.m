@@ -13,8 +13,8 @@ deltaD=circshift(deltaD,size(deltaD,1)-1);
 gz=0.5*((deltaD.*(abs(deltaS)+abs(deltaD)))./(deltaS.*abs(deltaD)));
 gz_gag=(-0.5)*((deltaD.*(abs(deltaS)-abs(deltaD)))./(deltaS.*abs(deltaD)));
 
-gz_enc=repelem(gz,NumOfVerticesInEdges);
-gz_gag_enc=repelem(gz_gag,NumOfVerticesInEdges);
+gz_enc=repelem_ours(gz,NumOfVerticesInEdges);
+gz_gag_enc=repelem_ours(gz_gag,NumOfVerticesInEdges);
 
 %*************step 3:solve 13 - obtain r, psi(z)******************
 Cz0=C_sizeM(Z0index,:);
