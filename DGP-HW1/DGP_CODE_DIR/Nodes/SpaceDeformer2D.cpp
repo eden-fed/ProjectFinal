@@ -7,8 +7,8 @@
 #include "Utils/MatlabInterface.h"
 #include "Utils/MatlabGMMDataExchange.h"
 
-#define EPS 0.001
-#define CVX_INTERPOLATION 
+#define EPS 0.0001
+//#define CVX_INTERPOLATION 
 
 #define IS_NUMERIC_ZERO(a) (abs(a)<0.000001?1:0)
 
@@ -176,6 +176,7 @@ void SpaceDeformer2D::matlabCalcLforHprojection()
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0", compToGmmMat(mZ0onMesh));
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map", compPointArrayToGmmMat(mCartCageVerticesNos));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map_sizeA", compPointArrayToGmmMat(mCartCageVerticesNos_sizeA));//send the matrix to matlab
 
 	int res = MatlabInterface::GetEngine().LoadAndRunScript(RelativeToFullPath("\\matlab scripts\\projectToH.m").c_str());
 	if (res != 0) {//error if failed to load file
@@ -307,7 +308,7 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 #ifdef CVX_INTERPOLATION //calculate using cvx
 		matlabCalcNewVerticesForInterpolation();
 #else//calculate using the inverse matrix
-		gmm::mult(mCauchyCoordsOfOriginalCageVertices, mUserCageVertices, mInterpolationGenCage_f);
+		gmm::mult(mCauchyCoordsOfOriginalCageVertices, mUserCageVerticesNos, mInterpolationGenCage_f);
 #endif
 		gmm::mult(mCauchyCoordinates, mInterpolationGenCage_f, mInternalPoints);//get the new internal points 
 		break;
@@ -729,15 +730,15 @@ MStatus SpaceDeformer2D::runTimeDoSetup() {
 	gmm::clear(mNumOfVerticesInEdges);
 	gmm::resize(mNumOfVerticesInEdges, mCartCageVerticesNos.length(), 1);
 
-	MPointArray increasedVertecies_a; //dimensions are: a x 1
+	//MPointArray mCartCageVerticesNos_sizeA; //dimensions are: a x 1
 	
-	IncreaseVertecies(IN mCartCageVerticesNos, OUT increasedVertecies_a, mNumOfSegmentsA,true);
+	IncreaseVertecies(IN mCartCageVerticesNos, OUT mCartCageVerticesNos_sizeA, mNumOfSegmentsA,true);
 
-	int a = increasedVertecies_a.length();
+	int a = mCartCageVerticesNos_sizeA.length();
 	gmm::clear(mSecondDerOfIncCageVertexCoords);
 	gmm::resize(mSecondDerOfIncCageVertexCoords, a, mNLarge);
 
-	populateD(OUT mSecondDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, increasedVertecies_a, a);
+	populateD(OUT mSecondDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, mCartCageVerticesNos_sizeA, a);
 
 	//********************************************************************************
 	//calculate the first derivative of the cauchy grenn coords for the projection to H 
@@ -749,14 +750,14 @@ MStatus SpaceDeformer2D::runTimeDoSetup() {
 	gmm::clear(mIncCageVertexCoords);
 	gmm::resize(mIncCageVertexCoords, a, mNLarge);
 
-	populateC(OUT mIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, increasedVertecies_a, a);
-	populateCtag(OUT mFirstDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, increasedVertecies_a, a);
+	populateC(OUT mIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, mCartCageVerticesNos_sizeA, a);
+	populateCtag(OUT mFirstDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, mCartCageVerticesNos_sizeA, a);
 
 	//*********************************** temp ***************************************
 	gmm::clear(mTempTagCauchyCoordsOfSetAOnN);
 	gmm::resize(mTempTagCauchyCoordsOfSetAOnN, a, mNumOfCageVerticies);
 
-	populateCtag(mTempTagCauchyCoordsOfSetAOnN, mCompCageVerticesWos, mNumOfCageVerticies, increasedVertecies_a, a);
+	populateCtag(mTempTagCauchyCoordsOfSetAOnN, mCompCageVerticesWos, mNumOfCageVerticies, mCartCageVerticesNos_sizeA, a);
 
 	//********************************************************************************
 

@@ -53,6 +53,7 @@ protected:
 	int mNumOfCageVerticies;
 	int mNumOfControlPoints;
 	MPointArray mCartCageVerticesNos; //cartesian coordinates
+	MPointArray mCartCageVerticesNos_sizeA; //cartesian coordinates
 	Complex* mCompCageVerticesWos;
 	MPointArray mInternalPoints_MPoint; //mpoint array for runtime dosetup
 	MPointArray mInitialcontrolPoints;
