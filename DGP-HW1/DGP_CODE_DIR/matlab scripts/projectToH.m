@@ -2,7 +2,7 @@
 a=size(Ctag,1);
 n=size(Ctag,2);
 k=(SIGMA-sigma)/(SIGMA+sigma);
-
+lambda=1;
 %*************step 2:Evaluate gz and gz_gag******************
 deltaS=cageVerteciesB4Map-circshift(cageVerteciesB4Map,1);
 deltaD=cageVerteciesAfterMap-circshift(cageVerteciesAfterMap,1);
@@ -31,10 +31,11 @@ tic
 cvx_begin
     variable  psai(n) complex;
     variable r(a);
-    minimize((r-abs_gz)'*(r-abs_gz)+(Ctag*psai-conj_gs_gag)'*(Ctag*psai-conj_gs_gag));
+    minimize norm(r-abs_gz, 2) + lambda*norm(Ctag*psai-conj_gs_gag, 2);
+    %minimize norm(r-abs_gz, 2) + lambda*norm(Ctag*psai-conj(conj_gs_gag), 2);
     subject to
 		Cz0*psai == zeros(size(Cz0*psai));
-        abs(Ctag*psai)<=k*r;
+       % abs(Ctag*psai)<=k*r;
         abs(Ctag*psai)<=SIGMA-r;
         abs(Ctag*psai)<=r-sigma;
 cvx_end
