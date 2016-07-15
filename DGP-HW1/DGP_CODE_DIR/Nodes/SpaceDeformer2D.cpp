@@ -8,7 +8,7 @@
 #include "Utils/MatlabGMMDataExchange.h"
 
 #define EPS 0.0001
-//#define CVX_INTERPOLATION 
+#define CVX_INTERPOLATION 
 
 #define IS_NUMERIC_ZERO(a) (abs(a)<0.000001?1:0)
 
@@ -23,10 +23,11 @@ MObject SpaceDeformer2D::mCageP2pAttr;
 MObject SpaceDeformer2D::mCoordinateTypeAttr;
 MObject SpaceDeformer2D::mNumOfSegmentsAttr;
 MObject SpaceDeformer2D::mNlargeAttr;
-//MObject SpaceDeformer2D::mkAttr;
+MObject SpaceDeformer2D::mkAttr;
 MObject SpaceDeformer2D::mSigmaaAttr;
 MObject SpaceDeformer2D::msigmabAttr;
 MObject SpaceDeformer2D::mZ0Attr;
+MObject SpaceDeformer2D::mlambdaAttr;
 
 
 
@@ -71,6 +72,7 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Cauchy Interpolation", 1));
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Point to point", 2));
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection H Space", 3));
+	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space", 4));
 	CHECK_MSTATUS(attributeAffects(mCoordinateTypeAttr, outputGeom));
 
 	MFnNumericAttribute numOfSegmentsAttr;
@@ -85,11 +87,11 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(addAttribute(mNlargeAttr));
 	CHECK_MSTATUS(attributeAffects(mNlargeAttr, outputGeom));
 
-/*	MFnNumericAttribute kAttr;
+	MFnNumericAttribute kAttr;
 	mkAttr = kAttr.create("k", "k", MFnNumericData::kDouble, 0.6, &stat);
 	CHECK_MSTATUS(kAttr.setKeyable(true));
 	CHECK_MSTATUS(addAttribute(mkAttr));
-	CHECK_MSTATUS(attributeAffects(mkAttr, outputGeom));*/
+	CHECK_MSTATUS(attributeAffects(mkAttr, outputGeom));
 
 	MFnNumericAttribute sigmaaAttr;
 	mSigmaaAttr = sigmaaAttr.create("Sigma(a)", "Sigma(a)", MFnNumericData::kDouble, 2, &stat);
@@ -108,6 +110,13 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(z0Attr.setKeyable(true));
 	CHECK_MSTATUS(addAttribute(mZ0Attr));
 	CHECK_MSTATUS(attributeAffects(mZ0Attr, outputGeom));
+
+	MFnNumericAttribute lambdaAttr;
+	mlambdaAttr = lambdaAttr.create("lambda", "lambda", MFnNumericData::kDouble, 1, &stat);
+	CHECK_MSTATUS(lambdaAttr.setKeyable(true));
+	CHECK_MSTATUS(addAttribute(mlambdaAttr));
+	CHECK_MSTATUS(attributeAffects(mlambdaAttr, outputGeom));
+
 	return MStatus::kSuccess;
 }
 
@@ -162,18 +171,17 @@ GMMDenseComplexColMatrix compPointArrayToGmmMat(const MPointArray array)
 void SpaceDeformer2D::matlabCalcLforHprojection()
 {
 	MatlabInterface::GetEngine().Eval("clearvars -except edgeVectors_gpu endIndices startIndices");
-	MatlabGMMDataExchange::SetEngineDenseMatrix("internalPoints", mInternalPoints);//**for debuging**
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdges", mNumOfVerticesInEdges);//send the matrix to matlab
-	MatlabGMMDataExchange::SetEngineDenseMatrix("Ctag_tempAN", mTempTagCauchyCoordsOfSetAOnN);//****for debuging****
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Ctag", mFirstDerOfIncCageVertexCoords);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeM", mCauchyCoordinatesIncForP2P);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeA", mIncCageVertexCoords);//send the matrix to matlab
-	//MatlabGMMDataExchange::SetEngineDenseMatrix("k", doubleToGmmMat(this->k));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("k", doubleToGmmMat(this->k));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("SIGMA", doubleToGmmMat(this->SigmaA));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("sigma", doubleToGmmMat(this->sigmaB));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0index", doubleToGmmMat((this->mZ0index)+1));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0", compToGmmMat(mZ0onMesh));
+	MatlabGMMDataExchange::SetEngineDenseMatrix("lambda", doubleToGmmMat(this->lambda));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map", compPointArrayToGmmMat(mCartCageVerticesNos));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map_sizeA", compPointArrayToGmmMat(mCartCageVerticesNos_sizeA));//send the matrix to matlab
@@ -189,21 +197,19 @@ void SpaceDeformer2D::matlabCalcLforHprojection()
 void SpaceDeformer2D::matlabCalcLforLvprojection()
 {
 	MatlabInterface::GetEngine().Eval("clearvars -except edgeVectors_gpu endIndices startIndices");
-	MatlabGMMDataExchange::SetEngineDenseMatrix("internalPoints", mInternalPoints);//**for debuging**
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdges", mNumOfVerticesInEdges);//send the matrix to matlab
-	MatlabGMMDataExchange::SetEngineDenseMatrix("Ctag_tempAN", mTempTagCauchyCoordsOfSetAOnN);//****for debuging****
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Ctag", mFirstDerOfIncCageVertexCoords);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeM", mCauchyCoordinatesIncForP2P);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeA", mIncCageVertexCoords);//send the matrix to matlab
-																				 //MatlabGMMDataExchange::SetEngineDenseMatrix("k", doubleToGmmMat(this->k));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("k", doubleToGmmMat(this->k));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("SIGMA", doubleToGmmMat(this->SigmaA));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("sigma", doubleToGmmMat(this->sigmaB));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0index", doubleToGmmMat((this->mZ0index) + 1));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0", compToGmmMat(mZ0onMesh));
+	MatlabGMMDataExchange::SetEngineDenseMatrix("lambda", doubleToGmmMat(this->lambda));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map", compPointArrayToGmmMat(mCartCageVerticesNos));//send the matrix to matlab
-	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map_sizeA", compPointArrayToGmmMat(mCartCageVerticesNos_sizeA));//send the matrix to matlab
 
 	int res = MatlabInterface::GetEngine().LoadAndRunScript(RelativeToFullPath("\\matlab scripts\\projectToH.m").c_str());
 	if (res != 0) {//error if failed to load file
@@ -256,9 +262,8 @@ MStatus SpaceDeformer2D::getData(IN MDataBlock& block,OUT MObject& cageMesh,OUT 
 	MDataHandle segNHandle = block.inputValue(mNlargeAttr, &stat);
 	mNLarge = segNHandle.asInt();//we can only change this value in the first time (doSetup)
 
-	/*MDataHandle kHandle = block.inputValue(mkAttr, &stat);
+	MDataHandle kHandle = block.inputValue(mkAttr, &stat);
 	k = kHandle.asDouble();
-	*/
 
 	MDataHandle sigmaAHandle = block.inputValue(mSigmaaAttr, &stat);
 	SigmaA = sigmaAHandle.asDouble();
@@ -269,6 +274,9 @@ MStatus SpaceDeformer2D::getData(IN MDataBlock& block,OUT MObject& cageMesh,OUT 
 	MDataHandle z0Handle = block.inputValue(mZ0Attr, &stat);
 	float3& z0= z0Handle.asFloat3();
 	mZ0NotOnMesh[0] = z0[0]; mZ0NotOnMesh[1] = z0[1]; mZ0NotOnMesh[2] = 0;
+
+	MDataHandle lambdaHandle = block.inputValue(mlambdaAttr, &stat);
+	lambda = lambdaHandle.asDouble();
 
 	MDataHandle handle = block.inputValue(mCageAttr, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
@@ -782,14 +790,6 @@ MStatus SpaceDeformer2D::runTimeDoSetup() {
 
 	populateC(OUT mIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, mCartCageVerticesNos_sizeA, a);
 	populateCtag(OUT mFirstDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, mCartCageVerticesNos_sizeA, a);
-
-	//*********************************** temp ***************************************
-	gmm::clear(mTempTagCauchyCoordsOfSetAOnN);
-	gmm::resize(mTempTagCauchyCoordsOfSetAOnN, a, mNumOfCageVerticies);
-
-	populateCtag(mTempTagCauchyCoordsOfSetAOnN, mCompCageVerticesWos, mNumOfCageVerticies, mCartCageVerticesNos_sizeA, a);
-
-	//********************************************************************************
 
 	delete[] IncreasedCompCageVertecies;
 	return MS::kSuccess;

@@ -30,10 +30,11 @@ protected:
 	static MObject mCoordinateTypeAttr;
 	static MObject mNumOfSegmentsAttr;
 	static MObject mNlargeAttr;
-	//static MObject mkAttr;
+	static MObject mkAttr;
 	static MObject mSigmaaAttr;
 	static MObject msigmabAttr;
 	static MObject mZ0Attr;
+	static MObject mlambdaAttr;
 
 	bool mIsFirstTime;
 	float env;
@@ -42,9 +43,10 @@ protected:
 	int mNLarge;
 	int mNumOfSegmentsAOld;
 	int mNLargeOld;
-	//double k;
+	double k;
 	double SigmaA;
 	double sigmaB;
+	double lambda;
 	float3 mZ0NotOnMesh;
 	int mZ0index;
 	Complex mZ0onMesh;
@@ -79,7 +81,6 @@ protected:
 	GMMDenseComplexColMatrix mSecondDerOfIncCageVertexCoords; //dimensions are: a x nLarge
 	GMMDenseComplexColMatrix mFirstDerOfIncCageVertexCoords; //dimensions are: a x nLarge
 	//******************************
-	GMMDenseComplexColMatrix mTempTagCauchyCoordsOfSetAOnN; //dimensions are: a x n
 
 	GMMDenseColMatrix mNumOfVerticesInEdges;//dimensions are: numOfEdges x 1
 
