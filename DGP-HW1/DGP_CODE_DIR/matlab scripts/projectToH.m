@@ -47,7 +47,7 @@ tic
 % normAfterMap=cageVerteciesAfterMap/norm(cageVerteciesAfterMap);
 cvx_begin
     variable  l(n) complex;
-    minimize((real(C_sizeA*l)-log(r))'*(real(C_sizeA*l)-log(r)));
+    minimize norm(real(C_sizeA*l)-log(r),2);
     subject to
         %imag(Cz0*l)==mean(angle(normB4map-mean(normB4map))-angle(normAfterMap-mean(normAfterMap)));
         %imag(Cz0*l)==2*mean(angle(cageVerteciesB4Map-cageVerteciesAfterMap));

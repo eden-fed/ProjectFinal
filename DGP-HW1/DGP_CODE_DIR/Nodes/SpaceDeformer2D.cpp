@@ -186,7 +186,33 @@ void SpaceDeformer2D::matlabCalcLforHprojection()
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
 
 }
+void SpaceDeformer2D::matlabCalcLforLvprojection()
+{
+	MatlabInterface::GetEngine().Eval("clearvars -except edgeVectors_gpu endIndices startIndices");
+	MatlabGMMDataExchange::SetEngineDenseMatrix("internalPoints", mInternalPoints);//**for debuging**
 
+	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdges", mNumOfVerticesInEdges);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("Ctag_tempAN", mTempTagCauchyCoordsOfSetAOnN);//****for debuging****
+	MatlabGMMDataExchange::SetEngineDenseMatrix("Ctag", mFirstDerOfIncCageVertexCoords);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeM", mCauchyCoordinatesIncForP2P);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeA", mIncCageVertexCoords);//send the matrix to matlab
+																				 //MatlabGMMDataExchange::SetEngineDenseMatrix("k", doubleToGmmMat(this->k));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("SIGMA", doubleToGmmMat(this->SigmaA));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("sigma", doubleToGmmMat(this->sigmaB));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0index", doubleToGmmMat((this->mZ0index) + 1));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0", compToGmmMat(mZ0onMesh));
+	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map", compPointArrayToGmmMat(mCartCageVerticesNos));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map_sizeA", compPointArrayToGmmMat(mCartCageVerticesNos_sizeA));//send the matrix to matlab
+
+	int res = MatlabInterface::GetEngine().LoadAndRunScript(RelativeToFullPath("\\matlab scripts\\projectToH.m").c_str());
+	if (res != 0) {//error if failed to load file
+		std::cerr << "ERROR: Matlab script 'projectToH.m' failed with error code " << res << std::endl;
+	}
+
+	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
+
+}
 MStatus SpaceDeformer2D::showIncVertecies(MPointArray& IncreasedCageVertecies) {
 	int facesNum = 1;
 	int verticesNum = IncreasedCageVertecies.length();
@@ -318,10 +344,14 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 		matlabCalcNewVerticesForP2P();
 		gmm::mult(mCauchyCoordinatesIncForP2P, mP2PGenCageVertices_f, mInternalPoints);//get the new internal points 
 		break;
-	case 3:
+	case 3://projection via H space 
 		//runtime
 		runTimeDoSetup();
 		matlabCalcLforHprojection();
+		break;
+	case 4://projection via Lv space *****TODO: continue the Lv space ********
+		runTimeDoSetup();
+		matlabCalcLforLvprojection();
 		break;
 	}
 	///////////////////////////////

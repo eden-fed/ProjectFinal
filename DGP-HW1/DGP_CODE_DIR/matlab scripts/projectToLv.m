@@ -2,6 +2,7 @@
 a=size(Ctag,1);
 n=size(Ctag,2);
 k=(SIGMA-sigma)/(SIGMA+sigma);
+lambda=1;
 
 %*************step 2:Evaluate gz and gz_gag******************
 deltaS=cageVerteciesB4Map-circshift(cageVerteciesB4Map,1);
@@ -16,18 +17,16 @@ gz_gag=(-0.5)*((deltaD.*(abs(deltaS)-abs(deltaD)))./(deltaS.*abs(deltaD)));
 gz_enc=repelem(gz,NumOfVerticesInEdges);
 gz_gag_enc=repelem(gz_gag,NumOfVerticesInEdges);
 
-%*************step 3:evaluate ln|gz|, Vg on A******************
-ln_gz=log(abs(gz_enc));
+%*************step 3,4:extract argument from gz, and evaluate log(gz), Vg on A******************
+%ln_gz=log(abs(gz_enc));
+log_gz%get code from weber
 Vg=(conj(gz_gag_enc))/gz_enc;
-
-%*************step 4:extract argument from gz******************
-thetaG
 
 %*************step 5:solve 22 - obtain l(z), V(z)******************
 cvx_begin
     variable  l(n) complex;
     variable v(n) complex;
-    minimize (sum(abs(real(C_sizeA*l)-ln_gz)+abs(imag(C_sizeA*l)-thetaG))+sum(abs(C_sizeA*v-Vg)));
+    minimize norm(real(C_sizeA*l)-log_gz,2)+lambda*norm(C_sizeA*v-Vg,2);
     subject to
         abs(C_sizeA*v)<=k;
         abs(C_sizeA*v)<=log(SIGMA)-real(C_sizeA*l);
