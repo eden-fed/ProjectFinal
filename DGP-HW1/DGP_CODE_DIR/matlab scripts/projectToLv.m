@@ -11,22 +11,26 @@ deltaD=cageVerteciesAfterMap-circshift(cageVerteciesAfterMap,1);
 deltaS=circshift(deltaS,size(deltaS,1)-1);
 deltaD=circshift(deltaD,size(deltaD,1)-1);
 
-gz=0.5*((deltaD.*(abs(deltaS)+abs(deltaD)))./(deltaS.*abs(deltaD)));
-gz_gag=(-0.5)*((deltaD.*(abs(deltaS)-abs(deltaD)))./(deltaS.*abs(deltaD)));
+% gz=0.5*((deltaD.*(abs(deltaS)+abs(deltaD)))./(deltaS.*abs(deltaD)));
+% gz_gag=(-0.5)*((deltaD.*(abs(deltaS)-abs(deltaD)))./(deltaS.*abs(deltaD)));
+
+gz = 0.5*(abs(deltaD) + abs(deltaS)) .* deltaD ./ (abs(deltaD).*deltaS); %affine transformation with unit normal
+gz_gag = 0.5*(abs(deltaD) - abs(deltaS)) .* deltaD ./ (abs(deltaD).*conj(deltaS)); %affine transformation with unit normal
+
 
 gz_enc=repelem(gz,NumOfVerticesInEdges);
 gz_gag_enc=repelem(gz_gag,NumOfVerticesInEdges);
 
 %*************step 3,4:extract argument from gz, and evaluate log(gz), Vg on A******************
-%ln_gz=log(abs(gz_enc));
-log_gz=0.000000000001*1i+zeros(size(gz_enc));%get code from weber
+
+l_gz=logarithmExtraction(cageVerteciesB4Map_sizeA, gz_enc, cageVerteciesAfterMap, NumOfVerticesInEdges);
 Vg=(conj(gz_gag_enc))./gz_enc;
 
 %*************step 5:solve 22 - obtain l(z), V(z)******************
 cvx_begin
     variable  l(n) complex;
     variable v(n) complex;
-    minimize norm(C_sizeA*l-log_gz,2)+lambda*norm(C_sizeA*v-Vg,2);
+    minimize norm(C_sizeA*l-l_gz,2)+lambda*norm(C_sizeA*v-Vg,2);
     subject to
         abs(C_sizeA*v)<=k;
         abs(C_sizeA*v)<=log(SIGMA)-real(C_sizeA*l);

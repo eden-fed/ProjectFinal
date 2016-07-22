@@ -116,20 +116,8 @@ p_on_cage=zeros(size(f_on_cage,1),2);%convert the complex vector to matrix
 p_on_cage(:,1)=real(f_on_cage);
 p_on_cage(:,2)=imag(f_on_cage);
 
-%create q - user sampled cage
-%start and end vertecies for each edge
-startVertex=cageVerteciesAfterMap;
-endVertex=circshift(cageVerteciesAfterMap,size(cageVerteciesAfterMap,1)-1);
-%create sampled Cage Vertecies After Map
-sampledCageVerteciesAfterMap=zeros(a,1);
 
-jj=1;
-for ii=1:length(NumOfVerticesInEdges)
-    temp=linspace(startVertex(ii),endVertex(ii),NumOfVerticesInEdges(ii));
-    Len=length(temp);
-    sampledCageVerteciesAfterMap(jj:jj+Len-1)=temp;
-    jj=jj+Len;
-end
+sampledCageVerteciesAfterMap=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVerticesInEdges );
 
 %convert the complex vector to matrix
 q=zeros(size(sampledCageVerteciesAfterMap,1),2);
