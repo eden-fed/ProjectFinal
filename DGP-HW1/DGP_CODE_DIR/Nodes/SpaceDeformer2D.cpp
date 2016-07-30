@@ -186,13 +186,13 @@ void SpaceDeformer2D::matlabCalcLforHprojection()
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map", compPointArrayToGmmMat(mCartCageVerticesNos));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map_sizeA", compPointArrayToGmmMat(mCartCageVerticesNos_sizeA));//send the matrix to matlab
 
-	int res = MatlabInterface::GetEngine().LoadAndRunScript(RelativeToFullPath("\\matlab scripts\\projectToH.m").c_str());
-	if (res != 0) {//error if failed to load file
-		std::cerr << "ERROR: Matlab script 'projectToH.m' failed with error code " << res << std::endl;
-	}
+	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToH.m").c_str());
+	std::cout << res << std::endl;
+	std::cerr << res << std::endl;
 
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
 
+	cout.flush();
 }
 void SpaceDeformer2D::matlabCalcLforLvprojection()
 {
@@ -212,12 +212,13 @@ void SpaceDeformer2D::matlabCalcLforLvprojection()
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map", compPointArrayToGmmMat(mCartCageVerticesNos));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map_sizeA", compPointArrayToGmmMat(mCartCageVerticesNos_sizeA));//send the matrix to matlab
 
-	int res = MatlabInterface::GetEngine().LoadAndRunScript(RelativeToFullPath("\\matlab scripts\\projectToH.m").c_str());
-	if (res != 0) {//error if failed to load file
-		std::cerr << "ERROR: Matlab script 'projectToH.m' failed with error code " << res << std::endl;
-	}
+	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv.m").c_str());
+	std::cout << res << std::endl;
+	std::cerr << res << std::endl;
+
 
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
+	cout.flush();
 
 }
 MStatus SpaceDeformer2D::showIncVertecies(MPointArray& IncreasedCageVertecies) {
@@ -614,6 +615,7 @@ void SpaceDeformer2D::IncreaseVertecies(Complex* OriginalCompCageVertecies, int 
 MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 {
 	MStatus stat;
+//	MatlabInterface::GetEngine().EvalToString("addpath(genpath('C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR'))");
 
 	mNumOfInternalPoints = iter.count(&stat); //num internal points (point of the triangulated cage)
 	mNumOfCageVerticies = mUserCageVerticesNos.nrows(); //num of cage vertices
