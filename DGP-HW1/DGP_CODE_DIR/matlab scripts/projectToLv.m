@@ -1,8 +1,6 @@
 % clc
 a=size(Ctag,1);
 n=size(Ctag,2);
-%k=(SIGMA-sigma)/(SIGMA+sigma);
-%lambda=1;
 
 %*************step 2:Evaluate gz and gz_gag******************
 deltaS=cageVerteciesB4Map-circshift(cageVerteciesB4Map,1);
@@ -11,12 +9,8 @@ deltaD=cageVerteciesAfterMap-circshift(cageVerteciesAfterMap,1);
 deltaS=circshift(deltaS,size(deltaS,1)-1);
 deltaD=circshift(deltaD,size(deltaD,1)-1);
 
-% gz=0.5*((deltaD.*(abs(deltaS)+abs(deltaD)))./(deltaS.*abs(deltaD)));
-% gz_gag=(-0.5)*((deltaD.*(abs(deltaS)-abs(deltaD)))./(deltaS.*abs(deltaD)));
-
 gz = 0.5*(abs(deltaD) + abs(deltaS)) .* deltaD ./ (abs(deltaD).*deltaS); %affine transformation with unit normal
 gz_gag = 0.5*(abs(deltaD) - abs(deltaS)) .* deltaD ./ (abs(deltaD).*conj(deltaS)); %affine transformation with unit normal
-
 
 gz_enc=repelem(gz,NumOfVerticesInEdges);
 gz_gag_enc=repelem(gz_gag,NumOfVerticesInEdges);
@@ -37,8 +31,8 @@ cvx_begin
         sigma*exp(-real(C_sizeA*l))+abs(C_sizeA*v)<=1;
 cvx_end
 
-Vz=C_sizeM*l;
-lz=C_sizeM*v;
+Vz=C_sizeM*v;
+lz=C_sizeM*l;
 
 %*************step 6:find phi(z) - integral******************
 PHItag=exp(lz);
@@ -64,8 +58,7 @@ PHI = treeCumSum(uint32(Z0index), PHI_Z0, integral_on_edges, startIndices, endIn
 %*************step 7:find PSI - another integral******************
 PSItag=Vz.*PHItag;%check the .*
 
-%PSI_Z0=0; check if need to be 0 or Z0
-PSI_Z0=Z0;
+PSI_Z0=0;
 
 partialCalc_gpu=gpuArray(PSItag(endIndices)) + gpuArray(PSItag(startIndices));
 integral_on_edges_gpu=partialCalc_gpu.*edgeVectors_gpu;
