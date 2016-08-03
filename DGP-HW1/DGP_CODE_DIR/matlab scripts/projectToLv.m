@@ -56,7 +56,7 @@ PHI_Z0=PHI_Z0+0.000000000000000001i;
 PHI = treeCumSum(uint32(Z0index), PHI_Z0, integral_on_edges, startIndices, endIndices);
 
 %*************step 7:find PSI - another integral******************
-PSItag=Vz.*PHItag;%check the .*
+PSItag=Vz.*PHItag;
 
 PSI_Z0=0;
 
