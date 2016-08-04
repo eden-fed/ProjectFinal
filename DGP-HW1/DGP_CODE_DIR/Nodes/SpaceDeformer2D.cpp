@@ -172,7 +172,7 @@ void SpaceDeformer2D::matlabCalcLforHprojection()
 {
 	MatlabInterface::GetEngine().Eval("clearvars -except edgeVectors_gpu endIndices startIndices");
 
-	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdges", mNumOfVerticesInEdges);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdges", mNumOfVerticesInEdgesSizeA);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Ctag", mFirstDerOfIncCageVertexCoords);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeM", mCauchyCoordinatesIncForP2P);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeA", mIncCageVertexCoords);//send the matrix to matlab
@@ -198,7 +198,8 @@ void SpaceDeformer2D::matlabCalcLforLvprojection()
 {
 	MatlabInterface::GetEngine().Eval("clearvars -except edgeVectors_gpu endIndices startIndices");
 
-	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdges", mNumOfVerticesInEdges);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdgesSizeA", mNumOfVerticesInEdgesSizeA);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdgesSizeNlarge", mNumOfVerticesInEdgesSizeNlarge);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Ctag", mFirstDerOfIncCageVertexCoords);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeM", mCauchyCoordinatesIncForP2P);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeA", mIncCageVertexCoords);//send the matrix to matlab
@@ -359,7 +360,7 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 		runTimeDoSetup();
 		matlabCalcLforHprojection();
 		break;
-	case 4://projection via Lv space *****TODO: continue the Lv space ********
+	case 4://projection via Lv space 
 		runTimeDoSetup();
 		matlabCalcLforLvprojection();
 		break;
@@ -543,7 +544,7 @@ void populateCtag(GMMDenseComplexColMatrix &D, Complex* cage, int n, MPointArray
 	}
 }
 
-void SpaceDeformer2D::IncreaseVertecies(MPointArray& OriginalCageVertecies, MPointArray& IncreasedCageVertecies,int numOfIncreasedCageVertecies, bool countNumOfVerticesInEdges) {
+void SpaceDeformer2D::IncreaseVertecies(MPointArray& OriginalCageVertecies, MPointArray& IncreasedCageVertecies,int numOfIncreasedCageVertecies, bool sizeAorNlarge) {
 	//find the circumference of the cage polygon
 	double circumference=0;
 	int numOfOriginalVertecies = OriginalCageVertecies.length();
@@ -577,9 +578,11 @@ void SpaceDeformer2D::IncreaseVertecies(MPointArray& OriginalCageVertecies, MPoi
 			IncreasedCageVertecies.append((MPoint)((OriginalCageVertecies[i])+ j*vec));
 		}
 
-		if (countNumOfVerticesInEdges) {
-			mNumOfVerticesInEdges[i] = numOfSegmentsPerEdge;
+		if (sizeAorNlarge) {
+			mNumOfVerticesInEdgesSizeA[i] = numOfSegmentsPerEdge;
 		}
+		else
+			mNumOfVerticesInEdgesSizeNlarge[i] = numOfSegmentsPerEdge;
 	}
 
 }
@@ -753,6 +756,9 @@ MStatus SpaceDeformer2D::runTimeDoSetup() {
 
 	Complex* IncreasedCompCageVertecies = NULL;// = new Complex[nLarge];
 
+	gmm::clear(mNumOfVerticesInEdgesSizeNlarge);
+	gmm::resize(mNumOfVerticesInEdgesSizeNlarge, mCartCageVerticesNos.length(), 1);
+
 	IncreaseVertecies(IN mCompCageVerticesWos, IN mNumOfCageVerticies, OUT &IncreasedCompCageVertecies, mNLarge);//nLarge might change in this func
 
 	gmm::clear(mCauchyCoordinatesIncForP2P);
@@ -768,8 +774,8 @@ MStatus SpaceDeformer2D::runTimeDoSetup() {
 	gmm::resize(mCauchyCoordsOfOriginalP2P, mNumOfControlPoints, mNLarge);
 	populateC(mCauchyCoordsOfOriginalP2P, IncreasedCompCageVertecies, mNLarge, mInitialcontrolPoints, mNumOfControlPoints);
 
-	gmm::clear(mNumOfVerticesInEdges);
-	gmm::resize(mNumOfVerticesInEdges, mCartCageVerticesNos.length(), 1);
+	gmm::clear(mNumOfVerticesInEdgesSizeA);
+	gmm::resize(mNumOfVerticesInEdgesSizeA, mCartCageVerticesNos.length(), 1);
 
 	//MPointArray mCartCageVerticesNos_sizeA; //dimensions are: a x 1
 	

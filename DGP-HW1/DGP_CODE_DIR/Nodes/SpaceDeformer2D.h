@@ -82,7 +82,8 @@ protected:
 	GMMDenseComplexColMatrix mFirstDerOfIncCageVertexCoords; //dimensions are: a x nLarge
 	//******************************
 
-	GMMDenseColMatrix mNumOfVerticesInEdges;//dimensions are: numOfEdges x 1
+	GMMDenseColMatrix mNumOfVerticesInEdgesSizeA;//dimensions are: numOfEdges x 1 - sum of vertices=A
+	GMMDenseColMatrix mNumOfVerticesInEdgesSizeNlarge;//dimensions are: numOfEdges x 1 - sum of vertices=nLarge
 
 private:
 	void matlabCalcNewVerticesForInterpolation();
