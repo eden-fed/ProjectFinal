@@ -35,6 +35,7 @@ protected:
 	static MObject msigmabAttr;
 	static MObject mZ0Attr;
 	static MObject mlambdaAttr;
+	static MObject mIterAttr;
 
 	bool mIsFirstTime;
 	float env;
@@ -47,6 +48,7 @@ protected:
 	double SigmaA;
 	double sigmaB;
 	double lambda;
+	int iterationsNum;
 	float3 mZ0NotOnMesh;
 	int mZ0index;
 	Complex mZ0onMesh;
@@ -90,6 +92,7 @@ private:
 	void matlabCalcNewVerticesForP2P();
 	void matlabCalcLforHprojection();
 	void matlabCalcLforLvprojection();
+	void matlabCalcLforLvprojectionAccel();
 	std::string RelativeToFullPath(char* relPath);
 	MStatus runTimeDoSetup();
 	int findClosestInternalPointsToZ0();

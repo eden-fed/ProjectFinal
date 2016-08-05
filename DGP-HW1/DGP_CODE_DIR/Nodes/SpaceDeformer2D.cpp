@@ -28,7 +28,7 @@ MObject SpaceDeformer2D::mSigmaaAttr;
 MObject SpaceDeformer2D::msigmabAttr;
 MObject SpaceDeformer2D::mZ0Attr;
 MObject SpaceDeformer2D::mlambdaAttr;
-
+MObject SpaceDeformer2D::mIterAttr;
 
 
 
@@ -73,6 +73,8 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Point to point", 2));
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection H Space", 3));
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space", 4));
+	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space Accel", 5));
+
 	CHECK_MSTATUS(attributeAffects(mCoordinateTypeAttr, outputGeom));
 
 	MFnNumericAttribute numOfSegmentsAttr;
@@ -116,6 +118,12 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(lambdaAttr.setKeyable(true));
 	CHECK_MSTATUS(addAttribute(mlambdaAttr));
 	CHECK_MSTATUS(attributeAffects(mlambdaAttr, outputGeom));
+
+	MFnNumericAttribute iterAttr;
+	mIterAttr = iterAttr.create("iterations", "iterations", MFnNumericData::kInt, 5, &stat);
+	CHECK_MSTATUS(iterAttr.setKeyable(true));
+	CHECK_MSTATUS(addAttribute(mIterAttr));
+	CHECK_MSTATUS(attributeAffects(mIterAttr, outputGeom));
 
 	return MStatus::kSuccess;
 }
@@ -200,7 +208,6 @@ void SpaceDeformer2D::matlabCalcLforLvprojection()
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdgesSizeA", mNumOfVerticesInEdgesSizeA);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdgesSizeNlarge", mNumOfVerticesInEdgesSizeNlarge);//send the matrix to matlab
-	MatlabGMMDataExchange::SetEngineDenseMatrix("Ctag", mFirstDerOfIncCageVertexCoords);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeM", mCauchyCoordinatesIncForP2P);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeA", mIncCageVertexCoords);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("k", doubleToGmmMat(this->k));//send the matrix to matlab
@@ -214,6 +221,34 @@ void SpaceDeformer2D::matlabCalcLforLvprojection()
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map_sizeA", compPointArrayToGmmMat(mCartCageVerticesNos_sizeA));//send the matrix to matlab
 
 	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv.m").c_str());
+	std::cout << res << std::endl;
+	std::cerr << res << std::endl;
+
+
+	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
+	cout.flush();
+
+}
+void SpaceDeformer2D::matlabCalcLforLvprojectionAccel()
+{
+	MatlabInterface::GetEngine().Eval("clearvars -except edgeVectors_gpu endIndices startIndices");
+
+	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdgesSizeA", mNumOfVerticesInEdgesSizeA);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdgesSizeNlarge", mNumOfVerticesInEdgesSizeNlarge);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeM", mCauchyCoordinatesIncForP2P);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeA", mIncCageVertexCoords);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("k", doubleToGmmMat(this->k));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("SIGMA", doubleToGmmMat(this->SigmaA));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("sigma", doubleToGmmMat(this->sigmaB));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0index", doubleToGmmMat((this->mZ0index) + 1));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0", compToGmmMat(mZ0onMesh));
+	MatlabGMMDataExchange::SetEngineDenseMatrix("lambda", doubleToGmmMat(this->lambda));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("iterations", doubleToGmmMat(this->iterationsNum));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map", compPointArrayToGmmMat(mCartCageVerticesNos));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map_sizeA", compPointArrayToGmmMat(mCartCageVerticesNos_sizeA));//send the matrix to matlab
+
+	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_accel.m").c_str());
 	std::cout << res << std::endl;
 	std::cerr << res << std::endl;
 
@@ -280,6 +315,9 @@ MStatus SpaceDeformer2D::getData(IN MDataBlock& block,OUT MObject& cageMesh,OUT 
 
 	MDataHandle lambdaHandle = block.inputValue(mlambdaAttr, &stat);
 	lambda = lambdaHandle.asDouble();
+
+	MDataHandle iterHandle = block.inputValue(mIterAttr, &stat);
+	iterationsNum = iterHandle.asInt();
 
 	MDataHandle handle = block.inputValue(mCageAttr, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
@@ -364,6 +402,9 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 		runTimeDoSetup();
 		matlabCalcLforLvprojection();
 		break;
+	case 5://projection via Lv space accelerated
+		runTimeDoSetup();
+		matlabCalcLforLvprojectionAccel();
 	}
 	///////////////////////////////
 	///////////////////////////////

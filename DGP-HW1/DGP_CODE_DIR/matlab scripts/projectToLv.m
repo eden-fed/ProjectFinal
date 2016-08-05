@@ -1,6 +1,6 @@
 % clc
-a=size(Ctag,1);
-n=size(Ctag,2);
+a=size(C_sizeA,1);
+n=size(C_sizeA,2);
 
 %*************step 2:Evaluate gz and gz_gag******************
 deltaS=cageVerteciesB4Map-circshift(cageVerteciesB4Map,1);
@@ -24,7 +24,7 @@ Vg=(conj(gz_gag_enc))./gz_enc;
 cvx_begin
     variable  l(n) complex;
     variable v(n) complex;
-    minimize norm(C_sizeA*l-l_gz,1)+lambda*norm(C_sizeA*v-Vg,1);
+    minimize norm(C_sizeA*l-l_gz,2)+lambda*norm(C_sizeA*v-Vg,2);
     subject to
         abs(C_sizeA*v)<=k;
         abs(C_sizeA*v)<=log(SIGMA)-real(C_sizeA*l);
