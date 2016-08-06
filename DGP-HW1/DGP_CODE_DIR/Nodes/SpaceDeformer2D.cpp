@@ -590,6 +590,11 @@ void SpaceDeformer2D::IncreaseVertecies(MPointArray& OriginalCageVertecies, MPoi
 	double circumference=0;
 	int numOfOriginalVertecies = OriginalCageVertecies.length();
 
+	if (numOfOriginalVertecies >= numOfIncreasedCageVertecies) {
+		IncreasedCageVertecies = OriginalCageVertecies;
+		return;
+	}
+
 	for (int i = 0; i < numOfOriginalVertecies; i++) {
 
 		circumference += (OriginalCageVertecies[(i + 1)% numOfOriginalVertecies].distanceTo(OriginalCageVertecies[i]));
