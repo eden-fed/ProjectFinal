@@ -28,12 +28,13 @@ cvx_begin
     minimize norm(C_sizeA*l-l_gz,2);
 cvx_end
 
-lz=C_sizeM*l;
-lz(real(lz)>gamma1)=gamma1;
-lz(real(lz)<gamma2)=gamma2;
+l_gz=C_sizeA*l;
+l_gz(real(l_gz)>gamma1)=gamma1;
+l_gz(real(l_gz)<gamma2)=gamma2;
 
 end
 
+lz=C_sizeM*l;
 %*************step 3:find phi(z) - integral******************
 PHItag=exp(lz);
 
