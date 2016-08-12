@@ -21,14 +21,23 @@ l_gz=log(destEdges(1)./sourceEdges(1)) + cumsum(d);
 gamma1=log(SIGMA);
 gamma2=log(sigma);
 
+% l_gz(real(l_gz)>gamma1)=gamma1;
+% l_gz(real(l_gz)<gamma2)=gamma2;
+
 for ii=1:iterations
-    
+  
 cvx_begin
     variable  l(n) complex;
     minimize norm(C_sizeA*l-l_gz,2);
 cvx_end
 
 l_gz=C_sizeA*l;
+
+%debugging
+disp(['itaration = ', num2str(ii)]);
+sum(real(l_gz)>gamma1)
+sum(real(l_gz)<gamma2)
+   
 l_gz(real(l_gz)>gamma1)=gamma1;
 l_gz(real(l_gz)<gamma2)=gamma2;
 
