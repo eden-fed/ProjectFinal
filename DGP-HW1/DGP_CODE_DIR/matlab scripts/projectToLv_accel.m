@@ -20,10 +20,8 @@ l_gz=log(destEdges(1)./sourceEdges(1)) + cumsum(d);
 %*************step 5:obtain l(z)******************
 gamma1=log(SIGMA);
 gamma2=log(sigma);
+x_axis=1:size(l_gz,2);
 
-% l_gz(real(l_gz)>gamma1)=gamma1;
-% l_gz(real(l_gz)<gamma2)=gamma2;
-testPlot=zeros(iterations,1);
 for ii=1:iterations
   
 cvx_begin
@@ -31,21 +29,17 @@ cvx_begin
     minimize norm(C_sizeA*l-l_gz,2);
 cvx_end
 
-testPlot(ii)=norm(C_sizeA*l-l_gz,2);
-
 l_gz=C_sizeA*l;
-%debugging
-disp(['itaration = ', num2str(ii)]);
-sum(real(l_gz)>gamma1)
-sum(real(l_gz)<gamma2)
-   
+
+plot(real(l_gz),x_axis);
+ylim([0.5 1.5]);
+drawnow
+
 l_gz(real(l_gz)>gamma1)=gamma1;
 l_gz(real(l_gz)<gamma2)=gamma2;
 
 end
-plot(testPlot);
-xlabel('Iterations');
-ylabel('Energy');
+
 
 lz=C_sizeM*l;
 
