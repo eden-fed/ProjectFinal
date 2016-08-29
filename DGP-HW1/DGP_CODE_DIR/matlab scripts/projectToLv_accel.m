@@ -14,7 +14,7 @@ destEdges=cageVerteciesAfterMap_sizeA([2:end 1])-cageVerteciesAfterMap_sizeA;
 sourceEdges_minus1=sourceEdges([end 1:end-1]);
 destEdges_minus1=destEdges([end 1:end-1]);
 
-d=log(sourceEdges./sourceEdges_minus1)-log(destEdges./destEdges_minus1);
+d=log(destEdges./destEdges_minus1)-log(sourceEdges./sourceEdges_minus1);
 d(1)=0;
 l_gz=log(destEdges(1)./sourceEdges(1)) + cumsum(d); 
 %*************step 5:obtain l(z)******************
@@ -23,7 +23,7 @@ gamma2=log(sigma);
 
 % l_gz(real(l_gz)>gamma1)=gamma1;
 % l_gz(real(l_gz)<gamma2)=gamma2;
-
+testPlot=zeros(iterations,1);
 for ii=1:iterations
   
 cvx_begin
@@ -31,8 +31,9 @@ cvx_begin
     minimize norm(C_sizeA*l-l_gz,2);
 cvx_end
 
-l_gz=C_sizeA*l;
+testPlot(ii)=norm(C_sizeA*l-l_gz,2);
 
+l_gz=C_sizeA*l;
 %debugging
 disp(['itaration = ', num2str(ii)]);
 sum(real(l_gz)>gamma1)
@@ -42,8 +43,12 @@ l_gz(real(l_gz)>gamma1)=gamma1;
 l_gz(real(l_gz)<gamma2)=gamma2;
 
 end
+plot(testPlot);
+xlabel('Iterations');
+ylabel('Energy');
 
 lz=C_sizeM*l;
+
 %*************step 3:find phi(z) - integral******************
 PHItag=exp(lz);
 

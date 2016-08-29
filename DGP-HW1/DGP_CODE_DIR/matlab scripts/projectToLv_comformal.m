@@ -14,7 +14,7 @@ destEdges=cageVerteciesAfterMap_sizeA([2:end 1])-cageVerteciesAfterMap_sizeA;
 sourceEdges_minus1=sourceEdges([end 1:end-1]);
 destEdges_minus1=destEdges([end 1:end-1]);
 
-d=log(sourceEdges./sourceEdges_minus1)-log(destEdges./destEdges_minus1);
+d=log(destEdges./destEdges_minus1)-log(sourceEdges./sourceEdges_minus1);
 d(1)=0;
 l_gz=log(destEdges(1)./sourceEdges(1)) + cumsum(d); 
 %*************step 5:obtain l(z)******************
