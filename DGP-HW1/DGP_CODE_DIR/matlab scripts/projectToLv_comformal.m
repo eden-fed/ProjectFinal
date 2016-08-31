@@ -28,6 +28,13 @@ cvx_begin
         gamma2<=real(C_sizeA*l);
 cvx_end
 
+disp(cvx_optval);
+
+l_gz=C_sizeA*l;
+x_axis=1:size(l_gz,1);
+plot(x_axis, exp(real(l_gz)));
+ylim([0 5]);
+
 lz=C_sizeM*l;
 %*************step 3:find phi(z) - integral******************
 PHItag=exp(lz);
