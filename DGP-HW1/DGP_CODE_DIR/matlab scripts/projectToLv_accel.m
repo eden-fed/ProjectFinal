@@ -20,7 +20,7 @@ l_gz=log(destEdges(1)./sourceEdges(1)) + cumsum(d);
 %*************step 5:obtain l(z)******************
 gamma1=log(SIGMA);
 gamma2=log(sigma);
-x_axis=1:size(l_gz,2);
+x_axis=1:size(l_gz,1);
 
 for ii=1:iterations
   
@@ -31,8 +31,8 @@ cvx_end
 
 l_gz=C_sizeA*l;
 
-plot(real(l_gz),x_axis);
-ylim([0.5 1.5]);
+plot(x_axis, real(l_gz));
+ylim([-5 5]);
 drawnow
 
 l_gz(real(l_gz)>gamma1)=gamma1;
