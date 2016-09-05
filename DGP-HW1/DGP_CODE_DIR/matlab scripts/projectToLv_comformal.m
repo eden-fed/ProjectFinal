@@ -28,13 +28,6 @@ cvx_begin
         gamma2<=real(C_sizeA*l);
 cvx_end
 
-disp(cvx_optval);
-
-l_gz=C_sizeA*l;
-x_axis=1:size(l_gz,1);
-plot(x_axis, exp(real(l_gz)));
-ylim([0 5]);
-
 lz=C_sizeM*l;
 %*************step 3:find phi(z) - integral******************
 PHItag=exp(lz);
@@ -50,9 +43,9 @@ cageAfterMapSizeN=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVertices
 PHI_Z0=Cz0*cageAfterMapSizeN;
 
 %calc the integral on the edges
-partialCalc_gpu=gpuArray(PHItag(endIndices)) + gpuArray(PHItag(startIndices));
-integral_on_edges_gpu=partialCalc_gpu.*edgeVectors_gpu;
-integral_on_edges=gather(integral_on_edges_gpu);
+partialCalc=PHItag(endIndices) + PHItag(startIndices);
+integral_on_edges=partialCalc.*edgeVectors;
+% integral_on_edges=gather(integral_on_edges_gpu);
 
 % find the integral on all the spanning tree
 PHI_Z0=PHI_Z0+0.000000000000000001i;

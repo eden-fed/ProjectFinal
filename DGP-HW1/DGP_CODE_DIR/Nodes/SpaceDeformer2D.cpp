@@ -179,7 +179,7 @@ GMMDenseComplexColMatrix compPointArrayToGmmMat(const MPointArray array)
 }
 void SpaceDeformer2D::matlabCalcLforHprojection()
 {
-	MatlabInterface::GetEngine().Eval("clearvars -except edgeVectors_gpu endIndices startIndices");
+	MatlabInterface::GetEngine().Eval("clearvars -except edgeVectors startIndices endIndices");
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdges", mNumOfVerticesInEdgesSizeA);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Ctag", mFirstDerOfIncCageVertexCoords);//send the matrix to matlab
@@ -205,7 +205,7 @@ void SpaceDeformer2D::matlabCalcLforHprojection()
 }
 void SpaceDeformer2D::matlabCalcLforLvprojection()
 {
-	MatlabInterface::GetEngine().Eval("clearvars -except edgeVectors_gpu endIndices startIndices");
+	MatlabInterface::GetEngine().Eval("clearvars -except edgeVectors startIndices endIndices");
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdgesSizeA", mNumOfVerticesInEdgesSizeA);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdgesSizeNlarge", mNumOfVerticesInEdgesSizeNlarge);//send the matrix to matlab
@@ -232,7 +232,7 @@ void SpaceDeformer2D::matlabCalcLforLvprojection()
 }
 void SpaceDeformer2D::matlabCalcLforLvprojectionAccel()
 {
-	MatlabInterface::GetEngine().Eval("clearvars -except edgeVectors_gpu endIndices startIndices");
+	MatlabInterface::GetEngine().Eval("clearvars -except edgeVectors startIndices endIndices");
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdgesSizeA", mNumOfVerticesInEdgesSizeA);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdgesSizeNlarge", mNumOfVerticesInEdgesSizeNlarge);//send the matrix to matlab
@@ -260,7 +260,7 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionAccel()
 }
 void SpaceDeformer2D::matlabCalcLforLvprojectionConformal()
 {
-	MatlabInterface::GetEngine().Eval("clearvars -except edgeVectors_gpu endIndices startIndices");
+	MatlabInterface::GetEngine().Eval("clearvars -except edgeVectors startIndices endIndices");
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdgesSizeA", mNumOfVerticesInEdgesSizeA);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdgesSizeNlarge", mNumOfVerticesInEdgesSizeNlarge);//send the matrix to matlab
@@ -622,7 +622,7 @@ void SpaceDeformer2D::IncreaseVertecies(MPointArray& OriginalCageVertecies, MPoi
 	//find the circumference of the cage polygon
 	double circumference=0;
 	int numOfOriginalVertecies = OriginalCageVertecies.length();
-
+	IncreasedCageVertecies.clear();
 	if (numOfOriginalVertecies >= numOfIncreasedCageVertecies) {
 		IncreasedCageVertecies = OriginalCageVertecies;
 		return;
@@ -857,7 +857,7 @@ MStatus SpaceDeformer2D::runTimeDoSetup() {
 	gmm::resize(mNumOfVerticesInEdgesSizeA, mCartCageVerticesNos.length(), 1);
 
 	//MPointArray mCartCageVerticesNos_sizeA; //dimensions are: a x 1
-	
+	int x = mCartCageVerticesNos_sizeA.length();
 	IncreaseVertecies(IN mCartCageVerticesNos, OUT mCartCageVerticesNos_sizeA, mNumOfSegmentsA,true);
 
 	int a = mCartCageVerticesNos_sizeA.length();
@@ -878,6 +878,8 @@ MStatus SpaceDeformer2D::runTimeDoSetup() {
 
 	populateC(OUT mIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, mCartCageVerticesNos_sizeA, a);
 	populateCtag(OUT mFirstDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, mCartCageVerticesNos_sizeA, a);
+
+	//preprocessingIntegral(fnInputMesh, oInputGeom);
 
 	delete[] IncreasedCompCageVertecies;
 	return MS::kSuccess;

@@ -11,7 +11,8 @@
 
 endIndices = uint32(disc(2:end));
 startIndices = uint32(pred(endIndices));
+% endIndices_gpu = gpuArray(uint32(disc(2:end)));
+% startIndices_gpu = gpuArray(uint32(pred(endIndices_gpu)));
 
-% edgeVectors = vertices(endIndices) - vertices(startIndices);
-edgeVectors_gpu = (gpuArray(vertices(endIndices)) - gpuArray(vertices(startIndices)))./2;
-% integral_on_edges=gather(edgeVectors_gpu);
+edgeVectors = (vertices(endIndices) - vertices(startIndices))./2;
+% edgeVectors_gpu = (gpuArray(vertices(endIndices_gpu)) - gpuArray(vertices(startIndices_gpu)))./2;

@@ -41,8 +41,10 @@ title(num2str(ii));
 ylim([0 5]);
 drawnow
 
-l_gz(real(l_gz)>gamma1)=gamma1;
-l_gz(real(l_gz)<gamma2)=gamma2;
+%l_gz(real(l_gz)>gamma1)=gamma1;
+%l_gz(real(l_gz)<gamma2)=gamma2;
+x = max(min(real(l_gz), gamma1_gpu), gamma2_gpu);
+l_gz = complex(x, imag(l_gz));
 
 end
 
@@ -63,6 +65,11 @@ cageAfterMapSizeN=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVertices
 PHI_Z0=Cz0*cageAfterMapSizeN;
 
 %calc the integral on the edges
+% partialCalc_gpu=PHItag(endIndices_gpu) + PHItag(startIndices_gpu);
+% integral_on_edges_gpu=partialCalc_gpu.*edgeVectors_gpu;
+% integral_on_edges=gather(integral_on_edges_gpu);
+% startIndices=gather(startIndices_gpu);
+% endIndices=gather(endIndices_gpu);
 partialCalc_gpu=gpuArray(PHItag(endIndices)) + gpuArray(PHItag(startIndices));
 integral_on_edges_gpu=partialCalc_gpu.*edgeVectors_gpu;
 integral_on_edges=gather(integral_on_edges_gpu);

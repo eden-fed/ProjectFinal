@@ -69,9 +69,9 @@ end
 %PHI_Z0=Z0+mean(cageVerteciesAfterMap)-mean(cageVerteciesB4Map);
 PHI_Z0=Z0;
 %calc the integral on the edges
-partialCalc_gpu=gpuArray(PHItag(endIndices)) + gpuArray(PHItag(startIndices));
-integral_on_edges_gpu=partialCalc_gpu.*edgeVectors_gpu;
-integral_on_edges=gather(integral_on_edges_gpu);
+partialCalc=PHItag(endIndices) + PHItag(startIndices);
+integral_on_edges=partialCalc.*edgeVectors;
+% integral_on_edges=gather(integral_on_edges_gpu);
 
 % find the integral on all the spanning tree
 PHI_Z0=PHI_Z0+0.000000000000000001i;

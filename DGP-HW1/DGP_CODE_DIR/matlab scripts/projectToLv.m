@@ -48,9 +48,9 @@ cageAfterMapSizeN=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVertices
 PHI_Z0=Cz0*cageAfterMapSizeN;
 
 %calc the integral on the edges
-partialCalc_gpu=gpuArray(PHItag(endIndices)) + gpuArray(PHItag(startIndices));
-integral_on_edges_gpu=partialCalc_gpu.*edgeVectors_gpu;
-integral_on_edges=gather(integral_on_edges_gpu);
+partialCalc=PHItag(endIndices) + PHItag(startIndices);
+integral_on_edges=partialCalc.*edgeVectors;
+% integral_on_edges=gather(integral_on_edges_gpu);
 
 % find the integral on all the spanning tree
 PHI_Z0=PHI_Z0+0.000000000000000001i;
@@ -61,9 +61,9 @@ PSItag=Vz.*PHItag;
 
 PSI_Z0=0;
 
-partialCalc_gpu=gpuArray(PSItag(endIndices)) + gpuArray(PSItag(startIndices));
-integral_on_edges_gpu=partialCalc_gpu.*edgeVectors_gpu;
-integral_on_edges=gather(integral_on_edges_gpu);
+partialCalc=PSItag(endIndices) + PSItag(startIndices);
+integral_on_edges=partialCalc.*edgeVectors;
+% integral_on_edges=gather(integral_on_edges_gpu);
 
 PSI_Z0=PSI_Z0+0.000000000000000001i;
 PSI=treeCumSum(uint32(Z0index), PSI_Z0, integral_on_edges, startIndices, endIndices);
