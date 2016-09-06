@@ -1,7 +1,8 @@
 % clc
 a=size(C_sizeA,1);
 n=size(C_sizeA,2);
-
+% max_iterations=1000;
+% epsilon=0.0001;
 %*************step 1:Evaluate gz ******************
 sourceEdges=cageVerteciesB4Map_sizeA([2:end 1])-cageVerteciesB4Map_sizeA;
 
@@ -22,15 +23,16 @@ gamma1=log(SIGMA);
 gamma2=log(sigma);
 %p_inv=pinv(C_sizeA);
 
-for ii=1:iterations
-  
-l = p_inv*l_gz;
-l_gz=C_sizeA*l;
-
-%l_gz(real(l_gz)>gamma1)=gamma1;
-%l_gz(real(l_gz)<gamma2)=gamma2;
-x = max(min(real(l_gz), gamma1), gamma2);
-l_gz = complex(x, imag(l_gz));
+for ii=1:max_iterations
+    l = p_inv*l_gz;
+    l_gz=C_sizeA*l;
+    
+    if(sum(real(l_gz)>(gamma1+epsilon))<=0) && (sum(real(l_gz)<(gamma2-epsilon))<=0)
+        break;
+    end
+    
+    x = max(min(real(l_gz), gamma1), gamma2);
+    l_gz = complex(x, imag(l_gz));
 
 end
 
@@ -56,7 +58,7 @@ partialCalc=PHItag(endIndices) + PHItag(startIndices);
 integral_on_edges=partialCalc.*edgeVectors;
 
 % find the integral on all the spanning tree
-PHI_Z0=PHI_Z0+0.000000000000000001i;
+PHI_Z0=PHI_Z0+1e-10*1i;
 PHI = treeCumSum(uint32(Z0index), PHI_Z0, integral_on_edges, startIndices, endIndices);
 
 %*************step 4:find f******************

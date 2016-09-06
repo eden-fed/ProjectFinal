@@ -36,6 +36,7 @@ protected:
 	static MObject mZ0Attr;
 	static MObject mlambdaAttr;
 	static MObject mIterAttr;
+	static MObject mEpsilonAttr;
 
 	bool mIsFirstTime;
 	float env;
@@ -49,6 +50,7 @@ protected:
 	double sigmaB;
 	double lambda;
 	int iterationsNum;
+	double epsilon;
 	float3 mZ0NotOnMesh;
 	int mZ0index;
 	Complex mZ0onMesh;

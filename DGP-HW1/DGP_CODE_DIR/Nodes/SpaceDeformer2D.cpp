@@ -29,6 +29,7 @@ MObject SpaceDeformer2D::msigmabAttr;
 MObject SpaceDeformer2D::mZ0Attr;
 MObject SpaceDeformer2D::mlambdaAttr;
 MObject SpaceDeformer2D::mIterAttr;
+MObject SpaceDeformer2D::mEpsilonAttr;
 
 
 
@@ -121,10 +122,16 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(attributeAffects(mlambdaAttr, outputGeom));
 
 	MFnNumericAttribute iterAttr;
-	mIterAttr = iterAttr.create("iterations", "iterations", MFnNumericData::kInt, 5, &stat);
+	mIterAttr = iterAttr.create("max iterations", "max iterations", MFnNumericData::kInt, 200, &stat);
 	CHECK_MSTATUS(iterAttr.setKeyable(true));
 	CHECK_MSTATUS(addAttribute(mIterAttr));
 	CHECK_MSTATUS(attributeAffects(mIterAttr, outputGeom));
+
+	MFnNumericAttribute epsAttr;
+	mEpsilonAttr = epsAttr.create("epsilon", "epsilon", MFnNumericData::kDouble, 0.001, &stat);
+	CHECK_MSTATUS(epsAttr.setKeyable(true));
+	CHECK_MSTATUS(addAttribute(mEpsilonAttr));
+	CHECK_MSTATUS(attributeAffects(mEpsilonAttr, outputGeom));
 
 	return MStatus::kSuccess;
 }
@@ -244,11 +251,11 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionAccel()
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0index", doubleToGmmMat((this->mZ0index) + 1));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0", compToGmmMat(mZ0onMesh));
 	MatlabGMMDataExchange::SetEngineDenseMatrix("lambda", doubleToGmmMat(this->lambda));//send the matrix to matlab
-	MatlabGMMDataExchange::SetEngineDenseMatrix("iterations", doubleToGmmMat(this->iterationsNum));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("max_iterations", doubleToGmmMat(this->iterationsNum));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("epsilon", doubleToGmmMat(this->epsilon));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map", compPointArrayToGmmMat(mCartCageVerticesNos));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map_sizeA", compPointArrayToGmmMat(mCartCageVerticesNos_sizeA));//send the matrix to matlab
-	
 	MatlabGMMDataExchange::SetEngineDenseMatrix("p_inv", mPinvOfIncCageVertexCoords);//send the matrix to matlab
 
 
@@ -350,6 +357,9 @@ MStatus SpaceDeformer2D::getData(IN MDataBlock& block,OUT MObject& cageMesh,OUT 
 
 	MDataHandle iterHandle = block.inputValue(mIterAttr, &stat);
 	iterationsNum = iterHandle.asInt();
+
+	MDataHandle epsHandle = block.inputValue(mEpsilonAttr, &stat);
+	epsilon = epsHandle.asDouble();
 
 	MDataHandle handle = block.inputValue(mCageAttr, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
