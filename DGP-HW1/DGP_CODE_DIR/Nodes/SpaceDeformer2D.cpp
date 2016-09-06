@@ -248,6 +248,9 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionAccel()
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map", compPointArrayToGmmMat(mCartCageVerticesNos));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map_sizeA", compPointArrayToGmmMat(mCartCageVerticesNos_sizeA));//send the matrix to matlab
+	
+	MatlabGMMDataExchange::SetEngineDenseMatrix("p_inv", mPinvOfIncCageVertexCoords);//send the matrix to matlab
+
 
 	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_accel.m").c_str());
 	std::cout << res << std::endl;
@@ -878,8 +881,18 @@ MStatus SpaceDeformer2D::runTimeDoSetup() {
 
 	populateC(OUT mIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, mCartCageVerticesNos_sizeA, a);
 	populateCtag(OUT mFirstDerOfIncCageVertexCoords, IncreasedCompCageVertecies, mNLarge, mCartCageVerticesNos_sizeA, a);
+	
+	//**********************************************
+	// calc pinv for project to Lv accel
+	gmm::clear(mPinvOfIncCageVertexCoords);
+	gmm::resize(mPinvOfIncCageVertexCoords, mNLarge, a);
+	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeA", mIncCageVertexCoords);//send the matrix to matlab
+	std::string res = MatlabInterface::GetEngine().EvalToString("p_inv=pinv(C_sizeA)");
+	std::cout << res << std::endl;
+	std::cerr << res << std::endl;
 
-	//preprocessingIntegral(fnInputMesh, oInputGeom);
+	MatlabGMMDataExchange::GetEngineDenseMatrix("p_inv", mPinvOfIncCageVertexCoords);//get the map from matlab
+	cout.flush();
 
 	delete[] IncreasedCompCageVertecies;
 	return MS::kSuccess;

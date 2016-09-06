@@ -20,7 +20,7 @@ l_gz=log(destEdges(1)./sourceEdges(1)) + cumsum(d);
 %*************step 5:obtain l(z)******************
 gamma1=log(SIGMA);
 gamma2=log(sigma);
-p_inv=pinv(C_sizeA);
+%p_inv=pinv(C_sizeA);
 
 for ii=1:iterations
   

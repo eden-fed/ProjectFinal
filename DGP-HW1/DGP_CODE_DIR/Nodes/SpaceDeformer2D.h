@@ -87,6 +87,8 @@ protected:
 	GMMDenseColMatrix mNumOfVerticesInEdgesSizeA;//dimensions are: numOfEdges x 1 - sum of vertices=A
 	GMMDenseColMatrix mNumOfVerticesInEdgesSizeNlarge;//dimensions are: numOfEdges x 1 - sum of vertices=nLarge
 
+	GMMDenseComplexColMatrix mPinvOfIncCageVertexCoords; //dimensions are: nLarge x a
+
 private:
 	void matlabCalcNewVerticesForInterpolation();
 	void matlabCalcNewVerticesForP2P();
