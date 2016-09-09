@@ -96,8 +96,9 @@ private:
 	void matlabCalcNewVerticesForP2P();
 	void matlabCalcLforHprojection();
 	void matlabCalcLforLvprojection();
-	void matlabCalcLforLvprojectionAccel();
+	void matlabCalcLforLvprojectionConformalAccel();
 	void matlabCalcLforLvprojectionConformal();
+	void matlabCalcLforLvprojectionAccel();
 	std::string RelativeToFullPath(char* relPath);
 	MStatus runTimeDoSetup();
 	int findClosestInternalPointsToZ0();
