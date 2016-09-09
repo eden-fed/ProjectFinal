@@ -23,12 +23,9 @@ Vg=(conj(gz_gag_enc))./gz_enc;
 %*************step 5:solve 22 - obtain l(z), V(z)******************
 
 for ii=1:max_iterations
-    cvx_begin
-        variable  l(n) complex;
-        variable v(n) complex;
-        minimize norm(C_sizeA*l-l_gz,2)+norm(C_sizeA*v-Vg,2);
-    cvx_end
     
+    l = p_inv*l_gz;
+    v=p_inv*Vg;
     l_gz=C_sizeA*l;
     
     cvx_begin

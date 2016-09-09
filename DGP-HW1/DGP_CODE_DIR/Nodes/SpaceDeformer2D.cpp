@@ -313,11 +313,11 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionAccel()
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0", compToGmmMat(mZ0onMesh));
 	MatlabGMMDataExchange::SetEngineDenseMatrix("lambda", doubleToGmmMat(this->lambda));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("max_iterations", doubleToGmmMat(this->iterationsNum));//send the matrix to matlab
-//	MatlabGMMDataExchange::SetEngineDenseMatrix("epsilon", doubleToGmmMat(this->epsilon));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("epsilon", doubleToGmmMat(this->epsilon));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map", compPointArrayToGmmMat(mCartCageVerticesNos));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map_sizeA", compPointArrayToGmmMat(mCartCageVerticesNos_sizeA));//send the matrix to matlab
-//	MatlabGMMDataExchange::SetEngineDenseMatrix("p_inv", mPinvOfIncCageVertexCoords);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("p_inv", mPinvOfIncCageVertexCoords);//send the matrix to matlab
 
 
 	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_accel.m").c_str());

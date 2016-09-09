@@ -1,8 +1,6 @@
-% clc
 a=size(C_sizeA,1);
 n=size(C_sizeA,2);
-% max_iterations=1000;
-% epsilon=0.0001;
+
 %*************step 1:Evaluate gz ******************
 sourceEdges=cageVerteciesB4Map_sizeA([2:end 1])-cageVerteciesB4Map_sizeA;
 
@@ -21,7 +19,6 @@ l_gz=log(destEdges(1)./sourceEdges(1)) + cumsum(d);
 %*************step 5:obtain l(z)******************
 gamma1=log(SIGMA);
 gamma2=log(sigma);
-%p_inv=pinv(C_sizeA);
 
 for ii=1:max_iterations
     l = p_inv*l_gz;
