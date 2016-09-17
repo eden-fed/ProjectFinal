@@ -130,7 +130,7 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(attributeAffects(mIterAttr, outputGeom));
 
 	MFnNumericAttribute epsAttr;
-	mEpsilonAttr = epsAttr.create("epsilon", "epsilon", MFnNumericData::kDouble, 0.001, &stat);
+	mEpsilonAttr = epsAttr.create("epsilon", "epsilon", MFnNumericData::kDouble, 0.0000000001, &stat);
 	CHECK_MSTATUS(epsAttr.setKeyable(true));
 	CHECK_MSTATUS(addAttribute(mEpsilonAttr));
 	CHECK_MSTATUS(attributeAffects(mEpsilonAttr, outputGeom));
