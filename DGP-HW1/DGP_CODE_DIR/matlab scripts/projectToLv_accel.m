@@ -3,11 +3,8 @@ a=size(C_sizeA,1);
 n=size(C_sizeA,2);
 
 %*************step 2:Evaluate gz and gz_gag******************
-deltaS=cageVerteciesB4Map-circshift(cageVerteciesB4Map,1);
-deltaD=cageVerteciesAfterMap-circshift(cageVerteciesAfterMap,1);
-
-deltaS=circshift(deltaS,size(deltaS,1)-1);
-deltaD=circshift(deltaD,size(deltaD,1)-1);
+deltaS=cageVerteciesB4Map([2:end 1])-cageVerteciesB4Map;
+deltaD=cageVerteciesAfterMap([2:end 1])-cageVerteciesAfterMap;
 
 gz = 0.5*(abs(deltaD) + abs(deltaS)) .* deltaD ./ (abs(deltaD).*deltaS); %affine transformation with unit normal
 gz_gag = 0.5*(abs(deltaD) - abs(deltaS)) .* deltaD ./ (abs(deltaD).*conj(deltaS)); %affine transformation with unit normal
@@ -26,27 +23,28 @@ for ii=1:max_iterations
     
     l = p_inv*l_gz;
     v=p_inv*Vg;
-    l_gz=C_sizeA*l;
     
+    l_gz=C_sizeA*l;
+    Vg=C_sizeA*v;
+    
+    if(~any(abs(Vg)>k+epsilon)) && (~any(abs(Vg)>log(SIGMA)-real(l_gz)+epsilon)) && (~any(sigma*exp(-real(l_gz))+abs(Vg)>1+epsilon))
+        break;
+    end
     cvx_begin
         variable R_l_gz(a);
-        variable Vg(a) complex;
-        minimize norm(real(l_gz)-R_l_gz,2)+norm(C_sizeA*v-Vg,2);
+        variable abs_Vg(a);
+        minimize norm(real(l_gz)-R_l_gz,2)+norm(abs(Vg)-abs_Vg,2);
         subject to
-            abs(Vg)<=k;
-            abs(Vg)<=log(SIGMA)-R_l_gz;
-            sigma*exp(-R_l_gz)+abs(Vg)<=1;
+            abs_Vg>=0;
+            abs_Vg<=k;
+            abs_Vg<=log(SIGMA)-R_l_gz;
+            sigma*exp(-R_l_gz)+abs_Vg<=1;
     cvx_end
     
     l_gz=complex(R_l_gz, imag(l_gz));
+    Vg=abs_Vg.*exp(1i*angle(Vg));
 
 end
-
-%check the distortion:
-sum(abs(C_sizeA*v)>k)
-sum(abs(C_sizeA*v)>log(SIGMA)-real(C_sizeA*l))
-sum(sigma*exp(-real(C_sizeA*l))+abs(C_sizeA*v)>1)
-%if all three are 0 then there is no distortion
 
 Vz=C_sizeM*v;
 lz=C_sizeM*l;

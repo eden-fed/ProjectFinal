@@ -3,11 +3,8 @@ a=size(C_sizeA,1);
 n=size(C_sizeA,2);
 
 %*************step 2:Evaluate gz and gz_gag******************
-deltaS=cageVerteciesB4Map-circshift(cageVerteciesB4Map,1);
-deltaD=cageVerteciesAfterMap-circshift(cageVerteciesAfterMap,1);
-
-deltaS=circshift(deltaS,size(deltaS,1)-1);
-deltaD=circshift(deltaD,size(deltaD,1)-1);
+deltaS=cageVerteciesB4Map([2:end 1])-cageVerteciesB4Map;
+deltaD=cageVerteciesAfterMap([2:end 1])-cageVerteciesAfterMap;
 
 gz = 0.5*(abs(deltaD) + abs(deltaS)) .* deltaD ./ (abs(deltaD).*deltaS); %affine transformation with unit normal
 gz_gag = 0.5*(abs(deltaD) - abs(deltaS)) .* deltaD ./ (abs(deltaD).*conj(deltaS)); %affine transformation with unit normal
@@ -62,10 +59,10 @@ PSItag=Vz.*PHItag;
 PSI_Z0=0;
 
 partialCalc=PSItag(endIndices) + PSItag(startIndices);
-integral_on_edges=partialCalc.*edgeVectors;
+integral_on_edges=complex(partialCalc.*edgeVectors);
 % integral_on_edges=gather(integral_on_edges_gpu);
 
-PSI_Z0=PSI_Z0+0.000000000000000001i;
+PSI_Z0=complex(PSI_Z0);
 PSI=treeCumSum(uint32(Z0index), PSI_Z0, integral_on_edges, startIndices, endIndices);
 
 %*************step 8:find f******************
