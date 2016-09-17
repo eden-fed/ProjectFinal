@@ -50,7 +50,7 @@ integral_on_edges=partialCalc.*edgeVectors;
 % integral_on_edges=gather(integral_on_edges_gpu);
 
 % find the integral on all the spanning tree
-PHI_Z0=PHI_Z0+0.000000000000000001i;
+PHI_Z0=complex(PHI_Z0);
 PHI = treeCumSum(uint32(Z0index), PHI_Z0, integral_on_edges, startIndices, endIndices);
 
 %*************step 7:find PSI - another integral******************
