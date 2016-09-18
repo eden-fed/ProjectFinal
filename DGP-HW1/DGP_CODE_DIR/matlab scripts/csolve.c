@@ -1,4 +1,4 @@
-/* Produced by CVXGEN, 2016-09-14 11:06:50 -0400.  */
+/* Produced by CVXGEN, 2016-09-18 02:13:45 -0400.  */
 /* CVXGEN is Copyright (C) 2006-2012 Jacob Mattingley, jem@cvxgen.com. */
 /* The code in this file is Copyright (C) 2006-2012 Jacob Mattingley. */
 /* CVXGEN, or solvers produced by CVXGEN, cannot be used for commercial */
@@ -27,7 +27,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const char *status_names[] = {"optval", "gap", "steps", "converged"};
   mwSize dims1x1of1[1] = {1};
   mwSize dims[1];
-  const char *var_names[] = {"R_l_gz", "abs_Vg"};
+  const char *var_names[] = {"out_Real_log_gz", "out_abs_Vg"};
   const int num_var_names = 2;
   /* Avoid compiler warnings of unused variables by using a dummy assignment. */
   warned_diags = j = 0;
@@ -74,8 +74,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if (xm == NULL) {
     printf("could not find params.A.\n");
   } else {
-    if (!((mxGetM(xm) == 50) && (mxGetN(xm) == 1))) {
-      printf("A must be size (50,1), not (%d,%d).\n", mxGetM(xm), mxGetN(xm));
+    if (!((mxGetM(xm) == 5) && (mxGetN(xm) == 1))) {
+      printf("A must be size (5,1), not (%d,%d).\n", mxGetM(xm), mxGetN(xm));
       this_var_errors++;
     }
     if (mxIsComplex(xm)) {
@@ -93,7 +93,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (this_var_errors == 0) {
       dest = params.A;
       src = mxGetPr(xm);
-      for (i = 0; i < 50; i++)
+      for (i = 0; i < 5; i++)
         *dest++ = *src++;
       valid_vars++;
     }
@@ -103,8 +103,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if (xm == NULL) {
     printf("could not find params.B.\n");
   } else {
-    if (!((mxGetM(xm) == 50) && (mxGetN(xm) == 1))) {
-      printf("B must be size (50,1), not (%d,%d).\n", mxGetM(xm), mxGetN(xm));
+    if (!((mxGetM(xm) == 5) && (mxGetN(xm) == 1))) {
+      printf("B must be size (5,1), not (%d,%d).\n", mxGetM(xm), mxGetN(xm));
       this_var_errors++;
     }
     if (mxIsComplex(xm)) {
@@ -122,34 +122,63 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (this_var_errors == 0) {
       dest = params.B;
       src = mxGetPr(xm);
-      for (i = 0; i < 50; i++)
+      for (i = 0; i < 5; i++)
         *dest++ = *src++;
       valid_vars++;
     }
   }
   this_var_errors = 0;
-  xm = mxGetField(prhs[0], 0, "Vg");
+  xm = mxGetField(prhs[0], 0, "in_Real_log_gz");
   if (xm == NULL) {
-    printf("could not find params.Vg.\n");
+    printf("could not find params.in_Real_log_gz.\n");
   } else {
     if (!((mxGetM(xm) == 1) && (mxGetN(xm) == 1))) {
-      printf("Vg must be size (1,1), not (%d,%d).\n", mxGetM(xm), mxGetN(xm));
+      printf("in_Real_log_gz must be size (1,1), not (%d,%d).\n", mxGetM(xm), mxGetN(xm));
       this_var_errors++;
     }
     if (mxIsComplex(xm)) {
-      printf("parameter Vg must be real.\n");
+      printf("parameter in_Real_log_gz must be real.\n");
       this_var_errors++;
     }
     if (!mxIsClass(xm, "double")) {
-      printf("parameter Vg must be a full matrix of doubles.\n");
+      printf("parameter in_Real_log_gz must be a full matrix of doubles.\n");
       this_var_errors++;
     }
     if (mxIsSparse(xm)) {
-      printf("parameter Vg must be a full matrix.\n");
+      printf("parameter in_Real_log_gz must be a full matrix.\n");
       this_var_errors++;
     }
     if (this_var_errors == 0) {
-      dest = params.Vg;
+      dest = params.in_Real_log_gz;
+      src = mxGetPr(xm);
+      for (i = 0; i < 1; i++)
+        *dest++ = *src++;
+      valid_vars++;
+    }
+  }
+  this_var_errors = 0;
+  xm = mxGetField(prhs[0], 0, "in_abs_Vg");
+  if (xm == NULL) {
+    printf("could not find params.in_abs_Vg.\n");
+  } else {
+    if (!((mxGetM(xm) == 1) && (mxGetN(xm) == 1))) {
+      printf("in_abs_Vg must be size (1,1), not (%d,%d).\n", mxGetM(xm), mxGetN(xm));
+      this_var_errors++;
+    }
+    if (mxIsComplex(xm)) {
+      printf("parameter in_abs_Vg must be real.\n");
+      this_var_errors++;
+    }
+    if (!mxIsClass(xm, "double")) {
+      printf("parameter in_abs_Vg must be a full matrix of doubles.\n");
+      this_var_errors++;
+    }
+    if (mxIsSparse(xm)) {
+      printf("parameter in_abs_Vg must be a full matrix.\n");
+      this_var_errors++;
+    }
+    if (this_var_errors == 0) {
+      dest = params.in_abs_Vg;
       src = mxGetPr(xm);
       for (i = 0; i < 1; i++)
         *dest++ = *src++;
@@ -179,35 +208,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
     if (this_var_errors == 0) {
       dest = params.k;
-      src = mxGetPr(xm);
-      for (i = 0; i < 1; i++)
-        *dest++ = *src++;
-      valid_vars++;
-    }
-  }
-  this_var_errors = 0;
-  xm = mxGetField(prhs[0], 0, "l_gz");
-  if (xm == NULL) {
-    printf("could not find params.l_gz.\n");
-  } else {
-    if (!((mxGetM(xm) == 1) && (mxGetN(xm) == 1))) {
-      printf("l_gz must be size (1,1), not (%d,%d).\n", mxGetM(xm), mxGetN(xm));
-      this_var_errors++;
-    }
-    if (mxIsComplex(xm)) {
-      printf("parameter l_gz must be real.\n");
-      this_var_errors++;
-    }
-    if (!mxIsClass(xm, "double")) {
-      printf("parameter l_gz must be a full matrix of doubles.\n");
-      this_var_errors++;
-    }
-    if (mxIsSparse(xm)) {
-      printf("parameter l_gz must be a full matrix.\n");
-      this_var_errors++;
-    }
-    if (this_var_errors == 0) {
-      dest = params.l_gz;
       src = mxGetPr(xm);
       for (i = 0; i < 1; i++)
         *dest++ = *src++;
@@ -250,16 +250,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if (prepare_for_c) {
     printf("settings.prepare_for_c == 1. thus, outputting for C.\n");
     for (i = 0; i < 1; i++)
-      printf("  params.l_gz[%d] = %.6g;\n", i, params.l_gz[i]);
+      printf("  params.in_Real_log_gz[%d] = %.6g;\n", i, params.in_Real_log_gz[i]);
     for (i = 0; i < 1; i++)
-      printf("  params.Vg[%d] = %.6g;\n", i, params.Vg[i]);
+      printf("  params.in_abs_Vg[%d] = %.6g;\n", i, params.in_abs_Vg[i]);
     for (i = 0; i < 1; i++)
       printf("  params.k[%d] = %.6g;\n", i, params.k[i]);
     for (i = 0; i < 1; i++)
       printf("  params.log_SIGMA[%d] = %.6g;\n", i, params.log_SIGMA[i]);
-    for (i = 0; i < 50; i++)
+    for (i = 0; i < 5; i++)
       printf("  params.A[%d] = %.6g;\n", i, params.A[i]);
-    for (i = 0; i < 50; i++)
+    for (i = 0; i < 5; i++)
       printf("  params.B[%d] = %.6g;\n", i, params.B[i]);
   }
   /* Perform the actual solve in here. */
@@ -285,16 +285,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   /* Extract variable values. */
   plhs[0] = mxCreateStructArray(1, dims1x1of1, num_var_names, var_names);
   xm = mxCreateDoubleMatrix(1, 1, mxREAL);
-  mxSetField(plhs[0], 0, "R_l_gz", xm);
+  mxSetField(plhs[0], 0, "out_Real_log_gz", xm);
   dest = mxGetPr(xm);
-  src = vars.R_l_gz;
+  src = vars.out_Real_log_gz;
   for (i = 0; i < 1; i++) {
     *dest++ = *src++;
   }
   xm = mxCreateDoubleMatrix(1, 1, mxREAL);
-  mxSetField(plhs[0], 0, "abs_Vg", xm);
+  mxSetField(plhs[0], 0, "out_abs_Vg", xm);
   dest = mxGetPr(xm);
-  src = vars.abs_Vg;
+  src = vars.out_abs_Vg;
   for (i = 0; i < 1; i++) {
     *dest++ = *src++;
   }

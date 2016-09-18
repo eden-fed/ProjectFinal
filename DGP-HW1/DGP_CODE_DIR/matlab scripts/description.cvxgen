@@ -1,4 +1,4 @@
-# Produced by CVXGEN, 2016-09-14 11:06:50 -0400.
+# Produced by CVXGEN, 2016-09-18 02:13:45 -0400.
 # CVXGEN is Copyright (C) 2006-2012 Jacob Mattingley, jem@cvxgen.com.
 # The code in this file is Copyright (C) 2006-2012 Jacob Mattingley.
 # CVXGEN, or solvers produced by CVXGEN, cannot be used for commercial
@@ -8,37 +8,34 @@
 # Description: A description of the CVXGEN problem.
 
 dimensions
-  n=50
+  n=5
 end
 
 
 variables
-  R_l_gz
-  abs_Vg
+  out_Real_log_gz
+  out_abs_Vg
 end
 
 
 parameters
-  l_gz
-  Vg
-  sigma
+  in_Real_log_gz
+  in_abs_Vg
   log_SIGMA
   k
-  A(n)
-  B(n)
+  A(n) #y=ax+b
+  B(n) #y=ax+b
 end
-
 
 #the energy term
 minimize
-  quad(l_gz-R_l_gz)+quad(Vg-abs_Vg)
-  # norm(l_gz-R_l_gz)+norm(Vg-abs_Vg)
+  square(in_Real_log_gz-out_Real_log_gz)+square(in_abs_Vg-out_abs_Vg)
 
 subject to
 
-  abs_Vg >=0
-  abs_Vg <=k
-  abs_Vg <=log_SIGMA-R_l_gz
-  R_l_gz >=A[i]*abs_Vg+B[i], i=1..n
+  out_abs_Vg>=0
+  out_abs_Vg<=k
+  out_abs_Vg<=log_SIGMA-out_Real_log_gz
+  out_Real_log_gz>=A[i]*out_abs_Vg+B[i], i=1..n
 
 end

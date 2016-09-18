@@ -76,14 +76,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double* local_real_lg = mxGetPr(plhs[1]);
 
 	for (size_t i = 0; i < n; i++) {
-		*params.l_gz = global_real_lg[i];
-		*params.Vg = global_abs_vg[i];
+		*params.in_Real_log_gz = global_real_lg[i];
+		*params.in_abs_Vg = global_abs_vg[i];
 		steps = solve();
 	/*	if(!work.converged)
 			mexErrMsgIdAndTxt("MyToolbox:localStep:error", "the probles did not converged.");*/
 			/* For profiling purposes, allow extra silent solves if desired. */
 		settings.verbose = 0;
-		local_abs_vg[i] = *vars.abs_Vg;
-		local_real_lg[i] = *vars.R_l_gz;
+		local_abs_vg[i] = *vars.out_abs_Vg;
+		local_real_lg[i] = *vars.out_Real_log_gz;
 	}
 }

@@ -1,18 +1,5 @@
-% clc
 %********************check if mex files exists********************
-if(exist('csolve', 'file') ~= 3 || exist('localStep', 'file') ~= 3)
-    fullPathName = which('make_csolve.m');
-    [folderName, fileName, ext] = fileparts(fullPathName);
-	cd(folderName);
-	make_csolve;
-    make_localStep;
-end
-
-if(exist('treeCumSum', 'file') ~= 3)
-    fullPathName = which('treeCumSum.cpp');
-    [folderName, fileName, ext] = fileparts(fullPathName);
-    mex(fullPathName, '-outdir', folderName);
-end
+make_mex;
 %***********************start algorithm****************************
 a=size(C_sizeA,1);
 n=size(C_sizeA,2);
@@ -33,19 +20,7 @@ l_gz=logarithmExtraction(cageVerteciesB4Map_sizeA, gz_enc, cageVerteciesAfterMap
 Vg=(conj(gz_gag_enc))./gz_enc;
 
 %************preparing line segments for approximation********************
- crossPoint_vAxis1=-(lambertw((sigma/SIGMA)*exp(1))-1);
-if(k>=crossPoint_vAxis1)% the case that only the first and third equetions hold   
-    vAxis_segments=linspace(0,crossPoint_vAxis1,51); 
-else %the case that all equetions hold
-    vAxis_segments=linspace(0,k,51);
-end
-lAxis_segments=-log((1-vAxis_segments)/sigma);
-
-A=(lAxis_segments(1:end-1)-lAxis_segments(2:end))./(vAxis_segments(1:end-1)-vAxis_segments(2:end));
-B=lAxis_segments(1:end-1)-A.*vAxis_segments(1:end-1);
-A_length=length(A);
-A=A';B=B';
-
+[A,B]=createLineSegments(sigma,SIGMA,k,6);
 %*************step 5:solve 22 - obtain l(z), V(z)******************
 for ii=1:max_iterations
     
@@ -101,7 +76,7 @@ integral_on_edges=partialCalc.*edgeVectors;
 % integral_on_edges=gather(integral_on_edges_gpu);
 
 PSI_Z0=complex(PSI_Z0);
-PSI=treeCumSum(uint32(Z0index), PSI_Z0, integral_on_edges, startIndices, endIndices);
+PSI=treeCumSum(uint32(Z0index), PSI_Z0, complex(integral_on_edges), startIndices, endIndices);
 
 %*************step 8:find f******************
 f=PHI+conj(PSI);

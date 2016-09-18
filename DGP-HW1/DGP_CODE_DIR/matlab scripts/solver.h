@@ -1,4 +1,4 @@
-/* Produced by CVXGEN, 2016-09-14 11:06:52 -0400.  */
+/* Produced by CVXGEN, 2016-09-18 02:13:46 -0400.  */
 /* CVXGEN is Copyright (C) 2006-2012 Jacob Mattingley, jem@cvxgen.com. */
 /* The code in this file is Copyright (C) 2006-2012 Jacob Mattingley. */
 /* CVXGEN, or solvers produced by CVXGEN, cannot be used for commercial */
@@ -28,45 +28,45 @@
 #define pm(A, m, n) printmatrix(#A, A, m, n, 1)
 #endif
 typedef struct Params_t {
-  double l_gz[1];
-  double Vg[1];
+  double in_Real_log_gz[1];
+  double in_abs_Vg[1];
   double k[1];
   double log_SIGMA[1];
-  double A[50];
-  double B[50];
+  double A[5];
+  double B[5];
 } Params;
 typedef struct Vars_t {
-  double *R_l_gz; /* 1 rows. */
-  double *abs_Vg; /* 1 rows. */
+  double *out_Real_log_gz; /* 1 rows. */
+  double *out_abs_Vg; /* 1 rows. */
 } Vars;
 typedef struct Workspace_t {
-  double h[53];
-  double s_inv[53];
-  double s_inv_z[53];
+  double h[8];
+  double s_inv[8];
+  double s_inv_z[8];
   double *b;
   double q[2];
-  double rhs[108];
-  double x[108];
+  double rhs[18];
+  double x[18];
   double *s;
   double *z;
   double *y;
-  double lhs_aff[108];
-  double lhs_cc[108];
-  double buffer[108];
-  double buffer2[108];
-  double KKT[265];
-  double L[158];
-  double d[108];
-  double v[108];
-  double d_inv[108];
+  double lhs_aff[18];
+  double lhs_cc[18];
+  double buffer[18];
+  double buffer2[18];
+  double KKT[40];
+  double L[23];
+  double d[18];
+  double v[18];
+  double d_inv[18];
   double gap;
   double optval;
   double ineq_resid_squared;
   double eq_resid_squared;
   double block_33[1];
   /* Pre-op symbols. */
-  double quad_772795076608[1];
-  double quad_890218008576[1];
+  double quad_382403260416[1];
+  double quad_800024121344[1];
   int converged;
 } Workspace;
 typedef struct Settings_t {
