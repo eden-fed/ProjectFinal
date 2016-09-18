@@ -34,7 +34,7 @@ for ii=1:max_iterations
         break;
     end
     %local
-    %try using segments
+
     if sigma==1 && SIGMA==1
         R_l_gz=zeros(size(l_gz));
         abs_Vg=complex(zeros(size(Vg)));
@@ -63,7 +63,9 @@ integral_on_edges=partialCalc.*edgeVectors;
 % integral_on_edges=gather(integral_on_edges_gpu);
 
 % find the integral on all the spanning tree
+if (isreal(PHI_Z0))
 PHI_Z0=complex(PHI_Z0);
+end
 PHI = treeCumSum(uint32(Z0index), PHI_Z0, integral_on_edges, startIndices, endIndices);
 
 %*************step 7:find PSI - another integral******************
@@ -75,8 +77,13 @@ partialCalc=PSItag(endIndices) + PSItag(startIndices);
 integral_on_edges=partialCalc.*edgeVectors;
 % integral_on_edges=gather(integral_on_edges_gpu);
 
+if (isreal(PSI_Z0))
 PSI_Z0=complex(PSI_Z0);
-PSI=treeCumSum(uint32(Z0index), PSI_Z0, complex(integral_on_edges), startIndices, endIndices);
+end
+if (isreal(integral_on_edges))
+integral_on_edges=complex(integral_on_edges);
+end
+PSI=treeCumSum(uint32(Z0index), PSI_Z0, integral_on_edges, startIndices, endIndices);
 
 %*************step 8:find f******************
 f=PHI+conj(PSI);

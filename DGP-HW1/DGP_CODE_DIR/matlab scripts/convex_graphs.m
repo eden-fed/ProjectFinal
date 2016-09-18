@@ -42,17 +42,42 @@ line([0.4 0.4],[-1 1.5],'LineWidth',3,'Color','m');
 
 
 
-plot(abs_Vg1,R_l_gz1,'LineWidth',3,'g');
-    hold on
-    plot(abs_Vg,R_l_gz,'LineWidth',2,'y');
-    hold on ;
-		x = 0:0.01:0.45;
+plot(abs_Vg1,R_l_gz1,'LineWidth',3,'Color','g');
+hold on
+plot(abs_Vg,R_l_gz,'LineWidth',2,'Color','b');
+hold on ;
+	x = 0:0.01:0.45;
 y = -log((1-abs(x))/0.5);
-plot(x,y,'LineWidth',3)
+plot(x,y,'LineWidth',3,'Color','m')
 
 hold on
 
 x = 0:0.01:0.45;
 y = 0.7-x;
-plot(x,y,'LineWidth',3)
+plot(x,y,'LineWidth',3,'Color','m')
 line([0.4 0.4],[-1 1.5],'LineWidth',3,'Color','m');
+
+
+%*************************************************************
+
+
+x = 0:0.01:0.45;
+y = -log((1-abs(x))/0.5);
+plot(x,y,'LineWidth',3,'Color','m')
+
+hold on
+
+x = 0:0.01:0.45;
+y = 0.7-x;
+plot(x,y,'LineWidth',3,'Color','m')
+line([0.4 0.4],[-1 1.5],'LineWidth',3,'Color','m');
+hold on
+plot(abs_Vg1(234),R_l_gz1(234),'g*');
+hold on
+plot(abs_Vg(234),R_l_gz(234),'b*');
+hold on ;
+plot(inputSampleX,inputSampleY,'c*')
+
+%********************************************************
+temp=(abs_Vg1-abs_Vg).^2+(R_l_gz1-R_l_gz).^2
+[~,I]=max(temp)
