@@ -19,8 +19,10 @@ gz_gag_enc=repelem_ours(gz_gag,NumOfVerticesInEdgesSizeA);
 l_gz=logarithmExtraction(cageVerteciesB4Map_sizeA, gz_enc, cageVerteciesAfterMap, NumOfVerticesInEdgesSizeA);
 Vg=(conj(gz_gag_enc))./gz_enc;
 
+l_gz_orig=l_gz;
+Vg_orig=Vg;
 %************preparing line segments for approximation********************
-[A,B]=createLineSegments(sigma,SIGMA,k,6);
+%[A,B]=createLineSegments(sigma,SIGMA,k,6);
 %*************step 5:solve 22 - obtain l(z), V(z)******************
 for ii=1:max_iterations
     
@@ -34,6 +36,7 @@ for ii=1:max_iterations
         break;
     end
     %local
+    
     %try using segments
     if sigma==1 && SIGMA==1
         R_l_gz=zeros(size(l_gz));
@@ -50,6 +53,7 @@ end
 Vz=C_sizeM*v;
 lz=C_sizeM*l;
 
+energy2=norm(C_sizeA*l-l_gz_orig,2)+norm(C_sizeA*v-Vg_orig,2);
 %*************step 6:find phi(z) - integral******************
 PHItag=exp(lz);
 
@@ -63,7 +67,9 @@ integral_on_edges=partialCalc.*edgeVectors;
 % integral_on_edges=gather(integral_on_edges_gpu);
 
 % find the integral on all the spanning tree
+if (isreal(PHI_Z0))
 PHI_Z0=complex(PHI_Z0);
+end
 PHI = treeCumSum(uint32(Z0index), PHI_Z0, integral_on_edges, startIndices, endIndices);
 
 %*************step 7:find PSI - another integral******************
@@ -75,8 +81,13 @@ partialCalc=PSItag(endIndices) + PSItag(startIndices);
 integral_on_edges=partialCalc.*edgeVectors;
 % integral_on_edges=gather(integral_on_edges_gpu);
 
+if (isreal(PSI_Z0))
 PSI_Z0=complex(PSI_Z0);
-PSI=treeCumSum(uint32(Z0index), PSI_Z0, complex(integral_on_edges), startIndices, endIndices);
+end
+if (isreal(integral_on_edges))
+integral_on_edges=complex(integral_on_edges);
+end
+PSI=treeCumSum(uint32(Z0index), PSI_Z0, integral_on_edges, startIndices, endIndices);
 
 %*************step 8:find f******************
 f=PHI+conj(PSI);

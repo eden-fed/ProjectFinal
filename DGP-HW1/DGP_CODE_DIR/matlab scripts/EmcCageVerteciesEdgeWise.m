@@ -6,7 +6,7 @@ function [ sampledCageVerteciesAfterMap ] = EmcCageVerteciesEdgeWise( cageVertec
         %create q - user sampled cage
         %start and end vertecies for each edge
         startVertex=cageVerteciesAfterMap;
-        endVertex=circshift(cageVerteciesAfterMap,size(cageVerteciesAfterMap,1)-1);
+        endVertex=cageVerteciesAfterMap([2:end 1]);
         %create sampled Cage Vertecies After Map
         sampledCageVerteciesAfterMap=zeros(sum(NumOfVerticesInEdges),1);
         jj=1;
@@ -17,7 +17,6 @@ function [ sampledCageVerteciesAfterMap ] = EmcCageVerteciesEdgeWise( cageVertec
             sampledCageVerteciesAfterMap(jj:jj+Len-1)=temp;
             jj=jj+Len;
         end
-
     end
 end
 

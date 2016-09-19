@@ -27,10 +27,11 @@ cvx_begin
         abs(C_sizeA*v)<=log(SIGMA)-real(C_sizeA*l);
         sigma*exp(-real(C_sizeA*l))+abs(C_sizeA*v)<=1;
 cvx_end
-
+p2Lv_orig_l=real(C_sizeA*l);
+p2Lv_orig_v=abs(C_sizeA*v);
 Vz=C_sizeM*v;
 lz=C_sizeM*l;
-
+energy1=cvx_optval
 %*************step 6:find phi(z) - integral******************
 PHItag=exp(lz);
 
@@ -50,7 +51,9 @@ integral_on_edges=partialCalc.*edgeVectors;
 % integral_on_edges=gather(integral_on_edges_gpu);
 
 % find the integral on all the spanning tree
+if (isreal(PHI_Z0))
 PHI_Z0=complex(PHI_Z0);
+end
 PHI = treeCumSum(uint32(Z0index), PHI_Z0, integral_on_edges, startIndices, endIndices);
 
 %*************step 7:find PSI - another integral******************
@@ -59,10 +62,15 @@ PSItag=Vz.*PHItag;
 PSI_Z0=0;
 
 partialCalc=PSItag(endIndices) + PSItag(startIndices);
-integral_on_edges=complex(partialCalc.*edgeVectors);
+integral_on_edges=partialCalc.*edgeVectors;
 % integral_on_edges=gather(integral_on_edges_gpu);
 
+if (isreal(PSI_Z0))
 PSI_Z0=complex(PSI_Z0);
+end
+if (isreal(integral_on_edges))
+integral_on_edges=complex(integral_on_edges);
+end
 PSI=treeCumSum(uint32(Z0index), PSI_Z0, integral_on_edges, startIndices, endIndices);
 
 %*************step 8:find f******************

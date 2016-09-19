@@ -318,7 +318,8 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionAccel()
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map", compPointArrayToGmmMat(mCartCageVerticesNos));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map_sizeA", compPointArrayToGmmMat(mCartCageVerticesNos_sizeA));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("p_inv", mPinvOfIncCageVertexCoords);//send the matrix to matlab
-
+	MatlabGMMDataExchange::SetEngineDenseMatrix("A", mAOfLineSegmentInLvAccelerated);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("B", mBOfLineSegmentInLvAccelerated);//send the matrix to matlab
 
 	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_accel.m").c_str());
 	std::cout << res << std::endl;
@@ -356,7 +357,7 @@ std::string SpaceDeformer2D::RelativeToFullPath(char* relPath) {
 }
 MStatus SpaceDeformer2D::getData(IN MDataBlock& block,OUT MObject& cageMesh,OUT MObject& p2pMesh) {
 	MStatus stat;
-
+	bool needToCalcNewSegments = false;
 	MDataHandle envData = block.inputValue(envelope, &stat);
 	if (MS::kSuccess != stat) return stat;
 
@@ -371,15 +372,22 @@ MStatus SpaceDeformer2D::getData(IN MDataBlock& block,OUT MObject& cageMesh,OUT 
 	MDataHandle segNHandle = block.inputValue(mNlargeAttr, &stat);
 	mNLarge = segNHandle.asInt();//we can only change this value in the first time (doSetup)
 
+	double test;
 	MDataHandle kHandle = block.inputValue(mkAttr, &stat);
-	k = kHandle.asDouble();
+	test = kHandle.asDouble();
+	if (k != test) needToCalcNewSegments = true;
+	k = test;
 
 	MDataHandle sigmaAHandle = block.inputValue(mSigmaaAttr, &stat);
-	SigmaA = sigmaAHandle.asDouble();
+	test = sigmaAHandle.asDouble();
+	if (SigmaA != test) needToCalcNewSegments = true;
+	SigmaA = test;
 
 	MDataHandle sigmaBHandle = block.inputValue(msigmabAttr, &stat);
-	sigmaB = sigmaBHandle.asDouble();
-	
+	test = sigmaBHandle.asDouble();
+	if (sigmaB != test) needToCalcNewSegments = true;
+	sigmaB = test;
+
 	MDataHandle z0Handle = block.inputValue(mZ0Attr, &stat);
 	float3& z0= z0Handle.asFloat3();
 	mZ0NotOnMesh[0] = z0[0]; mZ0NotOnMesh[1] = z0[1]; mZ0NotOnMesh[2] = 0;
@@ -400,6 +408,10 @@ MStatus SpaceDeformer2D::getData(IN MDataBlock& block,OUT MObject& cageMesh,OUT 
 	MDataHandle p2phandle = block.inputValue(mCageP2pAttr, &stat);
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
 	p2pMesh = p2phandle.asMesh();
+
+	if (needToCalcNewSegments){
+		calcSegments();
+	}
 
 	return stat;
 }
@@ -974,6 +986,26 @@ MStatus SpaceDeformer2D::preprocessingIntegral(MFnMesh& inputMesh, MObject Input
 	}
 	//MatlabGMMDataExchange::GetEngineDenseMatrix("adjacencyGraph", mCauchyCoordsOfOriginalCageVertices);//get the incersed matrix from matlab
 	return stat;
+}
+MStatus SpaceDeformer2D::calcSegments(){
+	gmm::clear(mAOfLineSegmentInLvAccelerated);
+	gmm::resize(mAOfLineSegmentInLvAccelerated, 5, 1);
+	gmm::clear(mBOfLineSegmentInLvAccelerated);
+	gmm::resize(mBOfLineSegmentInLvAccelerated, 5, 1);
+
+	MatlabGMMDataExchange::SetEngineDenseMatrix("k", doubleToGmmMat(this->k));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("SIGMA", doubleToGmmMat(this->SigmaA));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("sigma", doubleToGmmMat(this->sigmaB));//send the matrix to matlab
+
+	std::string res = MatlabInterface::GetEngine().EvalToString("[A,B]=createLineSegments(sigma,SIGMA,k,6);");
+	std::cout << res << std::endl;
+	std::cerr << res << std::endl;
+
+	MatlabGMMDataExchange::GetEngineDenseMatrix("A", mAOfLineSegmentInLvAccelerated);//get the map from matlab
+	MatlabGMMDataExchange::GetEngineDenseMatrix("B", mBOfLineSegmentInLvAccelerated);//get the map from matlab
+
+	cout.flush();
+	return MS::kSuccess;
 }
 
 

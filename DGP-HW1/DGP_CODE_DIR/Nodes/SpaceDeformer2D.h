@@ -91,6 +91,9 @@ protected:
 
 	GMMDenseComplexColMatrix mPinvOfIncCageVertexCoords; //dimensions are: nLarge x a
 
+	GMMDenseComplexColMatrix mAOfLineSegmentInLvAccelerated; //dimensions are: 5 x 1
+	GMMDenseComplexColMatrix mBOfLineSegmentInLvAccelerated; //dimensions are: 5 x 1
+
 private:
 	void matlabCalcNewVerticesForInterpolation();
 	void matlabCalcNewVerticesForP2P();
@@ -103,6 +106,7 @@ private:
 	MStatus runTimeDoSetup();
 	int findClosestInternalPointsToZ0();
 	MStatus preprocessingIntegral(MFnMesh& inputMesh, MObject InputGeom);
+	MStatus calcSegments();
 	void IncreaseVertecies(Complex* OriginalCompCageVertecies, int OrigCageSize, Complex** IncreasedCompCageVertecies, int& numOfIncreasedCageVertecies);
 	void IncreaseVertecies(MPointArray& OriginalCageVertecies, MPointArray& IncreasedCageVertecies, int numOfIncreasedCageVertecies, bool countNumOfVerticesInEdges);
 	MStatus showIncVertecies(MPointArray& IncreasedCageVertecies);
