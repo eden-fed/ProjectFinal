@@ -53,7 +53,6 @@ end
 Vz=C_sizeM*v;
 lz=C_sizeM*l;
 
-energy2=norm(C_sizeA*l-l_gz_orig,2)+norm(C_sizeA*v-Vg_orig,2);
 %*************step 6:find phi(z) - integral******************
 PHItag=exp(lz);
 

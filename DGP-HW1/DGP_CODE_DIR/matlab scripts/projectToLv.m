@@ -31,7 +31,6 @@ p2Lv_orig_l=real(C_sizeA*l);
 p2Lv_orig_v=abs(C_sizeA*v);
 Vz=C_sizeM*v;
 lz=C_sizeM*l;
-energy1=cvx_optval
 %*************step 6:find phi(z) - integral******************
 PHItag=exp(lz);
 

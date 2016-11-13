@@ -205,8 +205,7 @@ void SpaceDeformer2D::matlabCalcLforHprojection()
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map_sizeA", compPointArrayToGmmMat(mCartCageVerticesNos_sizeA));//send the matrix to matlab
 
 	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToH.m").c_str());
-	std::cout << res << std::endl;
-	std::cerr << res << std::endl;
+	std::cerr << res;
 
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
 
@@ -231,8 +230,7 @@ void SpaceDeformer2D::matlabCalcLforLvprojection()
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map_sizeA", compPointArrayToGmmMat(mCartCageVerticesNos_sizeA));//send the matrix to matlab
 
 	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv.m").c_str());
-	std::cout << res << std::endl;
-	std::cerr << res << std::endl;
+	std::cerr << res;
 
 
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
@@ -262,8 +260,7 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionConformalAccel()
 
 
 	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_accel_conformal.m").c_str());
-	std::cout << res << std::endl;
-	std::cerr << res << std::endl;
+	std::cerr << res;
 
 
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
@@ -290,8 +287,7 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionConformal()
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map_sizeA", compPointArrayToGmmMat(mCartCageVerticesNos_sizeA));//send the matrix to matlab
 
 	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_comformal.m").c_str());
-	std::cout << res << std::endl;
-	std::cerr << res << std::endl;
+	std::cerr << res;
 
 
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
@@ -322,8 +318,7 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionAccel()
 	MatlabGMMDataExchange::SetEngineDenseMatrix("B", mBOfLineSegmentInLvAccelerated);//send the matrix to matlab
 
 	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_accel.m").c_str());
-	std::cout << res << std::endl;
-	std::cerr << res << std::endl;
+	std::cerr << res;
 
 
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
