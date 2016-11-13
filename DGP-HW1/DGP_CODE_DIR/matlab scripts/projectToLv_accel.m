@@ -19,8 +19,6 @@ gz_gag_enc=repelem_ours(gz_gag,NumOfVerticesInEdgesSizeA);
 l_gz=logarithmExtraction(cageVerteciesB4Map_sizeA, gz_enc, cageVerteciesAfterMap, NumOfVerticesInEdgesSizeA);
 Vg=(conj(gz_gag_enc))./gz_enc;
 
-l_gz_orig=l_gz;
-Vg_orig=Vg;
 %************preparing line segments for approximation********************
 %[A,B]=createLineSegments(sigma,SIGMA,k,6);
 %*************step 5:solve 22 - obtain l(z), V(z)******************
@@ -36,8 +34,7 @@ for ii=1:max_iterations
         break;
     end
     %local
-    
-    %try using segments
+
     if sigma==1 && SIGMA==1
         R_l_gz=zeros(size(l_gz));
         abs_Vg=complex(zeros(size(Vg)));
