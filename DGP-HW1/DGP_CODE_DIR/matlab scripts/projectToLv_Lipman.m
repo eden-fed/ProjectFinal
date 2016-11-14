@@ -19,7 +19,6 @@ gz_gag_enc=repelem_ours(gz_gag,NumOfVerticesInEdgesSizeA);
 l_gz=logarithmExtraction(cageVerteciesB4Map_sizeA, gz_enc, cageVerteciesAfterMap, NumOfVerticesInEdgesSizeA);
 Vg=(conj(gz_gag_enc))./gz_enc;
 
-
 %*************step 5:solve 22 - obtain l(z), V(z)******************
 for ii=1:max_iterations
 
@@ -30,13 +29,21 @@ for ii=1:max_iterations
     else
         [abs_Vg,R_l_gz]=localStep(A,B,abs(Vg),real(l_gz),k,log(SIGMA));
     end
+    %***
     
-    l_gz=complex(R_l_gz, imag(l_gz));
-    Vg=abs_Vg.*exp(1i*angle(Vg));
+    l_gz_local=complex(R_l_gz, imag(l_gz));
+    Vg_local=abs_Vg.*exp(1i*angle(Vg));
     
     %global
-    l = p_inv*l_gz;
-    v=p_inv*Vg;
+    nl=l_gz-l_gz_local;
+    l_lambda=[C_sizeA'*C_sizeA , C_sizeA'*nl ; nl'*C_sizeA , 0] \ [C_sizeA'*l_gz ; nl'*l_gz_local];
+    l=l_lambda(1:end-1);%last index is lambda
+    
+    nv=Vg-Vg_local;
+    v_lambda=[C_sizeA'*C_sizeA , C_sizeA'*nv ; nv'*C_sizeA , 0] \ [C_sizeA'*Vg ; nv'*Vg_local];
+    v=v_lambda(1:end-1);
+  
+    %***
     
     l_gz=C_sizeA*l;
     Vg=C_sizeA*v;

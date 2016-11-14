@@ -73,11 +73,11 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Cauchy Interpolation", 1));
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Point to point", 2));
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection H Space", 3));
-	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space", 4));
-	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space Conformal", 5));
-	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space Conformal Accel", 6));
+	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space Conformal", 4));
+	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space Conformal Accel", 5));
+	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space", 6));
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space Accel", 7));
-
+	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space, Lipman", 8));
 
 	CHECK_MSTATUS(attributeAffects(mCoordinateTypeAttr, outputGeom));
 
@@ -324,6 +324,38 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionAccel()
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
 	cout.flush();
 }
+
+void SpaceDeformer2D::matlabCalcLforLvprojectionLipman()
+{
+	MatlabInterface::GetEngine().Eval("clearvars -except edgeVectors startIndices endIndices");
+
+	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdgesSizeA", mNumOfVerticesInEdgesSizeA);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdgesSizeNlarge", mNumOfVerticesInEdgesSizeNlarge);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeM", mCauchyCoordinatesIncForP2P);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeA", mIncCageVertexCoords);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("k", doubleToGmmMat(this->k));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("SIGMA", doubleToGmmMat(this->SigmaA));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("sigma", doubleToGmmMat(this->sigmaB));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0index", doubleToGmmMat((this->mZ0index) + 1));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0", compToGmmMat(mZ0onMesh));
+	MatlabGMMDataExchange::SetEngineDenseMatrix("lambda", doubleToGmmMat(this->lambda));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("max_iterations", doubleToGmmMat(this->iterationsNum));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("epsilon", doubleToGmmMat(this->epsilon));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map", compPointArrayToGmmMat(mCartCageVerticesNos));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map_sizeA", compPointArrayToGmmMat(mCartCageVerticesNos_sizeA));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("p_inv", mPinvOfIncCageVertexCoords);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("A", mAOfLineSegmentInLvAccelerated);//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("B", mBOfLineSegmentInLvAccelerated);//send the matrix to matlab
+
+	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_Lipman.m").c_str());
+	std::cerr << res;
+
+
+	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
+	cout.flush();
+}
+
 MStatus SpaceDeformer2D::showIncVertecies(MPointArray& IncreasedCageVertecies) {
 	int facesNum = 1;
 	int verticesNum = IncreasedCageVertecies.length();
@@ -479,25 +511,28 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 		runTimeDoSetup();
 		matlabCalcLforHprojection();
 		break;
-	case 4://projection via Lv space 
-		runTimeDoSetup();
-		matlabCalcLforLvprojection();
-		break;
-	case 5://projection via Lv space conformal
+	case 4://projection via Lv space conformal
 		runTimeDoSetup();
 		matlabCalcLforLvprojectionConformal();
 		break;
-	case 6://projection via Lv space conformal accelerated
+	case 5://projection via Lv space conformal accelerated
 		runTimeDoSetup();
 		matlabCalcLforLvprojectionConformalAccel();
+		break;
+	case 6://projection via Lv space 
+		runTimeDoSetup();
+		matlabCalcLforLvprojection();
 		break;
 	case 7://projection via Lv space accelerated
 		runTimeDoSetup();
 		matlabCalcLforLvprojectionAccel();
+		break;
+	case 8:
+		runTimeDoSetup();
+		matlabCalcLforLvprojectionLipman();
 	}
 	///////////////////////////////
 	///////////////////////////////
-
 
 	//update the new deformed position of all the internal vertices
 	for (iter.reset(); !iter.isDone(); iter.next())

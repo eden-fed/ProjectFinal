@@ -22,17 +22,6 @@ Vg=(conj(gz_gag_enc))./gz_enc;
 
 %*************step 5:solve 22 - obtain l(z), V(z)******************
 for ii=1:max_iterations
-
-    %local
-    if sigma==1 && SIGMA==1
-        R_l_gz=zeros(size(l_gz));
-        abs_Vg=complex(zeros(size(Vg)));
-    else
-        [abs_Vg,R_l_gz]=localStep(A,B,abs(Vg),real(l_gz),k,log(SIGMA));
-    end
-    
-    l_gz=complex(R_l_gz, imag(l_gz));
-    Vg=abs_Vg.*exp(1i*angle(Vg));
     
     %global
     l = p_inv*l_gz;
@@ -45,6 +34,17 @@ for ii=1:max_iterations
         break;
     end
     
+    %local
+    if sigma==1 && SIGMA==1
+        R_l_gz=zeros(size(l_gz));
+        abs_Vg=complex(zeros(size(Vg)));
+    else
+        [abs_Vg,R_l_gz]=localStep(A,B,abs(Vg),real(l_gz),k,log(SIGMA));
+    end
+    
+    l_gz=complex(R_l_gz, imag(l_gz));
+    Vg=abs_Vg.*exp(1i*angle(Vg));
+
 end
 
 Vz=C_sizeM*v;

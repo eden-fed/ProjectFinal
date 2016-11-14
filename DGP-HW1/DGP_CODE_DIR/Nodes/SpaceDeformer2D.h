@@ -102,6 +102,7 @@ private:
 	void matlabCalcLforLvprojectionConformalAccel();
 	void matlabCalcLforLvprojectionConformal();
 	void matlabCalcLforLvprojectionAccel();
+	void matlabCalcLforLvprojectionLipman();
 	std::string RelativeToFullPath(char* relPath);
 	MStatus runTimeDoSetup();
 	int findClosestInternalPointsToZ0();
