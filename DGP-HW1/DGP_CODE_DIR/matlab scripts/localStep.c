@@ -1,5 +1,5 @@
 //this is a MEX file for Matlab.
-
+#define ZERO_LIBRARY_MODE
 #include "mex.h"
 #include "solver.h"
 //#include <iostream>

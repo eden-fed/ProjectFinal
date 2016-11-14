@@ -6,6 +6,7 @@
 
 /* Filename: solver.c. */
 /* Description: Main solver file. */
+#define ZERO_LIBRARY_MODE
 #include "solver.h"
 double eval_gap(void) {
   int i;
