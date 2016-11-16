@@ -733,7 +733,7 @@ void SpaceDeformer2D::IncreaseVertecies(MPointArray& OriginalCageVertecies, MPoi
 
 		//find the number of new veritecies per edge
 		double edgeLength = (OriginalCageVertecies[(i + 1) % numOfOriginalVertecies].distanceTo(OriginalCageVertecies[i]));
-		double numOfSegmentsPerEdge = round(edgeLength / segmentLength);//the number of vertices in the edge is #seg-1
+		int numOfSegmentsPerEdge = round(edgeLength / segmentLength);//the number of vertices in the edge is #seg-1
 
 		//find the size of a segment in this edge
 		double segmentLengthInEdge = edgeLength / numOfSegmentsPerEdge;

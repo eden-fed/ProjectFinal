@@ -35,14 +35,19 @@ for ii=1:max_iterations
     Vg_local=abs_Vg.*exp(1i*angle(Vg));
     
     %global
-    nl=l_gz-l_gz_local;
-    l_lambda=[C_sizeA'*C_sizeA , C_sizeA'*nl ; nl'*C_sizeA , 0] \ [C_sizeA'*l_gz ; nl'*l_gz_local];
-    l=l_lambda(1:end-1);%last index is lambda
+%     nl=l_gz-l_gz_local;
+%     l_lambda=[C_sizeA'*C_sizeA , C_sizeA'*nl ; nl'*C_sizeA , 0] \ [C_sizeA'*l_gz ; nl'*l_gz_local];
+%     l=l_lambda(1:end-1);%last index is lambda
+%     
+%     nv=Vg-Vg_local;
+%     v_lambda=[C_sizeA'*C_sizeA , C_sizeA'*nv ; nv'*C_sizeA , 0] \ [C_sizeA'*Vg ; nv'*Vg_local];
+%     v=v_lambda(1:end-1);
     
-    nv=Vg-Vg_local;
-    v_lambda=[C_sizeA'*C_sizeA , C_sizeA'*nv ; nv'*C_sizeA , 0] \ [C_sizeA'*Vg ; nv'*Vg_local];
-    v=v_lambda(1:end-1);
-  
+    n0=[l_gz;Vg]-[l_gz_local;Vg_local];
+    T=blkdiag(C_sizeA,C_sizeA);
+    x_lambda=[T'*T , T'*n0 ; n0'*T , 0] \ [T'*[l_gz;Vg] ; n0'*[l_gz_local;Vg_local]];
+    l=x_lambda(1:n);
+    v=x_lambda(n+1:2*n);
     %***
     
     l_gz=C_sizeA*l;
