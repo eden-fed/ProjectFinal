@@ -5,14 +5,7 @@ a=size(C_sizeA,1);
 n=size(C_sizeA,2);
 
 %*************step 2:Evaluate gz and gz_gag******************
-deltaS=cageVerteciesB4Map([2:end 1])-cageVerteciesB4Map;
-deltaD=cageVerteciesAfterMap([2:end 1])-cageVerteciesAfterMap;
-
-gz = 0.5*(abs(deltaD) + abs(deltaS)) .* deltaD ./ (abs(deltaD).*deltaS); %affine transformation with unit normal
-gz_gag = 0.5*(abs(deltaD) - abs(deltaS)) .* deltaD ./ (abs(deltaD).*conj(deltaS)); %affine transformation with unit normal
-
-gz_enc=repelem_ours(gz,NumOfVerticesInEdgesSizeA);
-gz_gag_enc=repelem_ours(gz_gag,NumOfVerticesInEdgesSizeA);
+[gz_enc,gz_gag_enc]=EvalGzAndGzBar( cageVerteciesB4Map,cageVerteciesAfterMap,NumOfVerticesInEdgesSizeA );
 
 %*************step 3,4:extract argument from gz, and evaluate log(gz), Vg on A******************
 
@@ -20,6 +13,7 @@ l_gz=logarithmExtraction(cageVerteciesB4Map_sizeA, gz_enc, cageVerteciesAfterMap
 Vg=(conj(gz_gag_enc))./gz_enc;
 
 %*************step 5:solve 22 - obtain l(z), V(z)******************
+   mag=zeros(max_iterations,1);
 for ii=1:max_iterations
 
     %local
@@ -35,29 +29,31 @@ for ii=1:max_iterations
     Vg_local=abs_Vg.*exp(1i*angle(Vg));
     
     %global
-%     nl=l_gz-l_gz_local;
-%     l_lambda=[C_sizeA'*C_sizeA , C_sizeA'*nl ; nl'*C_sizeA , 0] \ [C_sizeA'*l_gz ; nl'*l_gz_local];
-%     l=l_lambda(1:end-1);%last index is lambda
-%     
-%     nv=Vg-Vg_local;
-%     v_lambda=[C_sizeA'*C_sizeA , C_sizeA'*nv ; nv'*C_sizeA , 0] \ [C_sizeA'*Vg ; nv'*Vg_local];
-%     v=v_lambda(1:end-1);
     
-    n0=[l_gz;Vg]-[l_gz_local;Vg_local];
+    n0=[l_gz;Vg]-[l_gz_local;Vg_local];    
     T=blkdiag(C_sizeA,C_sizeA);
-    x_lambda=[T'*T , T'*n0 ; n0'*T , 0] \ [T'*[l_gz;Vg] ; n0'*[l_gz_local;Vg_local]];
-    l=x_lambda(1:n);
-    v=x_lambda(n+1:2*n);
+    KKTresult=[T'*T , T'*n0 ; n0'*T , 0] \ [T'*[l_gz;Vg] ; n0'*[l_gz_local;Vg_local]];
+    l=KKTresult(1:n);
+    v=KKTresult(n+1:2*n);
     %***
     
     l_gz=C_sizeA*l;
     Vg=C_sizeA*v;
     
-    if(~any(abs(Vg)>k+epsilon)) && (~any(abs(Vg)>log(SIGMA)-real(l_gz)+epsilon)) && (~any(sigma*exp(-real(l_gz))+abs(Vg)>1+epsilon))
+%     if(~any(abs(Vg)>k+epsilon)) && (~any(abs(Vg)>log(SIGMA)-real(l_gz)+epsilon)) && (~any(sigma*exp(-real(l_gz))+abs(Vg)>1+epsilon))
+%         break;
+%     end
+    mag(ii)=norm(n0);
+    if(norm(n0)<0.01)%termination condition from the article
         break;
     end
     
 end
+x=1:ii;
+mag=mag(x);
+plot(x,mag,'-o');
+
+fprintf('iterations = %d\n',ii);
 
 Vz=C_sizeM*v;
 lz=C_sizeM*l;

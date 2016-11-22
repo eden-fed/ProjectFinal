@@ -4,17 +4,7 @@ n=size(Ctag,2);
 %k=(SIGMA-sigma)/(SIGMA+sigma);
 %lambda=1;
 %*************step 2:Evaluate gz and gz_gag******************
-deltaS=cageVerteciesB4Map-circshift(cageVerteciesB4Map,1);
-deltaD=cageVerteciesAfterMap-circshift(cageVerteciesAfterMap,1);
-
-deltaS=circshift(deltaS,size(deltaS,1)-1);
-deltaD=circshift(deltaD,size(deltaD,1)-1);
-
-gz=0.5*((deltaD.*(abs(deltaS)+abs(deltaD)))./(deltaS.*abs(deltaD)));
-gz_gag=(-0.5)*((deltaD.*(abs(deltaS)-abs(deltaD)))./(deltaS.*abs(deltaD)));
-
-gz_enc=repelem_ours(gz,NumOfVerticesInEdges);
-gz_gag_enc=repelem_ours(gz_gag,NumOfVerticesInEdges);
+[gz_enc,gz_gag_enc]=EvalGzAndGzBar( cageVerteciesB4Map,cageVerteciesAfterMap,NumOfVerticesInEdges );
 
 %*************step 3:solve 13 - obtain r, psi(z)******************
 Cz0=C_sizeM(Z0index,:);
@@ -23,11 +13,6 @@ Cz0=C_sizeM(Z0index,:);
 abs_gz=abs(gz_enc);
 conj_gs_gag=conj(gz_gag_enc);
 
-
-% abs_gz=ones(a,1);
-% conj_gs_gag=zeros(a,1);
-
-tic
 cvx_begin
     variable  psai(n) complex;
     variable r(a);
@@ -40,9 +25,8 @@ cvx_begin
         abs(Ctag*psai)<=r-sigma;
 cvx_end
 
-time1=toc;
 %*************step 4:solve 15 - obtain l(z)******************
-tic
+
 % normB4map=cageVerteciesB4Map/norm(cageVerteciesB4Map);
 % normAfterMap=cageVerteciesAfterMap/norm(cageVerteciesAfterMap);
 cvx_begin
@@ -54,7 +38,6 @@ cvx_begin
       %  imag(Cz0*l)==2*mean(angle(cageVerteciesB4Map-cageVerteciesAfterMap));
         imag(Cz0*l)==0;
 cvx_end
-time2=toc;
 %*************step 5:find derivative of phi(z)******************
 PHItag=exp(C_sizeM*l);
 

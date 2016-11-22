@@ -5,33 +5,18 @@ a=size(C_sizeA,1);
 n=size(C_sizeA,2);
 
 %*************step 2:Evaluate gz and gz_gag******************
-deltaS=cageVerteciesB4Map([2:end 1])-cageVerteciesB4Map;
-deltaD=cageVerteciesAfterMap([2:end 1])-cageVerteciesAfterMap;
-
-gz = 0.5*(abs(deltaD) + abs(deltaS)) .* deltaD ./ (abs(deltaD).*deltaS); %affine transformation with unit normal
-gz_gag = 0.5*(abs(deltaD) - abs(deltaS)) .* deltaD ./ (abs(deltaD).*conj(deltaS)); %affine transformation with unit normal
-
-gz_enc=repelem_ours(gz,NumOfVerticesInEdgesSizeA);
-gz_gag_enc=repelem_ours(gz_gag,NumOfVerticesInEdgesSizeA);
+[gz_enc,gz_gag_enc]=EvalGzAndGzBar( cageVerteciesB4Map,cageVerteciesAfterMap,NumOfVerticesInEdgesSizeA );
 
 %*************step 3,4:extract argument from gz, and evaluate log(gz), Vg on A******************
 
 l_gz=logarithmExtraction(cageVerteciesB4Map_sizeA, gz_enc, cageVerteciesAfterMap, NumOfVerticesInEdgesSizeA);
 Vg=(conj(gz_gag_enc))./gz_enc;
-
+first_l_gz=l_gz;first_Vg=Vg;
 
 %*************step 5:solve 22 - obtain l(z), V(z)******************
+mag=zeros(max_iterations,1);%*
+energy=zeros(max_iterations,1);%*
 for ii=1:max_iterations
-    %global
-    l = p_inv*l_gz;
-    v=p_inv*Vg;
-    
-    l_gz=C_sizeA*l;
-    Vg=C_sizeA*v;
-    
-    if(~any(abs(Vg)>k+epsilon)) && (~any(abs(Vg)>log(SIGMA)-real(l_gz)+epsilon)) && (~any(sigma*exp(-real(l_gz))+abs(Vg)>1+epsilon))
-        break;
-    end
     
     %local
     if sigma==1 && SIGMA==1
@@ -41,10 +26,40 @@ for ii=1:max_iterations
         [abs_Vg,R_l_gz]=localStep(A,B,abs(Vg),real(l_gz),k,log(SIGMA));
     end
     
-    l_gz=complex(R_l_gz, imag(l_gz));
-    Vg=abs_Vg.*exp(1i*angle(Vg));
+    l_gz_local=complex(R_l_gz, imag(l_gz));
+    Vg_local=abs_Vg.*exp(1i*angle(Vg));
     
+     n0=[l_gz;Vg]-[l_gz_local;Vg_local]; %*
+     
+     l_gz=l_gz_local;Vg=Vg_local;%*
+    %global
+    l = p_inv*l_gz;
+    v=p_inv*Vg;
+    
+    l_gz=C_sizeA*l;
+    Vg=C_sizeA*v;
+      
+    if(all(abs(Vg)<k+epsilon)) && (all(abs(Vg)<log(SIGMA)-real(l_gz)+epsilon)) && (all(sigma*exp(-real(l_gz))+abs(Vg)<1+epsilon))
+        break;
+    end
+    
+    mag(ii)=norm(n0);%*
+    energy(ii)=norm(C_sizeA*l-l_gz_local,2)+norm(C_sizeA*v-Vg_local,2);%*
 end
+x=1:ii;%*
+mag=mag(x);%*
+figure
+plot(x,mag,'-o');%*
+xlabel('iterations');%*
+ylabel('norm(n0)');%*
+
+energy=energy(x);
+figure
+plot(x,energy,'-o');%*
+xlabel('iterations');%*
+ylabel('energy');%*
+
+fprintf('iterations = %d\n',ii);
 
 Vz=C_sizeM*v;
 lz=C_sizeM*l;

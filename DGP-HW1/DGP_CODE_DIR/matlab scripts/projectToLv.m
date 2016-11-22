@@ -3,14 +3,7 @@ a=size(C_sizeA,1);
 n=size(C_sizeA,2);
 
 %*************step 2:Evaluate gz and gz_gag******************
-deltaS=cageVerteciesB4Map([2:end 1])-cageVerteciesB4Map;
-deltaD=cageVerteciesAfterMap([2:end 1])-cageVerteciesAfterMap;
-
-gz = 0.5*(abs(deltaD) + abs(deltaS)) .* deltaD ./ (abs(deltaD).*deltaS); %affine transformation with unit normal
-gz_gag = 0.5*(abs(deltaD) - abs(deltaS)) .* deltaD ./ (abs(deltaD).*conj(deltaS)); %affine transformation with unit normal
-
-gz_enc=repelem_ours(gz,NumOfVerticesInEdgesSizeA);
-gz_gag_enc=repelem_ours(gz_gag,NumOfVerticesInEdgesSizeA);
+[gz_enc,gz_gag_enc]=EvalGzAndGzBar( cageVerteciesB4Map,cageVerteciesAfterMap,NumOfVerticesInEdgesSizeA );
 
 %*************step 3,4:extract argument from gz, and evaluate log(gz), Vg on A******************
 
@@ -27,8 +20,8 @@ cvx_begin
         abs(C_sizeA*v)<=log(SIGMA)-real(C_sizeA*l);
         sigma*exp(-real(C_sizeA*l))+abs(C_sizeA*v)<=1;
 cvx_end
-p2Lv_orig_l=real(C_sizeA*l);
-p2Lv_orig_v=abs(C_sizeA*v);
+
+
 Vz=C_sizeM*v;
 lz=C_sizeM*l;
 %*************step 6:find phi(z) - integral******************
