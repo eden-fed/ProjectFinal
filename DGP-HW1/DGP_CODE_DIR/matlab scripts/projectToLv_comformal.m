@@ -22,7 +22,7 @@ gamma1=log(SIGMA);
 gamma2=log(sigma);
 cvx_begin
     variable  l(n) complex;
-    minimize norm(C_sizeA*l-l_gz,2);
+    minimize sum_square_abs(C_sizeA*l-l_gz);
     subject to
         real(C_sizeA*l)<=gamma1;
         gamma2<=real(C_sizeA*l);

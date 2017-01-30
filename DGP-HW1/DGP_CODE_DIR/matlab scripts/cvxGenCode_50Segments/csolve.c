@@ -1,4 +1,4 @@
-/* Produced by CVXGEN, 2016-12-28 05:27:42 -0500.  */
+/* Produced by CVXGEN, 2016-11-24 03:33:00 -0500.  */
 /* CVXGEN is Copyright (C) 2006-2012 Jacob Mattingley, jem@cvxgen.com. */
 /* The code in this file is Copyright (C) 2006-2012 Jacob Mattingley. */
 /* CVXGEN, or solvers produced by CVXGEN, cannot be used for commercial */
@@ -70,30 +70,59 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   }
   valid_vars = 0;
   this_var_errors = 0;
-  xm = mxGetField(prhs[0], 0, "b");
+  xm = mxGetField(prhs[0], 0, "A");
   if (xm == NULL) {
-    printf("could not find params.b.\n");
+    printf("could not find params.A.\n");
   } else {
-    if (!((mxGetM(xm) == 1) && (mxGetN(xm) == 1))) {
-      printf("b must be size (1,1), not (%d,%d).\n", mxGetM(xm), mxGetN(xm));
+    if (!((mxGetM(xm) == 50) && (mxGetN(xm) == 1))) {
+      printf("A must be size (50,1), not (%d,%d).\n", mxGetM(xm), mxGetN(xm));
       this_var_errors++;
     }
     if (mxIsComplex(xm)) {
-      printf("parameter b must be real.\n");
+      printf("parameter A must be real.\n");
       this_var_errors++;
     }
     if (!mxIsClass(xm, "double")) {
-      printf("parameter b must be a full matrix of doubles.\n");
+      printf("parameter A must be a full matrix of doubles.\n");
       this_var_errors++;
     }
     if (mxIsSparse(xm)) {
-      printf("parameter b must be a full matrix.\n");
+      printf("parameter A must be a full matrix.\n");
       this_var_errors++;
     }
     if (this_var_errors == 0) {
-      dest = params.b;
+      dest = params.A;
       src = mxGetPr(xm);
-      for (i = 0; i < 1; i++)
+      for (i = 0; i < 50; i++)
+        *dest++ = *src++;
+      valid_vars++;
+    }
+  }
+  this_var_errors = 0;
+  xm = mxGetField(prhs[0], 0, "B");
+  if (xm == NULL) {
+    printf("could not find params.B.\n");
+  } else {
+    if (!((mxGetM(xm) == 50) && (mxGetN(xm) == 1))) {
+      printf("B must be size (50,1), not (%d,%d).\n", mxGetM(xm), mxGetN(xm));
+      this_var_errors++;
+    }
+    if (mxIsComplex(xm)) {
+      printf("parameter B must be real.\n");
+      this_var_errors++;
+    }
+    if (!mxIsClass(xm, "double")) {
+      printf("parameter B must be a full matrix of doubles.\n");
+      this_var_errors++;
+    }
+    if (mxIsSparse(xm)) {
+      printf("parameter B must be a full matrix.\n");
+      this_var_errors++;
+    }
+    if (this_var_errors == 0) {
+      dest = params.B;
+      src = mxGetPr(xm);
+      for (i = 0; i < 50; i++)
         *dest++ = *src++;
       valid_vars++;
     }
@@ -214,35 +243,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       valid_vars++;
     }
   }
-  this_var_errors = 0;
-  xm = mxGetField(prhs[0], 0, "m");
-  if (xm == NULL) {
-    printf("could not find params.m.\n");
-  } else {
-    if (!((mxGetM(xm) == 1) && (mxGetN(xm) == 1))) {
-      printf("m must be size (1,1), not (%d,%d).\n", mxGetM(xm), mxGetN(xm));
-      this_var_errors++;
-    }
-    if (mxIsComplex(xm)) {
-      printf("parameter m must be real.\n");
-      this_var_errors++;
-    }
-    if (!mxIsClass(xm, "double")) {
-      printf("parameter m must be a full matrix of doubles.\n");
-      this_var_errors++;
-    }
-    if (mxIsSparse(xm)) {
-      printf("parameter m must be a full matrix.\n");
-      this_var_errors++;
-    }
-    if (this_var_errors == 0) {
-      dest = params.m;
-      src = mxGetPr(xm);
-      for (i = 0; i < 1; i++)
-        *dest++ = *src++;
-      valid_vars++;
-    }
-  }
   if (valid_vars != 6) {
     printf("Error: %d parameters are invalid.\n", 6 - valid_vars);
     mexErrMsgTxt("invalid parameters found.");
@@ -257,10 +257,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       printf("  params.k[%d] = %.6g;\n", i, params.k[i]);
     for (i = 0; i < 1; i++)
       printf("  params.log_SIGMA[%d] = %.6g;\n", i, params.log_SIGMA[i]);
-    for (i = 0; i < 1; i++)
-      printf("  params.m[%d] = %.6g;\n", i, params.m[i]);
-    for (i = 0; i < 1; i++)
-      printf("  params.b[%d] = %.6g;\n", i, params.b[i]);
+    for (i = 0; i < 50; i++)
+      printf("  params.A[%d] = %.6g;\n", i, params.A[i]);
+    for (i = 0; i < 50; i++)
+      printf("  params.B[%d] = %.6g;\n", i, params.B[i]);
   }
   /* Perform the actual solve in here. */
   steps = solve();

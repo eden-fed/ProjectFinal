@@ -1,5 +1,6 @@
 %********************check if mex files exists********************
 make_mex;
+delta=1e-3;%debug
 %***********************start algorithm****************************
 a=size(C_sizeA,1);
 n=size(C_sizeA,2);
@@ -20,9 +21,6 @@ v=p_inv*init_Vg;
 l_gz_first_step=C_sizeA*l;
 Vg_first_step=C_sizeA*v;
 
-l_gz=l_gz_first_step;
-Vg=Vg_first_step;
-
 energy_graph=zeros(max_iterations,1);%*
 temp_idx=1;
 
@@ -31,54 +29,45 @@ temp_idx2=1;
 
 figure('position', [610, 0, 600, 1400])
 h=plot(0,0);
-for iter=1:5000
-    
+for iter=1:500
+
+    l_gz=C_sizeA*l;
+    Vg=C_sizeA*v;
     energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
     delete(h);
     h=convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg , energy, m, b);
-	energy_graph(temp_idx)=energy;%*
-    temp_idx=temp_idx+1;
-	
-%     if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(m*abs(C_sizeA*v)+b<=real(C_sizeA*l)+epsilon))
-%         break;
-%     end
     
-    %local
-
-	[abs_Vg,R_l_gz]=localStep(m,b,abs(Vg),real(l_gz),k,log(SIGMA));%solve qp problem - straight line
-	
-    l_gz=complex(R_l_gz, imag(l_gz));
-    Vg=abs_Vg.*exp(1i*angle(Vg));
-	
+    energy_graph(temp_idx)=energy;%*
+    temp_idx=temp_idx+1;
+    
+    cvx_begin quiet
+        variable l_gz(a) complex;
+        variable Vg(a) complex;
+        E1=sum_square_abs(C_sizeA*l-l_gz)+sum_square_abs(C_sizeA*v-Vg);
+        E2=sum_square_abs(l_gz-l_gz_first_step)+sum_square_abs(Vg-Vg_first_step);
+        minimize E1+delta*E2;
+        subject to
+            abs(Vg)<=k;
+            abs(Vg)<=log(SIGMA)-real(l_gz);
+            m*abs(Vg)+b<=real(l_gz);
+    cvx_end
+    
 	E1=sum_square_abs(C_sizeA*l-l_gz)+sum_square_abs(C_sizeA*v-Vg);
-	energy_graph2(temp_idx2)=E1;%*
+	E2=sum_square_abs(l_gz-l_gz_first_step)+sum_square_abs(Vg-Vg_first_step);
+	energy_graph2(temp_idx2)=E1+delta*E2;%*
     temp_idx2=temp_idx2+1;
 	
-    %****
+%     cvx_end
     
-    %global
     l = p_inv*l_gz;
     v=p_inv*Vg;
-    
-    E1=sum_square_abs(C_sizeA*l-l_gz)+sum_square_abs(C_sizeA*v-Vg);
-	energy_graph2(temp_idx2)=E1;%*
+	
+	E1=sum_square_abs(C_sizeA*l-l_gz)+sum_square_abs(C_sizeA*v-Vg);
+	E2=sum_square_abs(l_gz-l_gz_first_step)+sum_square_abs(Vg-Vg_first_step);
+	energy_graph2(temp_idx2)=E1+delta*E2;%*
     temp_idx2=temp_idx2+1;
-    
-    l_gz=C_sizeA*l;
-    Vg=C_sizeA*v;
-    
-    %     if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(sigma*exp(-real(l_gz))+abs(Vg)<=1+epsilon))
-    %         break;
-    %     end
-    
-    
-end
 
-fprintf('max k = %d\n',max(abs(Vg)));
-fprintf('max SIGMA = %d\n',max(exp(real(l_gz)).*(1+abs(Vg))));
-fprintf('min sigma = %d\n',min(exp(real(l_gz)).*(1-abs(Vg))));
-fprintf('energy = %d\n',sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg));
-fprintf('iterations = %d\n\n',iter);
+end
 
 x=1:iter;%*
 energy_graph=energy_graph(x);%*
@@ -94,6 +83,22 @@ figure%*
 plot(x,energy_graph2,'LineWidth',3);%*
 title(['energy = ','E1+delta*E2']);
 ylabel('energy');%*
+
+l_gz=C_sizeA*l;
+Vg=C_sizeA*v;
+
+if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(m*abs(C_sizeA*v)+b<=real(C_sizeA*l)+epsilon))
+    fprintf('the constraints are satisfied\n');
+end
+
+fprintf('max k = %d\n',max(abs(Vg)));
+fprintf('max SIGMA = %d\n',max(exp(real(l_gz)).*(1+abs(Vg))));
+fprintf('min sigma = %d\n',min(exp(real(l_gz)).*(1-abs(Vg))));
+energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
+fprintf('energy = %d\n\n',energy);
+
+figure('position', [610, 0, 600, 1400])
+convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg, energy,m,b );
 
 Vz=C_sizeM*v;
 lz=C_sizeM*l;

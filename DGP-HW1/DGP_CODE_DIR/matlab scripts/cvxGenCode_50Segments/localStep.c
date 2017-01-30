@@ -9,7 +9,7 @@ Workspace work;
 Settings settings;
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-	size_t n,i;
+	size_t m,n,i;
 	double *src;
 	double *dest;
 	int steps;
@@ -25,14 +25,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(nlhs!=2) {
 		mexErrMsgIdAndTxt("MyToolbox:localStep:nlhs","Two output required.");
 	}
-	if(!(mxGetM(prhs[0]) == 1 &&  mxGetN(prhs[0]) == 1) )
+	m=mxGetM(prhs[0]);
+	if(!(m > 1 &&  mxGetN(prhs[0]) == 1))
 	{
-		mexErrMsgIdAndTxt("MyToolbox:localStep:wrongInput", "First argument must be a scalar.");//m
+		mexErrMsgIdAndTxt("MyToolbox:localStep:wrongInput", "First argument must be a column vector.");//A
 	}
 
-	if(!(mxGetM(prhs[1]) == 1 &&  mxGetN(prhs[1]) == 1) )
+	if(!(mxGetM(prhs[1]) > 1 &&  mxGetN(prhs[1]) == 1) && m==mxGetM(prhs[1]))
 	{
-		mexErrMsgIdAndTxt("MyToolbox:localStep:wrongInput", "Second argument must be a scalar.");//b
+		mexErrMsgIdAndTxt("MyToolbox:localStep:wrongInput", "Second argument must be a column vector, and the same size as the first argument.");//B
 	}
 	n=mxGetM(prhs[2]);
 	if(!(n > 1 && mxGetN(prhs[2]) == 1))
@@ -56,10 +57,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	set_defaults();  // Set basic algorithm parameters.
     setup_indexing();
+//	params.A = mxGetPr(prhs[0]);
+	dest = params.A;
+	src = mxGetPr(prhs[0]);
+	for (j = 0; j < m; j++)
+		*dest++ = *src++;
 
-	*params.m = mxGetScalar(prhs[0]);
-	*params.b = mxGetScalar(prhs[1]);
-	
+//	params.B = mxGetPr(prhs[1]);
+	dest = params.B;
+	src = mxGetPr(prhs[1]);
+	for (j = 0; j < m; j++)
+		*dest++ = *src++;
+
 	*params.k = mxGetScalar(prhs[4]);
 	*params.log_SIGMA = mxGetScalar(prhs[5]);
 

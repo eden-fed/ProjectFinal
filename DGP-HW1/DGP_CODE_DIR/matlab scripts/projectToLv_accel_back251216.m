@@ -22,51 +22,59 @@ Vg_first_step=C_sizeA*v;
 
 l_gz=l_gz_first_step;
 Vg=Vg_first_step;
-
-energy_graph=zeros(max_iterations,1);%*
-temp_idx=1;
-
-energy_graph2=zeros(2*max_iterations,1);%*
-temp_idx2=1;
-
 figure('position', [610, 0, 600, 1400])
 h=plot(0,0);
-for iter=1:5000
+for iter=1:max_iterations
     
     energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
     delete(h);
     h=convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg , energy, m, b);
-	energy_graph(temp_idx)=energy;%*
-    temp_idx=temp_idx+1;
-	
-%     if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(m*abs(C_sizeA*v)+b<=real(C_sizeA*l)+epsilon))
-%         break;
-%     end
+    if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(m*abs(C_sizeA*v)+b<=real(C_sizeA*l)+epsilon))
+        break;
+    end
     
     %local
+%     cvx_begin quiet
+%         variable R_l_gz(a);
+%         variable abs_Vg(a);
+%         minimize sum_square_abs(real(l_gz)-R_l_gz)+sum_square_abs(abs(Vg)-abs_Vg);
+%         subject to
+%             abs_Vg>=0;
+%             abs_Vg<=k;
+%             abs_Vg<=log(SIGMA)-R_l_gz;
+%             m*abs_Vg+b<=R_l_gz;
+%             %sigma*exp(-R_l_gz)+abs_Vg<=1;
+%     cvx_end
+%     
+%     l_gz=complex(R_l_gz, imag(l_gz));
+%     Vg=abs_Vg.*exp(1i*angle(Vg));
 
-	[abs_Vg,R_l_gz]=localStep(m,b,abs(Vg),real(l_gz),k,log(SIGMA));%solve qp problem - straight line
-	
-    l_gz=complex(R_l_gz, imag(l_gz));
-    Vg=abs_Vg.*exp(1i*angle(Vg));
-	
-	E1=sum_square_abs(C_sizeA*l-l_gz)+sum_square_abs(C_sizeA*v-Vg);
-	energy_graph2(temp_idx2)=E1;%*
-    temp_idx2=temp_idx2+1;
-	
+    cvx_begin quiet
+        variable l_gz_local(a) complex;
+        variable Vg_local(a) complex;
+        E1=sum_square_abs(l_gz-l_gz_local)+sum_square_abs(Vg-Vg_local);
+        minimize E1;
+        subject to
+            abs(Vg_local)<=k;
+            abs(Vg_local)<=log(SIGMA)-real(l_gz_local);
+            m*abs(Vg_local)+b<=real(l_gz_local);
+    cvx_end
+    
+    l_gz=l_gz_local;
+    Vg=Vg_local;
     %****
     
     %global
     l = p_inv*l_gz;
     v=p_inv*Vg;
     
-    E1=sum_square_abs(C_sizeA*l-l_gz)+sum_square_abs(C_sizeA*v-Vg);
-	energy_graph2(temp_idx2)=E1;%*
-    temp_idx2=temp_idx2+1;
-    
     l_gz=C_sizeA*l;
     Vg=C_sizeA*v;
     
+    
+    %     if(energy>=407.61)
+    %         break;
+    %     end
     %     if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(sigma*exp(-real(l_gz))+abs(Vg)<=1+epsilon))
     %         break;
     %     end
@@ -79,21 +87,6 @@ fprintf('max SIGMA = %d\n',max(exp(real(l_gz)).*(1+abs(Vg))));
 fprintf('min sigma = %d\n',min(exp(real(l_gz)).*(1-abs(Vg))));
 fprintf('energy = %d\n',sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg));
 fprintf('iterations = %d\n\n',iter);
-
-x=1:iter;%*
-energy_graph=energy_graph(x);%*
-figure%*
-plot(x,energy_graph,'LineWidth',3);%*
-title('energy = sumSquareAbs(l_gzFirstStep-l_gz)+sumSquareSbs(V_gFirstStep-V_g)');
-xlabel('iterations');%*
-ylabel('energy');%*
-
-x=1:2*iter;%*
-energy_graph2=energy_graph2(x);%*
-figure%*
-plot(x,energy_graph2,'LineWidth',3);%*
-title(['energy = ','E1+delta*E2']);
-ylabel('energy');%*
 
 Vz=C_sizeM*v;
 lz=C_sizeM*l;

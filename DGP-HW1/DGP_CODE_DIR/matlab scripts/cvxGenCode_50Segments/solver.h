@@ -1,4 +1,4 @@
-/* Produced by CVXGEN, 2016-12-28 05:27:43 -0500.  */
+/* Produced by CVXGEN, 2016-11-24 03:33:01 -0500.  */
 /* CVXGEN is Copyright (C) 2006-2012 Jacob Mattingley, jem@cvxgen.com. */
 /* The code in this file is Copyright (C) 2006-2012 Jacob Mattingley. */
 /* CVXGEN, or solvers produced by CVXGEN, cannot be used for commercial */
@@ -32,33 +32,33 @@ typedef struct Params_t {
   double in_abs_Vg[1];
   double k[1];
   double log_SIGMA[1];
-  double m[1];
-  double b[1];
+  double A[50];
+  double B[50];
 } Params;
 typedef struct Vars_t {
   double *out_Real_log_gz; /* 1 rows. */
   double *out_abs_Vg; /* 1 rows. */
 } Vars;
 typedef struct Workspace_t {
-  double h[4];
-  double s_inv[4];
-  double s_inv_z[4];
+  double h[53];
+  double s_inv[53];
+  double s_inv_z[53];
   double *b;
   double q[2];
-  double rhs[10];
-  double x[10];
+  double rhs[108];
+  double x[108];
   double *s;
   double *z;
   double *y;
-  double lhs_aff[10];
-  double lhs_cc[10];
-  double buffer[10];
-  double buffer2[10];
-  double KKT[20];
-  double L[11];
-  double d[10];
-  double v[10];
-  double d_inv[10];
+  double lhs_aff[108];
+  double lhs_cc[108];
+  double buffer[108];
+  double buffer2[108];
+  double KKT[265];
+  double L[158];
+  double d[108];
+  double v[108];
+  double d_inv[108];
   double gap;
   double optval;
   double ineq_resid_squared;

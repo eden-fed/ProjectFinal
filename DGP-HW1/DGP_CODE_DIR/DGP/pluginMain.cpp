@@ -9,6 +9,8 @@
 #include "Commands/TriangulatePolygonCmd.h"
 #include "Commands/colorMeshVerticesCmd.h"
 #include "Commands/inverseMatrixCmd.h"
+#include "Commands/reconstructRBFCmd.h"
+
 #include "Nodes/SpaceDeformer2D.h"
 
 #include "Utils/Maya_Macros.h"
@@ -25,6 +27,7 @@ MStatus initializePlugin(MObject obj)
 	REGISTER_COMMAND_WITH_SYNTAX(plugin, TriangulatePolygonCmd);
 	REGISTER_COMMAND_WITH_SYNTAX(plugin, colorMeshVerticesCmd);
 	REGISTER_COMMAND_WITH_SYNTAX(plugin, inverseMatrixCmd);
+	REGISTER_COMMAND_WITH_SYNTAX(plugin, reconstructRBFCmd);
 
 
 	return MS::kSuccess;
@@ -40,6 +43,7 @@ MStatus uninitializePlugin(MObject obj)
 	DEREGISTER_COMMAND(plugin, TriangulatePolygonCmd);
 	DEREGISTER_COMMAND(plugin, colorMeshVerticesCmd);
 	DEREGISTER_COMMAND(plugin, inverseMatrixCmd);
+	DEREGISTER_COMMAND(plugin, reconstructRBFCmd);
 
 
 	return MS::kSuccess;

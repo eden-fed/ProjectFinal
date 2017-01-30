@@ -14,53 +14,40 @@ init_Vg=(conj(gz_gag_enc))./gz_enc;
 
 %*************step 5:solve 22 - obtain l(z), V(z)******************
 [m,b]=findLineForTest(sigma,SIGMA,k);%temp - create line instead of third condition
+mag=zeros(max_iterations,1);%*
+energy=zeros(max_iterations,1);%*
+    l = p_inv*init_l_gz;%for the case of 1 iteration
+    v=p_inv*init_Vg;
+    l_gz=C_sizeA*l;
+    Vg=C_sizeA*v;
+    %make first step and compare the energy to it
 
-l = p_inv*init_l_gz;%for the case of 1 iteration
-v=p_inv*init_Vg;
-l_gz_first_step=C_sizeA*l;
-Vg_first_step=C_sizeA*v;
-
-l_gz=l_gz_first_step;
-Vg=Vg_first_step;
-
-figure('position', [1220, 0, 600, 1400])
-h=plot(0,0);
 for iter=1:max_iterations
     
     %local
-%     cvx_begin quiet
-%         variable R_l_gz(a);
-%         variable abs_Vg(a);
-%         % minimize norm(real(l_gz)-R_l_gz,2)+norm(abs(Vg)-abs_Vg,2);
-%         minimize sum_square_abs(real(l_gz)-R_l_gz)+sum_square_abs(abs(Vg)-abs_Vg);
-%         subject to
-%             abs_Vg>=0;
-%             abs_Vg<=k;
-%             abs_Vg<=log(SIGMA)-R_l_gz;
-%             m*abs_Vg+b<=R_l_gz;
-%             % sigma*exp(-R_l_gz)+abs_Vg<=1;
-%     cvx_end
-%     l_gz_local=complex(R_l_gz, imag(l_gz));
-%     Vg_local=abs_Vg.*exp(1i*angle(Vg));
-    
     cvx_begin quiet
-        variable l_gz_local(a) complex;
-        variable Vg_local(a) complex;
-        minimize sum_square_abs(l_gz-l_gz_local)+sum_square_abs(Vg-Vg_local);
+        variable R_l_gz(a);
+        variable abs_Vg(a);
+       % minimize norm(real(l_gz)-R_l_gz,2)+norm(abs(Vg)-abs_Vg,2);
+        minimize sum_square_abs(real(l_gz)-R_l_gz)+sum_square_abs(abs(Vg)-abs_Vg);
         subject to
-            abs(Vg_local)<=k;
-            abs(Vg_local)<=log(SIGMA)-real(l_gz_local);
-            m*abs(Vg_local)+b<=real(l_gz_local);
+            abs_Vg>=0;
+            abs_Vg<=k;
+            abs_Vg<=log(SIGMA)-R_l_gz;
+            m*abs_Vg+b<=R_l_gz;
+           % sigma*exp(-R_l_gz)+abs_Vg<=1;
     cvx_end
-    %****
+    %***
+    
+    l_gz_local=complex(R_l_gz, imag(l_gz));
+    Vg_local=abs_Vg.*exp(1i*angle(Vg));
     
     %global
-    energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
-    delete(h);
-    h=convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg , energy, m, b);
     
-    n0=[l_gz;Vg]-[l_gz_local;Vg_local];
-    if(norm(n0)<epsilon)%stop condition from the article
+    n0=[l_gz;Vg]-[l_gz_local;Vg_local]; 
+    mag(iter)=norm(n0);%*
+    energy(iter)=norm(l_gz-l_gz_local,2)+norm(Vg-Vg_local,2);%*
+    if(norm(n0)<epsilon)%termination condition from the article
         break;
     end
     T=blkdiag(C_sizeA,C_sizeA);
@@ -73,18 +60,29 @@ for iter=1:max_iterations
     %***
     l_gz=C_sizeA*l;
     Vg=C_sizeA*v;
-    
-end
-if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(m*abs(C_sizeA*v)+b<=real(C_sizeA*l)+epsilon))
-    fprintf('the constraints are satisfied\n');
-end
 
+end
 fprintf('max k = %d\n',max(abs(Vg)));
 fprintf('max SIGMA = %d\n',max(exp(real(l_gz)).*(1+abs(Vg))));
 fprintf('min sigma = %d\n',min(exp(real(l_gz)).*(1-abs(Vg))));
-fprintf('energy = %d\n',sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg));
+fprintf('energy = %d\n',sum_square_abs(init_l_gz-l_gz)+sum_square_abs(init_Vg-Vg));
 fprintf('iterations = %d\n\n',iter);
 
+
+%graphs:
+% x=1:iter;%*
+% mag=mag(x);%*
+% figure%*
+% plot(x,mag,'-o');%*
+% xlabel('iterations');%*
+% ylabel('norm(n0)');%*
+% 
+% energy=energy(x);%*
+% figure%*
+% plot(x,energy,'-o');%*
+% xlabel('iterations');%*
+% ylabel('energy');%*
+    
 Vz=C_sizeM*v;
 lz=C_sizeM*l;
 
@@ -102,7 +100,7 @@ integral_on_edges=partialCalc.*edgeVectors;
 
 % find the integral on all the spanning tree
 if (isreal(PHI_Z0))
-    PHI_Z0=complex(PHI_Z0);
+PHI_Z0=complex(PHI_Z0);
 end
 PHI = treeCumSum(uint32(Z0index), PHI_Z0, integral_on_edges, startIndices, endIndices);
 
@@ -116,10 +114,10 @@ integral_on_edges=partialCalc.*edgeVectors;
 % integral_on_edges=gather(integral_on_edges_gpu);
 
 if (isreal(PSI_Z0))
-    PSI_Z0=complex(PSI_Z0);
+PSI_Z0=complex(PSI_Z0);
 end
 if (isreal(integral_on_edges))
-    integral_on_edges=complex(integral_on_edges);
+integral_on_edges=complex(integral_on_edges);
 end
 PSI=treeCumSum(uint32(Z0index), PSI_Z0, integral_on_edges, startIndices, endIndices);
 

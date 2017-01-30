@@ -94,7 +94,7 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(attributeAffects(mNlargeAttr, outputGeom));
 
 	MFnNumericAttribute kAttr;
-	mkAttr = kAttr.create("k", "k", MFnNumericData::kDouble, 0.6, &stat);
+	mkAttr = kAttr.create("k", "k", MFnNumericData::kDouble, 0.4, &stat);
 	CHECK_MSTATUS(kAttr.setKeyable(true));
 	CHECK_MSTATUS(addAttribute(mkAttr));
 	CHECK_MSTATUS(attributeAffects(mkAttr, outputGeom));
@@ -124,13 +124,13 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(attributeAffects(mlambdaAttr, outputGeom));
 
 	MFnNumericAttribute iterAttr;
-	mIterAttr = iterAttr.create("maxIterations", "maxIterations", MFnNumericData::kInt, 200, &stat);
+	mIterAttr = iterAttr.create("maxIterations", "maxIterations", MFnNumericData::kInt, 500, &stat);
 	CHECK_MSTATUS(iterAttr.setKeyable(true));
 	CHECK_MSTATUS(addAttribute(mIterAttr));
 	CHECK_MSTATUS(attributeAffects(mIterAttr, outputGeom));
 
 	MFnNumericAttribute epsAttr;
-	mEpsilonAttr = epsAttr.create("epsilon", "epsilon", MFnNumericData::kDouble, 0.0000000001, &stat);
+	mEpsilonAttr = epsAttr.create("epsilon", "epsilon", MFnNumericData::kDouble, 1e-4, &stat);
 	CHECK_MSTATUS(epsAttr.setKeyable(true));
 	CHECK_MSTATUS(addAttribute(mEpsilonAttr));
 	CHECK_MSTATUS(attributeAffects(mEpsilonAttr, outputGeom));
@@ -224,10 +224,12 @@ void SpaceDeformer2D::matlabCalcLforLvprojection()
 	MatlabGMMDataExchange::SetEngineDenseMatrix("sigma", doubleToGmmMat(this->sigmaB));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0index", doubleToGmmMat((this->mZ0index) + 1));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Z0", compToGmmMat(mZ0onMesh));
+	MatlabGMMDataExchange::SetEngineDenseMatrix("epsilon", doubleToGmmMat(this->epsilon));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("lambda", doubleToGmmMat(this->lambda));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map", compPointArrayToGmmMat(mCartCageVerticesNos));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesB4Map_sizeA", compPointArrayToGmmMat(mCartCageVerticesNos_sizeA));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("p_inv", mPinvOfIncCageVertexCoords);//send the matrix to matlab
 
 	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv.m").c_str());
 	std::cerr << res;
@@ -1018,16 +1020,18 @@ MStatus SpaceDeformer2D::preprocessingIntegral(MFnMesh& inputMesh, MObject Input
 	return stat;
 }
 MStatus SpaceDeformer2D::calcSegments(){
+	const int numOfSegments = 50;
 	gmm::clear(mAOfLineSegmentInLvAccelerated);
-	gmm::resize(mAOfLineSegmentInLvAccelerated, 5, 1);
+	gmm::resize(mAOfLineSegmentInLvAccelerated, numOfSegments, 1);
 	gmm::clear(mBOfLineSegmentInLvAccelerated);
-	gmm::resize(mBOfLineSegmentInLvAccelerated, 5, 1);
+	gmm::resize(mBOfLineSegmentInLvAccelerated, numOfSegments, 1);
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("k", doubleToGmmMat(this->k));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("SIGMA", doubleToGmmMat(this->SigmaA));//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("sigma", doubleToGmmMat(this->sigmaB));//send the matrix to matlab
+	MatlabGMMDataExchange::SetEngineDenseMatrix("numOfSegments", doubleToGmmMat(numOfSegments));//send the matrix to matlab
 
-	std::string res = MatlabInterface::GetEngine().EvalToString("[A,B]=createLineSegments(sigma,SIGMA,k,6);");
+	std::string res = MatlabInterface::GetEngine().EvalToString("[A,B]=createLineSegments(sigma,SIGMA,k,numOfSegments+1);");
 	std::cout << res << std::endl;
 	std::cerr << res << std::endl;
 
