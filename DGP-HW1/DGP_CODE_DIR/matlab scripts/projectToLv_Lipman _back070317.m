@@ -13,93 +13,76 @@ init_l_gz=logarithmExtraction(cageVerteciesB4Map_sizeA, gz_enc, cageVerteciesAft
 init_Vg=(conj(gz_gag_enc))./gz_enc;
 
 %*************step 5:solve 22 - obtain l(z), V(z)******************
-% [m,intersectionX]=findLineApproxForCurve(sigma,SIGMA,k);  %temp - create line instead of third condition
+[m,intersectionX]=findLineForTest(sigma,SIGMA,k);%temp - create line instead of third condition
 
-l = p_inv*init_l_gz;
+l = p_inv*init_l_gz;%for the case of 1 iteration
 v=p_inv*init_Vg;
 l_gz_first_step=C_sizeA*l;
 Vg_first_step=C_sizeA*v;
 
 l_gz=l_gz_first_step;
 Vg=Vg_first_step;
-% 
-% energy_graph=zeros(max_iterations,1);%*
-% temp_idx=1;
-% 
-% energy_graph2=zeros(2*max_iterations,1);%*
-% temp_idx2=1;
-% 
-figure('position', [610, 0, 600, 1400])
-h=plot(0,0);
 
+%******preprocess******
+T=blkdiag(C_sizeA,C_sizeA);
+T_trans=T';
+% M=sparse(T_trans*T);
+% [M_L, M_U, M_p, M_q] = lu(M, 'vector');
+%**********************
+
+% figure('position', [1220, 0, 600, 1400])
+% h=plot(0,0);
 for iter=1:max_iterations
     
-    energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
-    delete(h);
-    h=convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg , energy, m, log(sigma));
-% 	energy_graph(temp_idx)=energy;%*
-%     temp_idx=temp_idx+1;
-	
-    if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(log(sigma)+m*abs(C_sizeA*v)<=real(C_sizeA*l)+epsilon))
-        fprintf('the constraints are satisfied\n');
-        break;
-    end
-    
     %local
-
-% 	[abs_Vg1,R_l_gz1]=localStep(m,b,abs(Vg),real(l_gz),k,log(SIGMA));%solve qp problem - straight line
-    
     [ abs_Vg,R_l_gz ] = projectToPoly( abs(Vg),real(l_gz),SIGMA,sigma,k,intersectionX);
     
     l_gz_local=complex(R_l_gz, imag(l_gz));
     Vg_local=abs_Vg.*exp(1i*angle(Vg));
-
-% 	E1=sum_square_abs(C_sizeA*l-l_gz)+sum_square_abs(C_sizeA*v-Vg);
-%  	energy_graph2(temp_idx2)=E1;%*
-%     temp_idx2=temp_idx2+1;
-	
     %****
-    %global
-    l = p_inv*l_gz_local;
-    v=p_inv*Vg_local;
-%     E1=sum_square_abs(C_sizeA*l-l_gz)+sum_square_abs(C_sizeA*v-Vg);
-% 	energy_graph2(temp_idx2)=E1;%*
-%     temp_idx2=temp_idx2+1;
     
+    %global
+%     energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
+%     delete(h);
+%     h=convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg , energy, m, log(sigma));
+%     
+    n0=[l_gz;Vg]-[l_gz_local;Vg_local];
+    if(norm(n0)<epsilon)%stop condition from the article
+        break;
+    end
+
+    KKTmat=[T'*T , T'*n0 ; n0'*T , 0];
+    KKTresult=KKTmat \ [T'*[l_gz;Vg] ; n0'*[l_gz_local;Vg_local]];
+    %fprintf('cond(KKTmat) = %d\n',cond(KKTmat));
+
+%     eta_0=T_trans*n0;
+%     d_0=n0'*[l_gz_local;Vg_local];
+%     c_0=T_trans*[l_gz;Vg];
+% 
+%     y_c = M_U\(M_L\(c_0(M_p,:)));
+%     y_eta = M_U\(M_L\(eta_0(M_p,:)));
+%     
+%     KKTresult=y_c-(y_eta*(eta_0'*y_c-d_0)/(eta_0'*y_eta));
+
+%     if(any(abs(KKTresult_old(1:end-1)-KKTresult)>1e-6))
+%        warning('different result'); 
+%     end
+    l=KKTresult(1:n);
+    v=KKTresult(n+1:2*n);%(n+1:end)
+    %***
     l_gz=C_sizeA*l;
     Vg=C_sizeA*v;
     
-    %     if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(sigma*exp(-real(l_gz))+abs(Vg)<=1+epsilon))
-    %         break;
-    %     end
-    
-    
+end
+if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(m*abs(C_sizeA*v)+log(sigma)<=real(C_sizeA*l)+epsilon))
+    fprintf('the constraints are satisfied\n');
 end
 
 fprintf('max k = %d\n',max(abs(Vg)));
 fprintf('max SIGMA = %d\n',max(exp(real(l_gz)).*(1+abs(Vg))));
 fprintf('min sigma = %d\n',min(exp(real(l_gz)).*(1-abs(Vg))));
-energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
-fprintf('energy = %d\n',energy);
+fprintf('energy = %d\n',sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg));
 fprintf('iterations = %d\n\n',iter);
-
-% figure('position', [610, 0, 600, 1400])
-% convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg, energy , m, log(sigma));
-
-% x=1:iter;%*
-% energy_graph=energy_graph(x);%*
-% figure%*
-% plot(x,energy_graph,'LineWidth',3);%*
-% title('energy = sumSquareAbs(l_gzFirstStep-l_gz)+sumSquareSbs(V_gFirstStep-V_g)');
-% xlabel('iterations');%*
-% ylabel('energy');%*
-% 
-% x=1:2*iter;%*
-% energy_graph2=energy_graph2(x);%*
-% figure%*
-% plot(x,energy_graph2,'LineWidth',3);%*
-% title(['energy = ','E1+delta*E2']);
-% ylabel('energy');%*
 
 Vz=C_sizeM*v;
 lz=C_sizeM*l;

@@ -63,10 +63,10 @@ plot(x,y,'LineWidth',3)
 line([k k],[-1 1.5],'LineWidth',3,'Color','c');
 line([0 0.7],[0 0],'LineWidth',1,'Color','k');
 
-hold on
-plot(abs(Vg),real(l_gz),'.','Color','r')
-xlabel('abs(V_gz)');
-ylabel('real(L_gz)');
+% hold on
+% plot(abs(Vg),real(l_gz),'.','Color','r')
+% xlabel('abs(V_gz)');
+% ylabel('real(L_gz)');
 
 axis equal tight 
 %**********************************************************
@@ -137,5 +137,130 @@ hold on
 
 y=m*abs(x)+b;
 plot(x,y,'LineWidth',3);
+
+axis equal tight 
+%******************************************************
+%draw the region:
+sigma=0.5;
+SIGMA=2;
+k=0.4;
+
+x = 0:0.01:0.7;
+figure;
+
+hold on
+
+y = log(SIGMA)-x;
+plot(x,y,'LineWidth',3)
+line([k k],[-1 1.5],'LineWidth',3,'Color','m');
+line([0 0.7],[0 0],'LineWidth',1,'Color','k');
+
+hold on
+
+y=m*abs(x)+b;
+plot(x,y,'LineWidth',3);
+
+axis equal tight 
+
+%***********************************************************
+sigma=0.5;
+SIGMA=2;
+k=0.4;
+crossPointY=log(sigma/(1-k));
+m=(crossPointY-log(sigma))/k;
+b=log(sigma);
+
+x = 0:0.01:k;
+figure;
+
+hold on
+
+y = log(SIGMA)-x;
+plot(x,y,'LineWidth',3)
+line([k k],[log(sigma)-0.3 log(SIGMA)+0.4],'LineWidth',3);
+line([0 0.7],[0 0],'LineWidth',1,'Color','k');
+
+hold on
+
+y=m*x+b;
+plot(x,y,'LineWidth',3);
+
+hold on
+
+y=x+log(SIGMA);
+plot(x,y,'LineWidth',3,'Color','m');
+
+hold on
+
+y=-x/m+log(sigma);
+plot(x,y,'LineWidth',3,'Color','m');
+
+hold on
+
+x = k:0.01:2*k;
+y=-x/m+crossPointY+k/m;
+plot(x,y,'LineWidth',3,'Color','m');
+
+hold on
+
+y=x+log(SIGMA)-2*k;
+plot(x,y,'LineWidth',3,'Color','m');
+
+hold on
+
+y=log(SIGMA)-k;
+plot(x,y,'LineWidth',3,'Color','m');
+
+hold on
+
+y=log(sigma/(1-k));
+plot(x,y,'LineWidth',3,'Color','m');
+
+axis equal tight 
+%***************************************************************
+sigma=0.5;
+SIGMA=2;
+k=0.7;
+crossPointX=-(lambertw((sigma/SIGMA)*exp(1))-1);
+crossPointY=log(sigma/(1-crossPointX));
+m=(crossPointY-log(sigma))/crossPointX;
+b=log(sigma);
+
+x = 0:0.01:2*crossPointX;
+figure;
+
+hold on
+
+y = log(SIGMA)-x;
+plot(x,y,'LineWidth',3)
+line([k k],[log(sigma)-0.3 log(SIGMA)+0.4],'LineWidth',1);
+line([0 0.7],[0 0],'LineWidth',1,'Color','k');
+
+hold on
+
+y=m*x+b;
+plot(x,y,'LineWidth',3);
+
+hold on
+
+x = 0:0.01:crossPointX;
+y=x+log(SIGMA);
+plot(x,y,'LineWidth',3,'Color','m');
+
+hold on
+
+y=-x/m+log(sigma);
+plot(x,y,'LineWidth',3,'Color','m');
+
+hold on
+
+x = crossPointX:0.01:2*crossPointX;
+y=x+crossPointY-crossPointX;
+plot(x,y,'LineWidth',3,'Color','m');
+
+hold on
+
+y=-x/m+crossPointY+crossPointX/m;
+plot(x,y,'LineWidth',3,'Color','m');
 
 axis equal tight 

@@ -9,83 +9,63 @@ n=size(C_sizeA,2);
 
 %*************step 3,4:extract argument from gz, and evaluate log(gz), Vg on A******************
 
-init_l_gz=logarithmExtraction(cageVerteciesB4Map_sizeA, gz_enc, cageVerteciesAfterMap, NumOfVerticesInEdgesSizeA);
-init_Vg=(conj(gz_gag_enc))./gz_enc;
-
+l_gz=logarithmExtraction(cageVerteciesB4Map_sizeA, gz_enc, cageVerteciesAfterMap, NumOfVerticesInEdgesSizeA);
+Vg=(conj(gz_gag_enc))./gz_enc;
+init_l_gz=l_gz;init_Vg=Vg;
+l_gz_local=l_gz;Vg_local=Vg;
 %*************step 5:solve 22 - obtain l(z), V(z)******************
-% [m,intersectionX]=findLineApproxForCurve(sigma,SIGMA,k);%temp - create line instead of third condition
-
-l = p_inv*init_l_gz;%for the case of 1 iteration
-v=p_inv*init_Vg;
-l_gz_first_step=C_sizeA*l;
-Vg_first_step=C_sizeA*v;
-
-l_gz=l_gz_first_step;
-Vg=Vg_first_step;
-
-%******preprocess******
-% T=blkdiag(C_sizeA,C_sizeA);
-% T_trans=T';
-% M=sparse(T_trans*T);
-% [M_L, M_U, M_p, M_q] = lu(M, 'vector');
-%**********************
-
-% figure('position', [1220, 0, 600, 1400])
-% h=plot(0,0);
+energy=zeros(2*max_iterations,1);%*
+temp_idx=1;
 for iter=1:max_iterations
     
-%     if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(m*abs(C_sizeA*v)+log(sigma)<=real(C_sizeA*l)+epsilon))
-%         break;
-%     end
-
-    %local
-    tic
-    [ abs_Vg,R_l_gz ] = projectToPoly( abs(Vg),real(l_gz),SIGMA,sigma,k,intersectionX);
-    
-    l_gz_local=complex(R_l_gz, imag(l_gz));
-    Vg_local=abs_Vg.*exp(1i*angle(Vg));
-    %****
-    
     %global
-%     energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
-%     delete(h);
-%     h=convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg , energy, m, log(sigma));
-%   
-    x_prevGlobal=[l_gz;Vg];
-    x_local=[l_gz_local;Vg_local];
-    
-    n0=x_prevGlobal-x_local;
-    if(norm(n0)<epsilon)%stop condition from the article
-        break;
-    end
-
-    tic
-    eta_0=T_trans*n0;
-    d_0=n0'*x_local;
-    c_0=T_trans*x_prevGlobal;
-
-    y_c = M_U\(M_L\(c_0(M_p,:)));
-    y_eta = M_U\(M_L\(eta_0(M_p,:)));
-    
-    KKTresult=y_c-(y_eta*(eta_0'*y_c-d_0)/(eta_0'*y_eta));
-
-    l=KKTresult(1:n);
-    v=KKTresult(n+1:2*n);%(n+1:end)
-    %***
+    l = p_inv*l_gz_local;
+    v=p_inv*Vg_local;
     
     l_gz=C_sizeA*l;
     Vg=C_sizeA*v;
+    energy(temp_idx)=norm(l_gz-l_gz_local,2)+norm(Vg-Vg_local,2);%*
+    temp_idx=temp_idx+1;
+    if(all(abs(Vg)<k+epsilon)) && (all(abs(Vg)<log(SIGMA)-real(l_gz)+epsilon)) && (all(sigma*exp(-real(l_gz))+abs(Vg)<1+epsilon))
+        break;
+    end
     
-end
-if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(m*abs(C_sizeA*v)+log(sigma)<=real(C_sizeA*l)+epsilon))
-    fprintf('the constraints are satisfied\n');
+    %local
+    
+     cvx_begin quiet
+        variable R_l_gz(a);
+        variable abs_Vg(a);
+      %  minimize norm(real(l_gz)-R_l_gz,2)+norm(abs(Vg)-abs_Vg,2);
+        minimize sum_square_abs(real(l_gz)-R_l_gz)+sum_square_abs(abs(Vg)-abs_Vg);
+        subject to
+            abs_Vg>=0;
+            abs_Vg<=k;
+            abs_Vg<=log(SIGMA)-R_l_gz;
+            sigma*exp(-R_l_gz)+abs_Vg<=1;
+    cvx_end 
+    
+    l_gz_local=complex(R_l_gz, imag(l_gz));
+    Vg_local=abs_Vg.*exp(1i*angle(Vg));
+    
+     energy(temp_idx)=norm(l_gz-l_gz_local,2)+norm(Vg-Vg_local,2);%*
+     temp_idx=temp_idx+1;
+
 end
 
 fprintf('max k = %d\n',max(abs(Vg)));
 fprintf('max SIGMA = %d\n',max(exp(real(l_gz)).*(1+abs(Vg))));
 fprintf('min sigma = %d\n',min(exp(real(l_gz)).*(1-abs(Vg))));
-fprintf('energy = %d\n',sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg));
+fprintf('energy = %d\n',norm(l_gz-init_l_gz,2)+norm(Vg-init_Vg,2));
 fprintf('iterations = %d\n\n',iter);
+
+%graphs:
+% x=1:2*iter;%*
+% energy=energy(x);%*
+% figure%*
+% loglog(x,energy,'LineWidth',3);%*
+% %xlabel('iterations');%*
+% ylabel('energy');%*
+
 
 Vz=C_sizeM*v;
 lz=C_sizeM*l;

@@ -90,19 +90,28 @@ protected:
 	GMMDenseColMatrix mNumOfVerticesInEdgesSizeNlarge;//dimensions are: numOfEdges x 1 - sum of vertices=nLarge
 
 	GMMDenseComplexColMatrix mPinvOfIncCageVertexCoords; //dimensions are: nLarge x a
+	GMMSparseComplexRowMatrix mLMatrixForLipmansMethod; //dimensions are: 2*nLarge x 2*nLarge
+	GMMSparseComplexRowMatrix mUMatrixForLipmansMethod; //dimensions are: 2*nLarge x 2*nLarge
+	GMMDenseColMatrix mPRowPermOfLUForLipmansMethod; //dimensions are: 1 x 2*nLarge
+	GMMDenseComplexColMatrix mTtrasposeForLipmansMethod;//dimensions are: 2*nLarge x a
 
-	GMMDenseComplexColMatrix mAOfLineSegmentInLvAccelerated; //dimensions are: 5 x 1
-	GMMDenseComplexColMatrix mBOfLineSegmentInLvAccelerated; //dimensions are: 5 x 1
+	GMMDenseComplexColMatrix mAOfLineSegmentInLvAccelerated; //dimensions are: 5 x 1 **unused**
+	GMMDenseComplexColMatrix mBOfLineSegmentInLvAccelerated; //dimensions are: 5 x 1 **unused**
+	GMMDenseComplexColMatrix mSlopeOfLineApproxForCurveInLv;
+	GMMDenseComplexColMatrix mXcoordOfIntersectionPointForCurveLv;
+
 
 private:
 	void matlabCalcNewVerticesForInterpolation();
 	void matlabCalcNewVerticesForP2P();
 	void matlabCalcLforHprojection();
+	void matlabCalcLforLvprojection_curve();
 	void matlabCalcLforLvprojection();
 	void matlabCalcLforLvprojectionConformalAccel();
 	void matlabCalcLforLvprojectionConformal();
 	void matlabCalcLforLvprojectionAccel();
 	void matlabCalcLforLvprojectionLipman();
+	void matlabCalcLforLvprojectionDykstra();
 	std::string RelativeToFullPath(char* relPath);
 	MStatus runTimeDoSetup();
 	int findClosestInternalPointsToZ0();
@@ -111,5 +120,5 @@ private:
 	void IncreaseVertecies(Complex* OriginalCompCageVertecies, int OrigCageSize, Complex** IncreasedCompCageVertecies, int& numOfIncreasedCageVertecies);
 	void IncreaseVertecies(MPointArray& OriginalCageVertecies, MPointArray& IncreasedCageVertecies, int numOfIncreasedCageVertecies, bool countNumOfVerticesInEdges);
 	MStatus showIncVertecies(MPointArray& IncreasedCageVertecies);
-
+	MStatus findLineApproximationForCurve();
 };

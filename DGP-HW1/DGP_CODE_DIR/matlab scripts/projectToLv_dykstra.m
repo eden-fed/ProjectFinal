@@ -22,60 +22,58 @@ Vg_first_step=C_sizeA*v;
 
 l_gz=l_gz_first_step;
 Vg=Vg_first_step;
-% 
-% energy_graph=zeros(max_iterations,1);%*
-% temp_idx=1;
-% 
-% energy_graph2=zeros(2*max_iterations,1);%*
-% temp_idx2=1;
-% 
+
 figure('position', [610, 0, 600, 1400])
 h=plot(0,0);
-
+p_l=zeros(a,1);
+p_v=zeros(a,1);
+q_l=zeros(a,1);
+q_v=zeros(a,1);
 for iter=1:max_iterations
-    
+%     
     energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
     delete(h);
     h=convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg , energy, m, log(sigma));
-% 	energy_graph(temp_idx)=energy;%*
-%     temp_idx=temp_idx+1;
 	
-    if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(log(sigma)+m*abs(C_sizeA*v)<=real(C_sizeA*l)+epsilon))
-        fprintf('the constraints are satisfied\n');
-        break;
-    end
+%     if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(log(sigma)+m*abs(C_sizeA*v)<=real(C_sizeA*l)+epsilon))
+%         fprintf('the constraints are satisfied\n');
+%         break;
+%     end
+    
+    p_prev=[p_l;p_v];
+    q_prev=[q_l;q_v];
     
     %local
-
-% 	[abs_Vg1,R_l_gz1]=localStep(m,b,abs(Vg),real(l_gz),k,log(SIGMA));%solve qp problem - straight line
+    l_gz_to_project=l_gz+p_l;
+    Vg_to_project=Vg+p_v;
     
-    [ abs_Vg,R_l_gz ] = projectToPoly( abs(Vg),real(l_gz),SIGMA,sigma,k,intersectionX);
-    
-    l_gz_local=complex(R_l_gz, imag(l_gz));
-    Vg_local=abs_Vg.*exp(1i*angle(Vg));
+    [ abs_Vg,R_l_gz ] = projectToPoly( abs(Vg_to_project),real(l_gz_to_project),SIGMA,sigma,k,intersectionX);
+    l_gz_local=complex(R_l_gz, imag(l_gz_to_project));
+    Vg_local=abs_Vg.*exp(1i*angle(Vg_to_project));
 
-% 	E1=sum_square_abs(C_sizeA*l-l_gz)+sum_square_abs(C_sizeA*v-Vg);
-%  	energy_graph2(temp_idx2)=E1;%*
-%     temp_idx2=temp_idx2+1;
-	
-    %****
+    p_l=l_gz_to_project-l_gz_local;
+    p_v=Vg_to_project-Vg_local;
+    
     %global
-    l = p_inv*l_gz_local;
-    v=p_inv*Vg_local;
-%     E1=sum_square_abs(C_sizeA*l-l_gz)+sum_square_abs(C_sizeA*v-Vg);
-% 	energy_graph2(temp_idx2)=E1;%*
-%     temp_idx2=temp_idx2+1;
+    l_gz_to_project=l_gz_local+q_l;
+    Vg_to_project=Vg_local+q_v;
     
+    l = p_inv*(l_gz_to_project);
+    v=p_inv*(Vg_to_project);    
     l_gz=C_sizeA*l;
     Vg=C_sizeA*v;
     
-    %     if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(sigma*exp(-real(l_gz))+abs(Vg)<=1+epsilon))
-    %         break;
-    %     end
+    q_l=l_gz_to_project-l_gz;
+    q_v=Vg_to_project-Vg;
     
-    
+    if(sum_square_abs(p_prev-[p_l;p_v])+sum_square_abs(q_prev-[q_l;q_v]) < epsilon)
+        break;
+    end
 end
 
+if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(log(sigma)+m*abs(C_sizeA*v)<=real(C_sizeA*l)+epsilon))
+    fprintf('the constraints are satisfied\n');
+end
 fprintf('max k = %d\n',max(abs(Vg)));
 fprintf('max SIGMA = %d\n',max(exp(real(l_gz)).*(1+abs(Vg))));
 fprintf('min sigma = %d\n',min(exp(real(l_gz)).*(1-abs(Vg))));
@@ -83,23 +81,8 @@ energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
 fprintf('energy = %d\n',energy);
 fprintf('iterations = %d\n\n',iter);
 
-% figure('position', [610, 0, 600, 1400])
+% figure('position', [1220, 0, 600, 1400])
 % convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg, energy , m, log(sigma));
-
-% x=1:iter;%*
-% energy_graph=energy_graph(x);%*
-% figure%*
-% plot(x,energy_graph,'LineWidth',3);%*
-% title('energy = sumSquareAbs(l_gzFirstStep-l_gz)+sumSquareSbs(V_gFirstStep-V_g)');
-% xlabel('iterations');%*
-% ylabel('energy');%*
-% 
-% x=1:2*iter;%*
-% energy_graph2=energy_graph2(x);%*
-% figure%*
-% plot(x,energy_graph2,'LineWidth',3);%*
-% title(['energy = ','E1+delta*E2']);
-% ylabel('energy');%*
 
 Vz=C_sizeM*v;
 lz=C_sizeM*l;

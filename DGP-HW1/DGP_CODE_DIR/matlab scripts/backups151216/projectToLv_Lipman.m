@@ -13,80 +13,72 @@ init_l_gz=logarithmExtraction(cageVerteciesB4Map_sizeA, gz_enc, cageVerteciesAft
 init_Vg=(conj(gz_gag_enc))./gz_enc;
 
 %*************step 5:solve 22 - obtain l(z), V(z)******************
-% [m,intersectionX]=findLineApproxForCurve(sigma,SIGMA,k);%temp - create line instead of third condition
-
-l = p_inv*init_l_gz;%for the case of 1 iteration
-v=p_inv*init_Vg;
-l_gz_first_step=C_sizeA*l;
-Vg_first_step=C_sizeA*v;
-
-l_gz=l_gz_first_step;
-Vg=Vg_first_step;
-
-%******preprocess******
-% T=blkdiag(C_sizeA,C_sizeA);
-% T_trans=T';
-% M=sparse(T_trans*T);
-% [M_L, M_U, M_p, M_q] = lu(M, 'vector');
-%**********************
-
-% figure('position', [1220, 0, 600, 1400])
-% h=plot(0,0);
+mag=zeros(max_iterations,1);%*
+energy=zeros(max_iterations,1);%*
+    l = p_inv*init_l_gz;%for the case of 1 iteration
+    v=p_inv*init_Vg;
+    l_gz=C_sizeA*l;
+    Vg=C_sizeA*v;
 for iter=1:max_iterations
     
-%     if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(m*abs(C_sizeA*v)+log(sigma)<=real(C_sizeA*l)+epsilon))
-%         break;
-%     end
-
     %local
-    tic
-    [ abs_Vg,R_l_gz ] = projectToPoly( abs(Vg),real(l_gz),SIGMA,sigma,k,intersectionX);
+    cvx_begin quiet
+        variable R_l_gz(a);
+        variable abs_Vg(a);
+       % minimize norm(real(l_gz)-R_l_gz,2)+norm(abs(Vg)-abs_Vg,2);
+        minimize sum_square_abs(real(l_gz)-R_l_gz)+sum_square_abs(abs(Vg)-abs_Vg);
+        subject to
+            abs_Vg>=0;
+            abs_Vg<=k;
+            abs_Vg<=log(SIGMA)-R_l_gz;
+            sigma*exp(-R_l_gz)+abs_Vg<=1;
+    cvx_end
+    %***
     
     l_gz_local=complex(R_l_gz, imag(l_gz));
     Vg_local=abs_Vg.*exp(1i*angle(Vg));
-    %****
     
     %global
-%     energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
-%     delete(h);
-%     h=convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg , energy, m, log(sigma));
-%   
-    x_prevGlobal=[l_gz;Vg];
-    x_local=[l_gz_local;Vg_local];
     
-    n0=x_prevGlobal-x_local;
-    if(norm(n0)<epsilon)%stop condition from the article
+    n0=[l_gz;Vg]-[l_gz_local;Vg_local]; 
+    mag(iter)=norm(n0);%*
+    energy(iter)=norm(l_gz-l_gz_local,2)+norm(Vg-Vg_local,2);%*
+    if(norm(n0)<epsilon)%termination condition from the article
         break;
     end
-
-    tic
-    eta_0=T_trans*n0;
-    d_0=n0'*x_local;
-    c_0=T_trans*x_prevGlobal;
-
-    y_c = M_U\(M_L\(c_0(M_p,:)));
-    y_eta = M_U\(M_L\(eta_0(M_p,:)));
+    T=blkdiag(C_sizeA,C_sizeA);
+    M=[T'*T , T'*n0 ; n0'*T , 0];
+    KKTresult=M \ [T'*[l_gz;Vg] ; n0'*[l_gz_local;Vg_local]];
+    %fprintf('cond(M) = %d\n',cond(M));
     
-    KKTresult=y_c-(y_eta*(eta_0'*y_c-d_0)/(eta_0'*y_eta));
-
     l=KKTresult(1:n);
-    v=KKTresult(n+1:2*n);%(n+1:end)
+    v=KKTresult(n+1:2*n);
     %***
-    
     l_gz=C_sizeA*l;
     Vg=C_sizeA*v;
-    
-end
-if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(m*abs(C_sizeA*v)+log(sigma)<=real(C_sizeA*l)+epsilon))
-    fprintf('the constraints are satisfied\n');
-end
 
+end
 fprintf('max k = %d\n',max(abs(Vg)));
 fprintf('max SIGMA = %d\n',max(exp(real(l_gz)).*(1+abs(Vg))));
 fprintf('min sigma = %d\n',min(exp(real(l_gz)).*(1-abs(Vg))));
-fprintf('energy = %d\n',sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg));
+fprintf('energy = %d\n',norm(l_gz-init_l_gz,2)+norm(Vg-init_Vg,2));
 fprintf('iterations = %d\n\n',iter);
 
+
+%graphs:
+% x=1:iter;%*
+% mag=mag(x);%*
+% figure%*
+% plot(x,mag,'-o');%*
+% xlabel('iterations');%*
+% ylabel('norm(n0)');%*
+% 
+% energy=energy(x);%*
+% figure%*
+% plot(x,energy,'-o');%*
+% xlabel('iterations');%*
+% ylabel('energy');%*
+    
 Vz=C_sizeM*v;
 lz=C_sizeM*l;
 
@@ -104,7 +96,7 @@ integral_on_edges=partialCalc.*edgeVectors;
 
 % find the integral on all the spanning tree
 if (isreal(PHI_Z0))
-    PHI_Z0=complex(PHI_Z0);
+PHI_Z0=complex(PHI_Z0);
 end
 PHI = treeCumSum(uint32(Z0index), PHI_Z0, integral_on_edges, startIndices, endIndices);
 
@@ -118,10 +110,10 @@ integral_on_edges=partialCalc.*edgeVectors;
 % integral_on_edges=gather(integral_on_edges_gpu);
 
 if (isreal(PSI_Z0))
-    PSI_Z0=complex(PSI_Z0);
+PSI_Z0=complex(PSI_Z0);
 end
 if (isreal(integral_on_edges))
-    integral_on_edges=complex(integral_on_edges);
+integral_on_edges=complex(integral_on_edges);
 end
 PSI=treeCumSum(uint32(Z0index), PSI_Z0, integral_on_edges, startIndices, endIndices);
 

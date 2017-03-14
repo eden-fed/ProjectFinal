@@ -13,9 +13,9 @@ init_l_gz=logarithmExtraction(cageVerteciesB4Map_sizeA, gz_enc, cageVerteciesAft
 init_Vg=(conj(gz_gag_enc))./gz_enc;
 
 %*************step 5:solve 22 - obtain l(z), V(z)******************
-% [m,intersectionX]=findLineApproxForCurve(sigma,SIGMA,k);%temp - create line instead of third condition
+% [m,intersectionX]=findLineApproxForCurve(sigma,SIGMA,k);  %temp - create line instead of third condition
 
-l = p_inv*init_l_gz;%for the case of 1 iteration
+l = p_inv*init_l_gz;
 v=p_inv*init_Vg;
 l_gz_first_step=C_sizeA*l;
 Vg_first_step=C_sizeA*v;
@@ -23,70 +23,53 @@ Vg_first_step=C_sizeA*v;
 l_gz=l_gz_first_step;
 Vg=Vg_first_step;
 
-%******preprocess******
-% T=blkdiag(C_sizeA,C_sizeA);
-% T_trans=T';
-% M=sparse(T_trans*T);
-% [M_L, M_U, M_p, M_q] = lu(M, 'vector');
-%**********************
-
-% figure('position', [1220, 0, 600, 1400])
-% h=plot(0,0);
+l_gz_gpu=gpuArray(l_gz);
+Vg_gpu=gpuArray(Vg);
+SIGMA_gpu=gpuArray(SIGMA);
+sigma_gpu=gpuArray(sigma);
+k_gpu=gpuArray(k);
+intersectionX_gpu=gpuArray(intersectionX);
+p_inv_gpu=gpuArray(p_inv);
+C_sizeA_gpu=gpuArray(C_sizeA);
+epsilon_gpu=gpuArray(epsilon);
+tic
 for iter=1:max_iterations
-    
-%     if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(m*abs(C_sizeA*v)+log(sigma)<=real(C_sizeA*l)+epsilon))
+
+%     if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(log(sigma)+m*abs(C_sizeA*v)<=real(C_sizeA*l)+epsilon))
 %         break;
 %     end
-
+    
     %local
-    tic
-    [ abs_Vg,R_l_gz ] = projectToPoly( abs(Vg),real(l_gz),SIGMA,sigma,k,intersectionX);
     
-    l_gz_local=complex(R_l_gz, imag(l_gz));
-    Vg_local=abs_Vg.*exp(1i*angle(Vg));
-    %****
+    [ abs_Vg,R_l_gz ] = projectToPoly( abs(Vg_gpu),real(l_gz_gpu),SIGMA_gpu,sigma_gpu,k_gpu,intersectionX_gpu);
     
-    %global
-%     energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
-%     delete(h);
-%     h=convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg , energy, m, log(sigma));
-%   
-    x_prevGlobal=[l_gz;Vg];
+    l_gz_local=complex(R_l_gz, imag(l_gz_gpu));
+    Vg_local=abs_Vg.*exp(1i*angle(Vg_gpu));
+
+    x_prevGlobal=[l_gz_gpu;Vg_gpu];
     x_local=[l_gz_local;Vg_local];
-    
-    n0=x_prevGlobal-x_local;
-    if(norm(n0)<epsilon)%stop condition from the article
+    n0=x_prevGlobal-x_local;  
+    if(norm(n0)<epsilon_gpu)%stop condition from the article
         break;
     end
 
-    tic
-    eta_0=T_trans*n0;
-    d_0=n0'*x_local;
-    c_0=T_trans*x_prevGlobal;
-
-    y_c = M_U\(M_L\(c_0(M_p,:)));
-    y_eta = M_U\(M_L\(eta_0(M_p,:)));
+	
+    %****
+    %global
+    l = p_inv_gpu*l_gz_local;
+    v=p_inv_gpu*Vg_local;
     
-    KKTresult=y_c-(y_eta*(eta_0'*y_c-d_0)/(eta_0'*y_eta));
-
-    l=KKTresult(1:n);
-    v=KKTresult(n+1:2*n);%(n+1:end)
-    %***
+    l_gz_gpu=C_sizeA_gpu*l;
+    Vg_gpu=C_sizeA_gpu*v;
     
-    l_gz=C_sizeA*l;
-    Vg=C_sizeA*v;
     
 end
-if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(m*abs(C_sizeA*v)+log(sigma)<=real(C_sizeA*l)+epsilon))
-    fprintf('the constraints are satisfied\n');
-end
+toc
 
-fprintf('max k = %d\n',max(abs(Vg)));
-fprintf('max SIGMA = %d\n',max(exp(real(l_gz)).*(1+abs(Vg))));
-fprintf('min sigma = %d\n',min(exp(real(l_gz)).*(1-abs(Vg))));
-fprintf('energy = %d\n',sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg));
 fprintf('iterations = %d\n\n',iter);
 
+v=gather(v);
+l=gather(l);
 Vz=C_sizeM*v;
 lz=C_sizeM*l;
 
