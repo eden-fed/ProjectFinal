@@ -39,6 +39,7 @@ protected:
 	static MObject mEpsilonAttr;
 
 	bool mIsFirstTime;
+	bool mNeedToCalcNewLine;
 	float env;
 	long coordinateType;
 	int mNumOfSegmentsA;
