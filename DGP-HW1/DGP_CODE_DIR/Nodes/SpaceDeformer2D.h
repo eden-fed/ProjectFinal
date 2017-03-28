@@ -46,6 +46,8 @@ protected:
 	int mNLarge;
 	int mNumOfSegmentsAOld;
 	int mNLargeOld;
+	int mCurrentNumOfSegmentsA;
+	int mCurrentNLarge;
 	double k;
 	double SigmaA;
 	double sigmaB;
@@ -67,6 +69,8 @@ protected:
 
 	MObject mcageMesh;
 
+	std::vector<double> mXvaluesOfIntersections;
+	std::vector<double> mYvaluesOfIntersections;
 
 	GMMDenseComplexColMatrix mUserCageVerticesNos; //this matrix is actually a column vector. dimensions are: n x 1
 	GMMDenseComplexColMatrix mCauchyCoordinates; //dimensions are: m x n
@@ -98,9 +102,24 @@ protected:
 
 	GMMDenseComplexColMatrix mAOfLineSegmentInLvAccelerated; //dimensions are: 5 x 1 **unused**
 	GMMDenseComplexColMatrix mBOfLineSegmentInLvAccelerated; //dimensions are: 5 x 1 **unused**
-	GMMDenseComplexColMatrix mSlopeOfLineApproxForCurveInLv;
-	GMMDenseComplexColMatrix mXcoordOfIntersectionPointForCurveLv;
+	/*GMMDenseColMatrix mSlopeOfLineApproxForCurveInLv;
+	GMMDenseColMatrix mXcoordOfIntersectionPointForCurveLv;*/
 
+	double mSlopeOfLineApproxForCurveInLv;
+	double mXcoordOfIntersectionPointForCurveLv;
+	double mYcoordOfIntersectionPointForCurveLv;
+
+	GMMDenseComplexColMatrix mUserCageVerticesNos_sizeA;
+	GMMDenseComplexColMatrix mUserCageVerticesNos_sizeNLarge;
+	
+	GMMDenseComplexColMatrix mCompCageVerticesNos_sizeA;
+	GMMDenseComplexColMatrix mCompCageVerticesNos;
+
+	GMMDenseColMatrix mEndIndicesForIntegral; //dimensions are: 1 X m-1
+	GMMDenseColMatrix mStartIndicesForIntegral; //dimensions are: 1 X m-1
+	GMMDenseComplexColMatrix mEdgeVectorsForIntegral; //dimensions are: m X 1
+
+	GMMDenseComplexColMatrix mCauchyCoordsOfz0; //dimensions are: 1 x nLarge
 
 private:
 	void matlabCalcNewVerticesForInterpolation();
@@ -122,4 +141,20 @@ private:
 	void IncreaseVertecies(MPointArray& OriginalCageVertecies, MPointArray& IncreasedCageVertecies, int numOfIncreasedCageVertecies, bool countNumOfVerticesInEdges);
 	MStatus showIncVertecies(MPointArray& IncreasedCageVertecies);
 	MStatus findLineApproximationForCurve();
+
+	void calcLvprojectionLGcpu();
+	void evalFzAndFzBar(GMMDenseComplexColMatrix& CageVerticesNos, GMMDenseComplexColMatrix& userCageVerticesNos, GMMDenseColMatrix& mNumOfVerticesInEdges, int numOfIncreasedCageVertecies, int numOfCageVertices, GMMDenseComplexColMatrix& fz, GMMDenseComplexColMatrix& fzBar);
+	void IncreaseVerteciesAfterMap(GMMDenseComplexColMatrix& OriginalCageVertecies, GMMDenseComplexColMatrix& IncreasedCageVertecies, int numOfIncreasedCageVertecies, GMMDenseColMatrix& mNumOfVerticesInEdges);
+	void logarithmExtraction(GMMDenseComplexColMatrix& cageVerticesNos_sizeA, GMMDenseComplexColMatrix& fz, GMMDenseComplexColMatrix& cageVerteciesAfterMapSizeA, int a, GMMDenseComplexColMatrix& log_fz);
+	void find_nu_f(GMMDenseComplexColMatrix& fz, GMMDenseComplexColMatrix& fzBar, int a, GMMDenseComplexColMatrix& nu_f);
+	int doLocalGlobalIterations(GMMDenseComplexColMatrix& log_fz, GMMDenseComplexColMatrix& nu_f, GMMDenseComplexColMatrix& l, GMMDenseComplexColMatrix& nu, void (SpaceDeformer2D::*projectionFunction)(double&, double&));
+	bool localStep(GMMDenseComplexColMatrix& log_fz, GMMDenseComplexColMatrix& nu_f, void (SpaceDeformer2D::*projectionFunction)(double&, double&));
+	bool checkIfInsidePolygon(double x, double y);
+	void projectPointToPolygonMinSeg(double& x, double& y);
+	void projectPointToPolygonWithK(double& x, double& y);
+	void projectPointToPolygonNoK(double& x, double& y);
+	void findPHI(GMMDenseComplexColMatrix& PHI, GMMDenseComplexColMatrix& PHItag, GMMDenseComplexColMatrix& LonInternalPoints);
+	void findPSI(GMMDenseComplexColMatrix& PSI, GMMDenseComplexColMatrix& NUonInternalPoints, GMMDenseComplexColMatrix& PHItag);
+	void calcIntegralUsingSpaningTree(GMMDenseComplexColMatrix& PHI, GMMDenseComplexColMatrix& PHItag,Complex phi_Z0);
+
 };

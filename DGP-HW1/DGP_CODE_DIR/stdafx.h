@@ -57,10 +57,11 @@
 #include "gmm/gmm.h"
 
 //////  CGAL  //////
-// #include <CGAL/Simple_cartesian.h>
-// #include <CGAL/Polyhedron_3.h>
-// #include <CGAL/Polyhedron_incremental_builder_3.h>
-// #include <CGAL/Subdivision_method_3.h>
-// #include <CGAL/surface_mesh_parameterization_assertions.h>
-// #include <CGAL/Parameterization_mesh_feature_extractor.h>
-// #include <CGAL/Parameterization_polyhedron_adaptor_3.h>
+ #include <CGAL/Simple_cartesian.h>
+ #include <CGAL/Polyhedron_3.h>
+ #include <CGAL/Polyhedron_incremental_builder_3.h>
+ #include <CGAL/Subdivision_method_3.h>
+ #include <CGAL/surface_mesh_parameterization_assertions.h>
+ #include <CGAL/Parameterization_mesh_feature_extractor.h>
+ #include <CGAL/Parameterization_polyhedron_adaptor_3.h>
+#include <CGAL/Timer.h>

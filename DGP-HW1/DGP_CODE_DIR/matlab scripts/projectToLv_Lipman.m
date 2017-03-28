@@ -15,10 +15,11 @@ init_Vg=(conj(gz_gag_enc))./gz_enc;
 %*************step 5:solve 22 - obtain l(z), V(z)******************
 % [m,intersectionX]=findLineApproxForCurve(sigma,SIGMA,k);%temp - create line instead of third condition
 
-l = p_inv*init_l_gz;%for the case of 1 iteration
+l = p_inv*init_l_gz;
 v=p_inv*init_Vg;
 l_gz_first_step=C_sizeA*l;
 Vg_first_step=C_sizeA*v;
+x_first_step=[l_gz_first_step;Vg_first_step];
 
 l_gz=l_gz_first_step;
 Vg=Vg_first_step;
@@ -29,52 +30,48 @@ Vg=Vg_first_step;
 % M=sparse(T_trans*T);
 % [M_L, M_U, M_p, M_q] = lu(M, 'vector');
 %**********************
-
+% 
 % figure('position', [1220, 0, 600, 1400])
 % h=plot(0,0);
 for iter=1:max_iterations
-    
-%     if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(m*abs(C_sizeA*v)+log(sigma)<=real(C_sizeA*l)+epsilon))
-%         break;
-%     end
 
     %local
-    tic
     [ abs_Vg,R_l_gz ] = projectToPoly( abs(Vg),real(l_gz),SIGMA,sigma,k,intersectionX);
     
     l_gz_local=complex(R_l_gz, imag(l_gz));
     Vg_local=abs_Vg.*exp(1i*angle(Vg));
     %****
     
-    %global
+%     %global
 %     energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
 %     delete(h);
 %     h=convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg , energy, m, log(sigma));
 %   
-    x_prevGlobal=[l_gz;Vg];
+    x_prevGlobal=[l_gz;Vg];    
     x_local=[l_gz_local;Vg_local];
-    
+        
     n0=x_prevGlobal-x_local;
     if(norm(n0)<epsilon)%stop condition from the article
         break;
     end
 
-    tic
     eta_0=T_trans*n0;
     d_0=n0'*x_local;
     c_0=T_trans*x_prevGlobal;
-
+%     c_0=T_trans*x_local;
+    
     y_c = M_U\(M_L\(c_0(M_p,:)));
     y_eta = M_U\(M_L\(eta_0(M_p,:)));
     
     KKTresult=y_c-(y_eta*(eta_0'*y_c-d_0)/(eta_0'*y_eta));
-
+    
     l=KKTresult(1:n);
     v=KKTresult(n+1:2*n);%(n+1:end)
     %***
     
     l_gz=C_sizeA*l;
     Vg=C_sizeA*v;
+    
     
 end
 if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(m*abs(C_sizeA*v)+log(sigma)<=real(C_sizeA*l)+epsilon))
@@ -94,7 +91,7 @@ lz=C_sizeM*l;
 PHItag=exp(lz);
 
 Cz0=C_sizeM(Z0index,:);
-cageAfterMapSizeN=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVerticesInEdgesSizeNlarge );
+cageAfterMapSizeN=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVerticesInEdgesSizeNlarge, n);
 PHI_Z0=Cz0*cageAfterMapSizeN;
 
 %calc the integral on the edges

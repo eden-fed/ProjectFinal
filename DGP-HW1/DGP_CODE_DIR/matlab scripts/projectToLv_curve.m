@@ -9,6 +9,7 @@ n=size(C_sizeA,2);
 
 init_l_gz=logarithmExtraction(cageVerteciesB4Map_sizeA, gz_enc, cageVerteciesAfterMap, NumOfVerticesInEdgesSizeA);
 init_Vg=(conj(gz_gag_enc))./gz_enc;
+
 %first make l_gz and Vg a map ***temporary***
 l = p_inv*init_l_gz;
 v=p_inv*init_Vg;
@@ -54,7 +55,7 @@ if(exist('treeCumSum', 'file') ~= 3)
 end
 
 Cz0=C_sizeM(Z0index,:);
-cageAfterMapSizeN=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVerticesInEdgesSizeNlarge );
+cageAfterMapSizeN=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVerticesInEdgesSizeNlarge, n );
 PHI_Z0=Cz0*cageAfterMapSizeN;
 
 %calc the integral on the edges

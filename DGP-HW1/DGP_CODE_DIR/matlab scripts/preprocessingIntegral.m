@@ -11,6 +11,10 @@
 
 endIndices = uint32(disc(2:end));
 startIndices = uint32(pred(endIndices));
+
+endIndices_double = disc(2:end);
+startIndices_double = pred(endIndices);
+
 % endIndices_gpu = gpuArray(uint32(disc(2:end)));
 % startIndices_gpu = gpuArray(uint32(pred(endIndices_gpu)));
 

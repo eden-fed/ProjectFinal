@@ -1,12 +1,11 @@
 function [ log_fz_i ] = logarithmExtraction( z_i, fz_i, f_i_before, NumOfVerticesInEdges )
-
 z_i_p = z_i([2:end 1]); %z_i_plus_1
 e_i = z_i_p - z_i;
 
 e_i_m = e_i([end 1:end-1]);
 fz_i_m = fz_i([end 1:end-1]);
 
-f_i=EmcCageVerteciesEdgeWise( f_i_before, NumOfVerticesInEdges );
+f_i=EmcCageVerteciesEdgeWise( f_i_before, NumOfVerticesInEdges,length(z_i) );
 f_i_p = f_i([2:end 1]);
 ef_i = f_i_p - f_i;
 

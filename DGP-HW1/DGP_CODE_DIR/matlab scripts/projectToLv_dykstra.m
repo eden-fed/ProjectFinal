@@ -91,7 +91,7 @@ lz=C_sizeM*l;
 PHItag=exp(lz);
 
 Cz0=C_sizeM(Z0index,:);
-cageAfterMapSizeN=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVerticesInEdgesSizeNlarge );
+cageAfterMapSizeN=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVerticesInEdgesSizeNlarge,n );
 PHI_Z0=Cz0*cageAfterMapSizeN;
 
 %calc the integral on the edges

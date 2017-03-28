@@ -10,10 +10,11 @@ n=size(C_sizeA,2);
 %*************step 3,4:extract argument from gz, and evaluate log(gz), Vg on A******************
 
 init_l_gz=logarithmExtraction(cageVerteciesB4Map_sizeA, gz_enc, cageVerteciesAfterMap, NumOfVerticesInEdgesSizeA);
+
 init_Vg=(conj(gz_gag_enc))./gz_enc;
 
-%*************step 5:solve 22 - obtain l(z), V(z)******************
-% [m,intersectionX]=findLineApproxForCurve(sigma,SIGMA,k);  %temp - create line instead of third condition
+% *************step 5:solve 22 - obtain l(z), V(z)******************
+[m,intersectionX]=findLineApproxForCurve(sigma,SIGMA,k);  %temp - create line instead of third condition
 
 l = p_inv*init_l_gz;
 v=p_inv*init_Vg;
@@ -28,19 +29,21 @@ Vg=Vg_first_step;
 % 
 % energy_graph2=zeros(2*max_iterations,1);%*
 % temp_idx2=1;
-% 
-figure('position', [610, 0, 600, 1400])
-h=plot(0,0);
+% % 
+% figure('position', [610, 0, 600, 1400])
+% h=plot(0,0);
 
+% converge=ones(max_iterations,1);
+% energy_=ones(max_iterations,1);
 for iter=1:max_iterations
     
-    energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
-    delete(h);
-    h=convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg , energy, m, log(sigma));
+%     energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
+%     delete(h);
+%     h=convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg , energy, m, log(sigma));
 % 	energy_graph(temp_idx)=energy;%*
 %     temp_idx=temp_idx+1;
-	
-    if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(log(sigma)+m*abs(C_sizeA*v)<=real(C_sizeA*l)+epsilon))
+% 	x_prevGlobal=[l_gz;Vg];
+    if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(log(sigma)+m*abs(Vg)<=real(l_gz)+epsilon))
         fprintf('the constraints are satisfied\n');
         break;
     end
@@ -72,8 +75,8 @@ for iter=1:max_iterations
     %     if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(sigma*exp(-real(l_gz))+abs(Vg)<=1+epsilon))
     %         break;
     %     end
-    
-    
+%     x=[l_gz;Vg];
+%     converge(iter)=norm(x-x_infty)/(norm(x_prevGlobal-x_infty));
 end
 
 fprintf('max k = %d\n',max(abs(Vg)));
@@ -108,8 +111,9 @@ lz=C_sizeM*l;
 PHItag=exp(lz);
 
 Cz0=C_sizeM(Z0index,:);
-cageAfterMapSizeN=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVerticesInEdgesSizeNlarge );
+cageAfterMapSizeN=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVerticesInEdgesSizeNlarge, n );
 PHI_Z0=Cz0*cageAfterMapSizeN;
+% PHI_Z0=Cz0*cageVerteciesAfterMapSizeNLarge;
 
 %calc the integral on the edges
 partialCalc=PHItag(endIndices) + PHItag(startIndices);

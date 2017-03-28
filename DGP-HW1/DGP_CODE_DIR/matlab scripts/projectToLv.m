@@ -8,7 +8,9 @@ n=size(C_sizeA,2);
 %*************step 3,4:extract argument from gz, and evaluate log(gz), Vg on A******************
 
 init_l_gz=logarithmExtraction(cageVerteciesB4Map_sizeA, gz_enc, cageVerteciesAfterMap, NumOfVerticesInEdgesSizeA);
+% init_l_gz=logarithmExtraction(cageVerteciesB4Map_sizeA, gz_enc, cageVerteciesAfterMapSizeA);
 init_Vg=(conj(gz_gag_enc))./gz_enc;
+
 %first make l_gz and Vg a map ***temporary***
 l = p_inv*init_l_gz;
 v=p_inv*init_Vg;
@@ -32,9 +34,9 @@ cvx_end
 
 l_gz=C_sizeA*l;
 Vg=C_sizeA*v;
-% % if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(sigma*exp(-real(l_gz))+abs(Vg)<=1+epsilon))
-% %     fprintf('the constraints are satisfied\n');
-% % end
+% if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(sigma*exp(-real(l_gz))+abs(Vg)<=1+epsilon))
+%     fprintf('the constraints are satisfied\n');
+% end
 if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(log(sigma)+m*abs(C_sizeA*v)<=real(C_sizeA*l)+epsilon))
     fprintf('the constraints are satisfied\n');
 end
@@ -44,10 +46,9 @@ fprintf('max SIGMA = %d\n',max(exp(real(l_gz)).*(1+abs(Vg))));
 fprintf('min sigma = %d\n',min(exp(real(l_gz)).*(1-abs(Vg))));
 energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
 fprintf('energy = %d\n\n',energy);
-
-figure('position', [0, 0, 600, 1400])
-convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg, energy , m, log(sigma));
-
+% 
+% figure('position', [0, 0, 600, 1400])
+% convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg, energy , m, log(sigma));
 
 Vz=C_sizeM*v;
 lz=C_sizeM*l;
@@ -61,7 +62,7 @@ if(exist('treeCumSum', 'file') ~= 3)
 end
 
 Cz0=C_sizeM(Z0index,:);
-cageAfterMapSizeN=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVerticesInEdgesSizeNlarge );
+cageAfterMapSizeN=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVerticesInEdgesSizeNlarge, n);
 PHI_Z0=Cz0*cageAfterMapSizeN;
 
 %calc the integral on the edges
