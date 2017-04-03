@@ -1,6 +1,17 @@
 #pragma once
 
 
+#define short2 MAYA_short2
+#define short3 MAYA_short3
+#define long2 MAYA_long2
+#define long3 MAYA_long3
+#define int2 MAYA_int2
+#define int3 MAYA_int3
+#define float2 MAYA_float2
+#define float3 MAYA_float3
+#define double2 MAYA_double2
+#define double3 MAYA_double3
+#define double4 MAYA_double4
 
 //////  MAYA API  //////
 #include <maya/MSelectionList.h>
@@ -42,6 +53,40 @@
 #include <maya/MDagModifier.h>
 #include <maya/MQuaternion.h>
 
+#undef short2
+#undef short3
+#undef long2
+#undef long3
+#undef int2
+#undef int3
+#undef float2
+#undef float3
+#undef double2
+#undef double3
+#undef double4
+
+#define short2 CUDA_short2
+#define short3 CUDA_short3
+#define long2 CUDA_long2
+#define long3 CUDA_long3
+#define int2 CUDA_int2
+#define int3 CUDA_int3
+#define float2 CUDA_float2
+#define float3 CUDA_float3
+#define double2 CUDA_double2
+#define double3 CUDA_double3
+#define double4 CUDA_double4
+
+//////  CUDA  //////
+#include <cublas.h>
+#include <cuda.h>
+#include <cuda_runtime_api.h>
+
+#include <helper_cuda.h>
+// #include <cutil.h>
+// #include <cutil_inline_runtime.h>
+
+#include <cuda_gl_interop.h>
 
 //////  STL  //////
 #include <complex>

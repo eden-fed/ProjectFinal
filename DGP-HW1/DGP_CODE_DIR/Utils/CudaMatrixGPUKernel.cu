@@ -131,6 +131,23 @@ __global__ void subVectorsComplexKernel(int numElements, const float2* d_A, cons
 }
 
 template<int blockSize>
+__global__ void subVectorsComplexDoubleKernel(int numElements, const double2* d_A, const double2* d_B, double2* d_C)
+{
+	const int index = blockSize*blockIdx.x + threadIdx.x;
+
+	if (index < numElements)
+	{
+		double2 complexA = d_A[index];
+		double2 complexB = d_B[index];
+		double2 complexC;
+		complexC.x = complexA.x - complexB.x;
+		complexC.y = complexA.y - complexB.y;
+
+		d_C[index] = complexC;
+	}
+}
+
+template<int blockSize>
 __global__ void subVectorsRealKernel(int numElements, const float* d_A, const float* d_B, float* d_C)
 {
 	const int index = blockSize*blockIdx.x + threadIdx.x;
@@ -158,6 +175,22 @@ __global__ void scaleVectorComplexKernel(int numElements, float2* d_A, float2 al
 }
 
 template<int blockSize>
+__global__ void scaleVectorComplexDoubleKernel(int numElements, double2* d_A, double2 alpha)
+{
+	const int index = blockSize*blockIdx.x + threadIdx.x;
+
+	if (index < numElements)
+	{
+		double2 C = d_A[index];
+		double temp = C.x;
+		C.x = alpha.x*C.x - alpha.y*C.y;
+		C.y = alpha.y*temp + alpha.x*C.y;
+
+		d_A[index] = C;
+	}
+}
+
+template<int blockSize>
 __global__ void exponentVectorComplexKernel(int numElements, float2* d_A)
 {
 	const int index = blockSize*blockIdx.x + threadIdx.x;
@@ -169,6 +202,26 @@ __global__ void exponentVectorComplexKernel(int numElements, float2* d_A)
 		float cosY = 0.0f;
 		sincosf(C.y, &sinY, &cosY);
 		float expX = expf(C.x);
+		C.x = expX*cosY;
+		C.y = expX*sinY;
+
+		d_A[index] = C;
+	}
+}
+
+
+template<int blockSize>
+__global__ void exponentVectorComplexDoubleKernel(int numElements, double2* d_A)
+{
+	const int index = blockSize*blockIdx.x + threadIdx.x;
+
+	if (index < numElements)
+	{
+		double2 C = d_A[index];
+		double sinY = 0.0f;
+		double cosY = 0.0f;
+		sincos(C.y, &sinY, &cosY);
+		double expX = exp(C.x);
 		C.x = expX*cosY;
 		C.y = expX*sinY;
 

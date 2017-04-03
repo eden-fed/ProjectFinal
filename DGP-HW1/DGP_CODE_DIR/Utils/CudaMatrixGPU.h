@@ -13,9 +13,12 @@ extern "C"
 	bool cuAddVectorsReal(int numElements, const float* d_A, const float* d_B, float* d_C);
 	bool cuAddVectorsComplex(int numElements, const std::complex<float>* d_A, const std::complex<float>* d_B, std::complex<float>* d_C);
 	bool cuSubVectorsComplex(int numElements, const std::complex<float>* d_A, const std::complex<float>* d_B, std::complex<float>* d_C);
+	bool cuSubVectorsComplexDouble(int numElements, const std::complex<double>* d_A, const std::complex<double>* d_B, std::complex<double>* d_C);//***
 	bool cuSubVectorsReal(int numElements, const float* d_A, const float* d_B, float* d_C);
 	bool cuScaleVectorComplex(int numElements, std::complex<float>* d_A, std::complex<float> alpha);
+	bool cuScaleVectorComplexDouble(int numElements, std::complex<double>* d_A, std::complex<double> alpha);//***
 	bool cuExponentVectorComplex(int numElements, std::complex<float>* d_A);
+	bool cuExponentVectorComplexDouble(int numElements, std::complex<double>* d_A);//***
 	bool cuConvertRealToComplex(int numElements, std::complex<float>* d_A, const float* d_B);
 	bool cuConjugate(int numElements, std::complex<float>* d_A);
 	bool cuAddRealScalar(int numElements, float* d_A, float alpha);

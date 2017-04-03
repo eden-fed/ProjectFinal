@@ -106,6 +106,23 @@ bool cuSubVectorsComplex(int numElements, const std::complex<float>* d_A, const 
 	return true;
 }
 
+bool cuSubVectorsComplexDouble(int numElements, const std::complex<double>* d_A, const std::complex<double>* d_B, std::complex<double>* d_C)
+{
+	if (numElements <= 0)
+	{
+		return false;
+	}
+
+	const unsigned int blockSize = 256;
+	int numBlocks = I_DIV_UP(numElements, blockSize);
+	assert(numBlocks > 0 && numBlocks <= MAX_GRID_DIMENSION);
+
+	dim3 threads(blockSize, 1);
+	dim3 grid(numBlocks, 1);
+	subVectorsComplexDoubleKernel<blockSize> << <grid, threads >> >(numElements, (const double2*)d_A, (const double2*)d_B, (double2*)d_C);
+
+	return true;
+}
 bool cuSubVectorsReal(int numElements, const float* d_A, const float* d_B, float* d_C)
 {
 	if(numElements <= 0)
@@ -159,6 +176,27 @@ bool cuScaleVectorComplex(int numElements, std::complex<float>* d_A, std::comple
 	return true;
 }
 
+bool cuScaleVectorComplexDouble(int numElements, std::complex<double>* d_A, std::complex<double> alpha)
+{
+	if (numElements <= 0)
+	{
+		return false;
+	}
+
+	const unsigned int blockSize = 256;
+	int numBlocks = I_DIV_UP(numElements, blockSize);
+	assert(numBlocks > 0 && numBlocks <= MAX_GRID_DIMENSION);
+
+	dim3 threads(blockSize, 1);
+	dim3 grid(numBlocks, 1);
+	double2 a;
+	a.x = alpha.real();
+	a.y = alpha.imag();
+
+	scaleVectorComplexDoubleKernel<blockSize> << <grid, threads >> >(numElements, (double2*)d_A, a);
+
+	return true;
+}
 bool cuExponentVectorComplex(int numElements, std::complex<float>* d_A)
 {
 	if(numElements <= 0)
@@ -174,6 +212,25 @@ bool cuExponentVectorComplex(int numElements, std::complex<float>* d_A)
 	dim3 grid(numBlocks, 1);
 
 	exponentVectorComplexKernel<blockSize><<<grid, threads>>>(numElements, (float2*)d_A);
+
+	return true;
+}
+
+bool cuExponentVectorComplexDouble(int numElements, std::complex<double>* d_A)
+{
+	if (numElements <= 0)
+	{
+		return false;
+	}
+
+	const unsigned int blockSize = 256;
+	int numBlocks = I_DIV_UP(numElements, blockSize);
+	assert(numBlocks > 0 && numBlocks <= MAX_GRID_DIMENSION);
+
+	dim3 threads(blockSize, 1);
+	dim3 grid(numBlocks, 1);
+
+	exponentVectorComplexDoubleKernel<blockSize> << <grid, threads >> >(numElements, (double2*)d_A);
 
 	return true;
 }

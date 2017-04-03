@@ -1,5 +1,6 @@
 #pragma once
 
+#include <builtin_types.h>
 #include <complex>
 #include <vector>
 
@@ -28,4 +29,12 @@ T P3(T x)
 {
 	return x*x*x;
 }
+
+
+
+
+//CUDA Helpers
+cudaError_t safeCudaMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, enum cudaMemcpyKind kind);
+
+
 

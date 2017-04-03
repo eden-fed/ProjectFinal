@@ -43,6 +43,8 @@ public:
 	const MatrixGPU<T>& operator=(const MatrixGPU<T>& mat);
 	const MatrixGPU<T>& operator=(const MatrixCPU<T>& mat);
 	~MatrixGPU();
+	bool concatenate(const MatrixGPU<T>& mat1, const MatrixGPU<T>& mat2);//***
+	bool splitInMiddle(MatrixGPU<T>& mat1, MatrixGPU<T>& mat2);//***
 	inline const T get_slow(int i, int j) const;
 	void set_slow(int i, int j, const T& value);
 	inline bool isValid() const;
@@ -53,6 +55,7 @@ public:
 	int nPitchedRows() const;
 	const T* getData();
 	bool mult(const MatrixGPU<T>& A, const MatrixGPU<T>& B, char opA = 'N', char opB = 'N', double* gpuTime = NULL);
+	ComplexDouble dotColVec(const MatrixGPU<T>& v, double* gpuTime = NULL);//***
 	bool add(const MatrixGPU<T>& A, const MatrixGPU<T>& B, double* gpuTime = NULL);
 	bool add(T alpha);
 	bool sub(const MatrixGPU<T>& A, const MatrixGPU<T>& B, double* gpuTime = NULL);
@@ -71,6 +74,7 @@ protected:
 	bool cuda_add(MatrixGPU<float>& A, float alpha) const;
 	bool cuda_sub(const MatrixGPU<float>& A, const MatrixGPU<float>& B);
 	bool cuda_sub(const MatrixGPU<ComplexFloat>& A, const MatrixGPU<ComplexFloat>& B);
+	bool cuda_sub(const MatrixGPU<ComplexDouble>& A, const MatrixGPU<ComplexDouble>& B);
 	bool cuda_conjugate(MatrixGPU<ComplexFloat>& A) const;
 	bool cuda_conjugate(MatrixGPU<float>& A) const;
 	int roundToCoalesced(int numElements);
@@ -82,7 +86,7 @@ protected:
 	void cublas_gemv(const MatrixGPU<double>& A, const MatrixGPU<double>& v, int m, int n, char opA);
 	void cublas_gemv(const MatrixGPU<ComplexFloat>& A, const MatrixGPU<ComplexFloat>& v, int m, int n, char opA);
 	void cublas_gemv(const MatrixGPU<ComplexDouble>& A, const MatrixGPU<ComplexDouble>& v, int m, int n, char opA);
-	
+	ComplexDouble cublas_dot(const MatrixGPU<ComplexDouble>& v, int n);
 
 protected:
 
@@ -325,6 +329,120 @@ const MatrixGPU<T>& MatrixGPU<T>::operator=(const MatrixCPU<T>& mat)
 	return *this;
 }
 
+/*concatenate vertically
+**works for vectors-not sure about matrix
+**TODO:check mNumRows vs mNumPitchedRows)*/
+template <class T>
+bool MatrixGPU<T>::concatenate(const MatrixGPU<T>& mat1, const MatrixGPU<T>& mat2){
+	if (mat1.mNumRows == 0 && mat1.mNumColumns == 0 && mat1.mNumPitchedRows == 0) //an empty matrix
+	{
+		*this = mat2;
+		return true;
+	}
+	if (mat2.mNumRows == 0 && mat2.mNumColumns == 0 && mat2.mNumPitchedRows == 0) //an empty matrix
+	{
+		*this = mat1;
+		return true;
+	}
+	if (mat1.mNumRows <= 0 || mat1.mNumColumns <= 0 || mat1.mNumPitchedRows <= 0 || mat2.mNumRows <= 0 || mat2.mNumColumns <= 0 || mat2.mNumPitchedRows <= 0)
+	{
+		assert(0);
+		return false;
+	}
+	if (mat1.mNumColumns != mat2.mNumColumns)
+	{
+		assert(0);
+		return false;
+	}
+	int pitchRows = roundToCoalesced(mat1.mNumRows + mat2.mNumRows);
+
+	if (pitchRows*mat1.mNumColumns != mNumPitchedRows*mNumColumns)
+	{
+		if (mData)
+		{
+			cudaError_t stat = cudaFree(mData);
+			assert(stat == cudaSuccess);
+			mData = NULL;
+		}
+		mNumRows = 0;
+		mNumColumns = 0;
+		mNumPitchedRows = 0;
+
+		cudaError_t stat = cudaMalloc((void**)&mData, (pitchRows)*mat1.mNumColumns*sizeof(T));
+
+		if (mData == NULL || stat != cudaSuccess)
+		{
+			assert(0);
+			return false;
+		}
+	}
+	mNumRows = mat1.mNumRows+mat2.mNumRows;
+	mNumColumns = mat1.mNumColumns;
+	mNumPitchedRows = pitchRows;
+
+	checkCudaErrors(cudaMemcpy(mData, mat1.mData, mat1.mNumPitchedRows*mat1.mNumColumns*sizeof(T), cudaMemcpyDeviceToDevice));
+	checkCudaErrors(cudaMemcpy(mData + mat1.mNumColumns*mat1.mNumRows, mat2.mData, mat2.mNumRows*mat2.mNumColumns*sizeof(T), cudaMemcpyDeviceToDevice));
+	
+	return true;
+
+}
+
+/*split vertically class matrix to 2 matrices in the same size
+**works for vectors-not sure about matrix
+*/
+template <class T>
+bool MatrixGPU<T>::splitInMiddle(MatrixGPU<T>& mat1, MatrixGPU<T>& mat2){
+
+	if (mNumRows <= 0 || mNumColumns <= 0 || mNumPitchedRows <= 0 )
+	{
+		assert(0);
+		return false;
+	}
+	if (mNumRows % 2 != 0 || mNumPitchedRows % 2 != 0)
+	{
+		assert(0);
+		return false;
+	}
+
+	int pitchRows = roundToCoalesced(mNumRows / 2);
+	if ((mat1.mNumPitchedRows)*mat1.mNumColumns != pitchRows*mNumColumns)
+	{
+
+		mat1.freeData();
+		cudaError_t stat = cudaMalloc((void**)&mat1.mData, pitchRows*mNumColumns*sizeof(T));
+
+		if (mat1.mData == NULL || stat != cudaSuccess)
+		{
+			assert(0);
+			return false;
+		}
+	}
+	mat1.mNumRows = mNumRows/2;
+	mat1.mNumColumns = mNumColumns;
+	mat1.mNumPitchedRows = pitchRows;
+
+	if ((mat2.mNumPitchedRows)*mat2.mNumColumns != pitchRows*mNumColumns)
+	{
+
+		mat2.freeData();
+		cudaError_t stat = cudaMalloc((void**)&mat2.mData, pitchRows*mNumColumns*sizeof(T));
+
+		if (mat2.mData == NULL || stat != cudaSuccess)
+		{
+			assert(0);
+			return false;
+		}
+	}
+	mat2.mNumRows = mNumRows / 2;
+	mat2.mNumColumns = mNumColumns;
+	mat2.mNumPitchedRows = pitchRows;
+
+	checkCudaErrors(cudaMemcpy(mat1.mData, mData, mat1.mNumRows*mat1.mNumColumns*sizeof(T), cudaMemcpyDeviceToDevice));
+	checkCudaErrors(cudaMemcpy(mat2.mData, mData + mat1.mNumColumns*mat1.mNumRows, mat2.mNumRows*mat2.mNumColumns*sizeof(T), cudaMemcpyDeviceToDevice));
+
+	return true;
+}
+
 template <class T>
 MatrixGPU<T>::~MatrixGPU()
 {
@@ -527,6 +645,51 @@ bool MatrixGPU<T>::mult(const MatrixGPU<T>& A, const MatrixGPU<T>& B, char opA, 
 	return true;
 }
 
+//result=u dot v, where u is this class
+template <class T>
+ComplexDouble MatrixGPU<T>::dotColVec(const MatrixGPU<T>& v, double* gpuTime)
+{
+	ComplexDouble result=Complex(0.0);
+
+	int n = v.mNumRows;
+	if ((mNumRows != n) || mNumColumns != 1 ||v.mNumColumns != 1){
+		assert(0);
+		return result;
+	}
+	if (n <= 0){
+		assert(0);
+		return result;
+	}
+
+	CUDATimer timer;
+	if (gpuTime)
+	{
+		*gpuTime = 0.0;
+		timer.startTimer();
+	}
+
+	result=cublas_dot(v, n);
+
+	if (gpuTime)
+	{
+		*gpuTime = timer.stopTimer();
+	}
+
+	return result;
+}
+
+template <class T>
+ComplexDouble MatrixGPU<T>::cublas_dot(const MatrixGPU<ComplexDouble>& v, int n)
+{
+	//cuDoubleComplex result=cublasZdotu(n, (const cuDoubleComplex*)mData, 1, (const cuDoubleComplex*)v.mData, 1);
+	cuDoubleComplex result = cublasZdotc(n, (const cuDoubleComplex*)mData, 1, (const cuDoubleComplex*)v.mData, 1);
+
+	cublasStatus err = cublasGetError();
+
+	ComplexDouble returnResult(result.x, result.y);
+	return returnResult;
+}
+
 
 template <class T>
 void MatrixGPU<T>::cublas_gemv(const MatrixGPU<float>& A, const MatrixGPU<float>& v, int m, int n, char opA)
@@ -719,6 +882,11 @@ bool MatrixGPU<T>::cuda_sub(const MatrixGPU<ComplexFloat>& A, const MatrixGPU<Co
 }
 
 template <class T>
+bool MatrixGPU<T>::cuda_sub(const MatrixGPU<ComplexDouble>& A, const MatrixGPU<ComplexDouble>& B)
+{
+	return cuSubVectorsComplexDouble(mNumPitchedRows*mNumColumns, A.mData, B.mData, mData);
+}
+template <class T>
 bool MatrixGPU<T>::scale(T alpha, double* gpuTime)
 {
 	if(mNumColumns <= 0 || mNumRows <= 0)
@@ -733,7 +901,7 @@ bool MatrixGPU<T>::scale(T alpha, double* gpuTime)
 		timer.startTimer();
 	}
 
-	bool res = cuScaleVectorComplex(mNumPitchedRows*mNumColumns, mData, alpha);
+	bool res = cuScaleVectorComplexDouble(mNumPitchedRows*mNumColumns, mData, alpha);
 
 	if(gpuTime)
 	{
@@ -758,7 +926,7 @@ bool MatrixGPU<T>::exponent(double* gpuTime)
 		timer.startTimer();
 	}
 
-	bool res = cuExponentVectorComplex(mNumPitchedRows*mNumColumns, mData);
+	bool res = cuExponentVectorComplexDouble(mNumPitchedRows*mNumColumns, mData);
 
 	if(gpuTime)
 	{

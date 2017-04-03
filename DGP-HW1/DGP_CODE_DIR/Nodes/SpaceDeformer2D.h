@@ -2,6 +2,9 @@
 
 #include "Utils/STL_Macros.h"
 #include "Utils/GMM_Macros.h"
+#include "Utils/FastMatrix.h"
+#include "Utils/MatrixCPU.h"
+#include "Utils/MatrixGPU.h"
 
 class SpaceDeformer2D : public MPxDeformerNode
 {
@@ -54,7 +57,7 @@ protected:
 	double lambda;
 	int iterationsNum;
 	double epsilon;
-	float3 mZ0NotOnMesh;
+	MAYA_float3 mZ0NotOnMesh;
 	int mZ0index;
 	Complex mZ0onMesh;
 
@@ -97,8 +100,9 @@ protected:
 	GMMDenseComplexColMatrix mPinvOfIncCageVertexCoords; //dimensions are: nLarge x a
 	GMMSparseComplexRowMatrix mLMatrixForLipmansMethod; //dimensions are: 2*nLarge x 2*nLarge
 	GMMSparseComplexRowMatrix mUMatrixForLipmansMethod; //dimensions are: 2*nLarge x 2*nLarge
-	GMMDenseColMatrix mPRowPermOfLUForLipmansMethod; //dimensions are: 1 x 2*nLarge
 	GMMDenseComplexColMatrix mTtrasposeForLipmansMethod;//dimensions are: 2*nLarge x a
+	GMMDenseComplexColMatrix mTForLipmansMethod;//dimensions are: 2*nLarge x a
+	GMMDenseComplexColMatrix mInvMForLipmansMethod;//dimensions are: 2*nLarge x a
 
 	GMMDenseComplexColMatrix mAOfLineSegmentInLvAccelerated; //dimensions are: 5 x 1 **unused**
 	GMMDenseComplexColMatrix mBOfLineSegmentInLvAccelerated; //dimensions are: 5 x 1 **unused**
@@ -109,8 +113,8 @@ protected:
 	double mXcoordOfIntersectionPointForCurveLv;
 	double mYcoordOfIntersectionPointForCurveLv;
 
-	GMMDenseComplexColMatrix mUserCageVerticesNos_sizeA;
-	GMMDenseComplexColMatrix mUserCageVerticesNos_sizeNLarge;
+	ComplexDoubleCPUMatrix mUserCageVerticesNos_sizeA;
+	ComplexDoubleCPUMatrix mUserCageVerticesNos_sizeNLarge;
 	
 	GMMDenseComplexColMatrix mCompCageVerticesNos_sizeA;
 	GMMDenseComplexColMatrix mCompCageVerticesNos;
@@ -120,6 +124,52 @@ protected:
 	GMMDenseComplexColMatrix mEdgeVectorsForIntegral; //dimensions are: m X 1
 
 	GMMDenseComplexColMatrix mCauchyCoordsOfz0; //dimensions are: 1 x nLarge
+
+	//***arrays for L_nu projection in c++***
+	ComplexDoubleCPUMatrix mfz;
+	ComplexDoubleCPUMatrix mfzBar;
+	ComplexDoubleCPUMatrix mLog_fz;
+	ComplexDoubleCPUMatrix mNu_f;
+	ComplexDoubleGPUMatrix mLog_fz_gpu;
+	ComplexDoubleGPUMatrix mNu_f_gpu;
+	ComplexDoubleGPUMatrix mL_gpu;
+	ComplexDoubleGPUMatrix mNu_gpu;
+
+	std::vector<int> mNumOfVerticesInEdgesSizeA_stdVec;//dimensions are: numOfEdges x 1 - sum of vertices=A
+	std::vector<int> mNumOfVerticesInEdgesSizeNlarge_stdVec;//dimensions are: numOfEdges x 1 - sum of vertices=nLarge
+
+	ComplexDoubleGPUMatrix mPinvOfIncCageVertexCoords_gpuMat;
+	ComplexDoubleGPUMatrix mIncCageVertexCoords_gpuMat;
+
+	ComplexDoubleCPUMatrix mLonInternalPoints;
+	ComplexDoubleCPUMatrix mNUonInternalPoints;
+	ComplexDoubleGPUMatrix mLonInternalPoints_gpu;
+	ComplexDoubleGPUMatrix mNUonInternalPoints_gpu;
+
+	ComplexDoubleGPUMatrix mCauchyCoordinatesIncForP2P_gpuMat;
+	ComplexDoubleCPUMatrix mPHI;
+	ComplexDoubleCPUMatrix mPHItag;
+	ComplexDoubleCPUMatrix mPSI;
+
+	ComplexDoubleGPUMatrix mCauchyCoordsOfz0_gpuMat;
+
+	DoubleGPUMatrix mXvaluesOfIntersections_gpu;//test
+	DoubleGPUMatrix mYvaluesOfIntersections_gpu;//test
+
+
+	ComplexDoubleGPUMatrix mX_gpu;
+	ComplexDoubleGPUMatrix mX_local_gpu;
+	ComplexDoubleGPUMatrix mn_0forLipmansMethod_gpu;
+	ComplexDoubleGPUMatrix mEta_0forLipmansMethod_gpu; 
+	ComplexDoubleGPUMatrix mc_0forLipmansMethod_gpu;
+	ComplexDoubleGPUMatrix my_cforLipmansMethod_gpu;
+	ComplexDoubleGPUMatrix my_etaforLipmansMethod_gpu;
+	ComplexDoubleGPUMatrix mTtrasposeForLipmansMethod_gpu;
+	ComplexDoubleGPUMatrix mTForLipmansMethod_gpu;
+	ComplexDoubleGPUMatrix mInvMForLipmansMethod_gpu;
+	ComplexDoubleGPUMatrix mKKTresult_gpu;
+
+	//****
 
 private:
 	void matlabCalcNewVerticesForInterpolation();
@@ -142,19 +192,28 @@ private:
 	MStatus showIncVertecies(MPointArray& IncreasedCageVertecies);
 	MStatus findLineApproximationForCurve();
 
-	void calcLvprojectionLGcpu();
-	void evalFzAndFzBar(GMMDenseComplexColMatrix& CageVerticesNos, GMMDenseComplexColMatrix& userCageVerticesNos, GMMDenseColMatrix& mNumOfVerticesInEdges, int numOfIncreasedCageVertecies, int numOfCageVertices, GMMDenseComplexColMatrix& fz, GMMDenseComplexColMatrix& fzBar);
-	void IncreaseVerteciesAfterMap(GMMDenseComplexColMatrix& OriginalCageVertecies, GMMDenseComplexColMatrix& IncreasedCageVertecies, int numOfIncreasedCageVertecies, GMMDenseColMatrix& mNumOfVerticesInEdges);
-	void logarithmExtraction(GMMDenseComplexColMatrix& cageVerticesNos_sizeA, GMMDenseComplexColMatrix& fz, GMMDenseComplexColMatrix& cageVerteciesAfterMapSizeA, int a, GMMDenseComplexColMatrix& log_fz);
-	void find_nu_f(GMMDenseComplexColMatrix& fz, GMMDenseComplexColMatrix& fzBar, int a, GMMDenseComplexColMatrix& nu_f);
-	int doLocalGlobalIterations(GMMDenseComplexColMatrix& log_fz, GMMDenseComplexColMatrix& nu_f, GMMDenseComplexColMatrix& l, GMMDenseComplexColMatrix& nu, void (SpaceDeformer2D::*projectionFunction)(double&, double&));
-	bool localStep(GMMDenseComplexColMatrix& log_fz, GMMDenseComplexColMatrix& nu_f, void (SpaceDeformer2D::*projectionFunction)(double&, double&));
+	void calcLvprojectionLGgpu();
+	void calcLvprojectionHPgpu();
+	void evalFzAndFzBar(GMMDenseComplexColMatrix& CageVerticesNos, GMMDenseComplexColMatrix& userCageVerticesNos, std::vector<int>& mNumOfVerticesInEdges, int numOfIncreasedCageVertecies, int numOfCageVertices, ComplexDoubleCPUMatrix& fz, ComplexDoubleCPUMatrix& fzBar);
+	void IncreaseVerteciesAfterMap(GMMDenseComplexColMatrix& OriginalCageVertecies, ComplexDoubleCPUMatrix& IncreasedCageVertecies, int numOfIncreasedCageVertecies, std::vector<int>& mNumOfVerticesInEdges);
+	void logarithmExtraction(GMMDenseComplexColMatrix& cageVerticesNos_sizeA, ComplexDoubleCPUMatrix& fz, ComplexDoubleCPUMatrix& cageVerteciesAfterMapSizeA, int a, ComplexDoubleCPUMatrix& log_fz);
+	void find_nu_f(ComplexDoubleCPUMatrix& fz, ComplexDoubleCPUMatrix& fzBar, int a, ComplexDoubleCPUMatrix& nu_f);
+	//int doLocalGlobalIterations(void (SpaceDeformer2D::*projectionFunction)(double&, double&));
+	int doLocalGlobalIterations(bool (SpaceDeformer2D::*localStepFunction)(ComplexDoubleGPUMatrix&, ComplexDoubleGPUMatrix&));
+	int doHyperPlaneIterations(bool (SpaceDeformer2D::*localStepFunction)(ComplexDoubleGPUMatrix&));
+	bool localStep(ComplexDoubleCPUMatrix& log_fz, ComplexDoubleCPUMatrix& nu_f, void (SpaceDeformer2D::*projectionFunction)(double&, double&));
 	bool checkIfInsidePolygon(double x, double y);
 	void projectPointToPolygonMinSeg(double& x, double& y);
 	void projectPointToPolygonWithK(double& x, double& y);
 	void projectPointToPolygonNoK(double& x, double& y);
-	void findPHI(GMMDenseComplexColMatrix& PHI, GMMDenseComplexColMatrix& PHItag, GMMDenseComplexColMatrix& LonInternalPoints);
-	void findPSI(GMMDenseComplexColMatrix& PSI, GMMDenseComplexColMatrix& NUonInternalPoints, GMMDenseComplexColMatrix& PHItag);
-	void calcIntegralUsingSpaningTree(GMMDenseComplexColMatrix& PHI, GMMDenseComplexColMatrix& PHItag,Complex phi_Z0);
+	void findPHI(ComplexDoubleCPUMatrix& PHI, ComplexDoubleCPUMatrix& PHItag, ComplexDoubleCPUMatrix& LonInternalPoints);
+	void findPSI(ComplexDoubleCPUMatrix& PSI, ComplexDoubleCPUMatrix& NUonInternalPoints, ComplexDoubleCPUMatrix& PHItag);
+	void calcIntegralUsingSpaningTree(ComplexDoubleCPUMatrix& f, ComplexDoubleCPUMatrix& f_tag, Complex phi_Z0);
 
+	bool localStep_noK_gpu(ComplexDoubleGPUMatrix& log_fz, ComplexDoubleGPUMatrix& nu_f);
+	bool localStep_withK_gpu(ComplexDoubleGPUMatrix& log_fz, ComplexDoubleGPUMatrix& nu_f);
+	bool localStep_noK_HP_gpu(ComplexDoubleGPUMatrix& x_vec);
+	bool localStep_withK_HP_gpu(ComplexDoubleGPUMatrix& x_vec);
+	bool localStep_minSeg_gpu(ComplexDoubleGPUMatrix& log_fz, ComplexDoubleGPUMatrix& nu_f);
+	bool localStep_minSeg_HP_gpu(ComplexDoubleGPUMatrix& x_vec);
 };
