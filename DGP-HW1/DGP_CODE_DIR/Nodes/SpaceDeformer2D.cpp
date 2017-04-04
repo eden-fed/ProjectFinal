@@ -19,6 +19,10 @@
 
 //#define DEBUG
 //#define DEBUG2
+//#define COMPARE_TOTAL_TIMINGS
+#define COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
+//#define DEBUG_FINAL_RESULT
+
 
 const MTypeId SpaceDeformer2D::mTypeId(0x6723c);
 const MString SpaceDeformer2D::mTypeName("SpaceDeformer2D");
@@ -98,7 +102,7 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(attributeAffects(mNumOfSegmentsAttr, outputGeom));
 
 	MFnNumericAttribute nLargeAttr;
-	mNlargeAttr = nLargeAttr.create("numOfSegmentsN", "nLarge", MFnNumericData::kInt, 100, &stat);
+	mNlargeAttr = nLargeAttr.create("numOfSegmentsN", "nLarge", MFnNumericData::kInt, 150, &stat);
 	CHECK_MSTATUS(nLargeAttr.setKeyable(true));
 	CHECK_MSTATUS(addAttribute(mNlargeAttr));
 	CHECK_MSTATUS(attributeAffects(mNlargeAttr, outputGeom));
@@ -410,7 +414,10 @@ void SpaceDeformer2D::evalFzAndFzBar(GMMDenseComplexColMatrix& CageVerticesNos, 
 	}
 }
 void SpaceDeformer2D::logarithmExtraction(GMMDenseComplexColMatrix& cageVerticesNos_sizeA, ComplexDoubleCPUMatrix& fz, ComplexDoubleCPUMatrix& cageVerteciesAfterMapSizeA, int a, ComplexDoubleCPUMatrix& log_fz){
+#ifdef DEBUG
 	std::vector<double> cornerAngleChanges; //debug
+#endif // DEBUG
+
 	double arg_fz;
 	double ln_abs_fz;
 	for (int i = 0; i < a; i++){
@@ -419,12 +426,15 @@ void SpaceDeformer2D::logarithmExtraction(GMMDenseComplexColMatrix& cageVertices
 		if (i == 0){
 			arg_fz = arg(edgeAfterMap / edgeBeforeMap);
 			//debug:
+#ifdef DEBUG
 			Complex prevEdgeBeforeMap = cageVerticesNos_sizeA(0,0) - cageVerticesNos_sizeA(a - 1,0);
 			double cornerSourceAngle = arg(edgeBeforeMap / prevEdgeBeforeMap) + M_PI;
 			double cornerTargetAngle = arg(edgeBeforeMap * fz(0,0) / (prevEdgeBeforeMap * fz(a - 1,0))) + M_PI;
 			double cornerAngleChange = cornerTargetAngle - cornerSourceAngle;
 			cornerAngleChanges.push_back(cornerAngleChange);
 			//end debug
+#endif // DEBUG
+
 		}
 		else{
 			Complex prevEdgeBeforeMap = cageVerticesNos_sizeA(i,0) - cageVerticesNos_sizeA(i - 1,0);
@@ -432,13 +442,16 @@ void SpaceDeformer2D::logarithmExtraction(GMMDenseComplexColMatrix& cageVertices
 			double cornerSourceAngle = arg(edgeBeforeMap / prevEdgeBeforeMap) + M_PI;
 			double cornerTargetAngle = arg(edgeBeforeMap * fz(i,0) / (prevEdgeBeforeMap * prevfz)) + M_PI;
 			double cornerAngleChange = cornerTargetAngle - cornerSourceAngle;
+#ifdef DEBUG
 			cornerAngleChanges.push_back(cornerAngleChange);//debug
+#endif // DEBUG
+
 			arg_fz = arg_fz + cornerAngleChange;
 		}
 		ln_abs_fz = log(abs(fz(i,0)));
 		log_fz(i,0) = ln_abs_fz + Complex(0, 1)*arg_fz;
 	}
-
+#ifdef DEBUG
 	//check turning number
 	if (abs(std::accumulate(cornerAngleChanges.begin(), cornerAngleChanges.end(), 0.0))>1e-6){
 		std::cerr << "The turning number of target polygon is invalid!\n";
@@ -452,6 +465,8 @@ void SpaceDeformer2D::logarithmExtraction(GMMDenseComplexColMatrix& cageVertices
 	}
 	if (max>1e-6)
 		std::cerr << "The sanity check for log of derivative failed!\n";
+#endif // DEBUG
+
 }
 void SpaceDeformer2D::find_nu_f(ComplexDoubleCPUMatrix& fz, ComplexDoubleCPUMatrix& fzBar, int a, ComplexDoubleCPUMatrix& nu_f){
 	//GMMDenseComplexColMatrix nu_f(a, 1);//return this
@@ -600,25 +615,34 @@ bool SpaceDeformer2D::localStep(ComplexDoubleCPUMatrix& log_fz, ComplexDoubleCPU
 	return allPointsInPolygon;
 }
 int SpaceDeformer2D::doLocalGlobalIterations(bool (SpaceDeformer2D::*localStepFunction)(ComplexDoubleGPUMatrix&, ComplexDoubleGPUMatrix&)){
-	CPUTimer timer,timer2;
-	double duration1 = 0.0, duration2 = 0.0, durationn3 = 0.0;
+#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
+	CPUTimer timer;
+	double duration1 = 0.0, duration2 = 0.0;
+#endif //COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
 
-	timer2.tic();
 	int i;
 	for (i = 0; i < iterationsNum; i++){
+#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
 		timer.tic();
+#endif //COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
+
 		//local step
 		//bool allPointsInPolygon = localStep(mLog_fz, mNu_f, projectionFunction);
 
 		//bool allPointsInPolygon = (this->*localStepFunction)(mLog_fz_gpu, mNu_f_gpu);
 		bool allPointsInPolygon = localStep_minSeg_gpu(mLog_fz_gpu, mNu_f_gpu);
-
+#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
 		duration1 = timer.toc();
+		cout << "local step took " << duration1 << endl;
+#endif //COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
+
 		//stop condition -fix
 		if (allPointsInPolygon)
 			break;
 
+#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
 		timer.tic();
+#endif //COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
 
 		//global step
 		mL_gpu.mult(mPinvOfIncCageVertexCoords_gpuMat, mLog_fz_gpu);
@@ -627,10 +651,13 @@ int SpaceDeformer2D::doLocalGlobalIterations(bool (SpaceDeformer2D::*localStepFu
 		mLog_fz_gpu.mult(mIncCageVertexCoords_gpuMat, mL_gpu);
 		mNu_f_gpu.mult(mIncCageVertexCoords_gpuMat, mNu_gpu);
 
+#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
 		duration2 = timer.toc();
+		cout << "global step took " << duration2 << endl;
+#endif //COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
 	}
 
-#ifdef DEBUG2
+#ifdef DEBUG
 	ComplexDoubleCPUMatrix test = mL_gpu;
 	GMMDenseComplexColMatrix matlab0(test.nRows(), 1);
 	for (int j = 0; j < test.nRows(); ++j)
@@ -642,103 +669,66 @@ int SpaceDeformer2D::doLocalGlobalIterations(bool (SpaceDeformer2D::*localStepFu
 		matlab1(j, 0) = test(j, 0);
 	MatlabGMMDataExchange::SetEngineDenseMatrix("mNu_gpu", matlab1);
 #endif
-	durationn3=timer2.toc();
-	/*cout << "cout: local-global iterations took " << durationn3 << endl;
-	cerr << "cerr: local-global iterations took " << durationn3 << endl;
-	cout.flush();*/
+	/*cout << "cout: local-global iterations took " << durationn3 << endl;*/
 	return i;
 }
 
 int SpaceDeformer2D::doHyperPlaneIterations(bool (SpaceDeformer2D::*localStepFunction)(ComplexDoubleGPUMatrix&)){
-#ifdef DEBUG2
-	ComplexDoubleCPUMatrix test,test2;
-#endif
+#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
+	CPUTimer timer;
+	double duration1 = 0.0, duration2 = 0.0;
+#endif //COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
+
+	double gpuTime;
+
 	int i;
+	Complex scalar;
+	double norm_n0;
 	for (i = 0; i < iterationsNum; i++){
-
-#ifdef DEBUG
-		test = mX_gpu;//debug
-		GMMDenseComplexColMatrix matlab0(test.nRows(), 1);
-		for (int j = 0; j < test.nRows(); ++j)
-			matlab0(j, 0) = test(j, 0);
-		MatlabGMMDataExchange::SetEngineDenseMatrix("mX_gpu", matlab0);
-#endif
-
 		mX_local_gpu = mX_gpu;
+
 		//local step
+#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
+		timer.tic();
+#endif //COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
+
 		//(this->*localStepFunction)(mX_local_gpu);
 		localStep_minSeg_HP_gpu(mX_local_gpu);
 
-#ifdef DEBUG
-		test = mX_local_gpu;//debug
-		GMMDenseComplexColMatrix matlab1(test.nRows(), 1);
-		for (int j = 0; j < test.nRows(); ++j)
-			matlab1(j, 0) = test(j, 0);
-		MatlabGMMDataExchange::SetEngineDenseMatrix("mX_local_gpu", matlab1);
-#endif
+#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
+		duration1 = timer.toc();
+		cout << "local step took " << duration1 << endl;
+		timer.tic();
+#endif //COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
+
 
 		//global step
-		mn_0forLipmansMethod_gpu.sub(mX_gpu, mX_local_gpu);
+		mn_0forLipmansMethod_gpu.sub(mX_gpu, mX_local_gpu, &gpuTime);
+		norm_n0 = mn_0forLipmansMethod_gpu.norm();
+		//stop condition
+		if (norm_n0 < epsilon)
+			break;
 
-#ifdef DEBUG
-		test = mn_0forLipmansMethod_gpu;//debug
-		GMMDenseComplexColMatrix matlab2(test.nRows(), 1);
-		for (int j = 0; j < test.nRows(); ++j)
-			matlab2(j, 0) = test(j, 0);
-		MatlabGMMDataExchange::SetEngineDenseMatrix("mn_0forLipmansMethod_gpu", matlab2);
-#endif
-		//stop condition?
+#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
+		timer.tic();
+#endif //COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
 
-		mc_0forLipmansMethod_gpu.mult(mTtrasposeForLipmansMethod_gpu, mX_gpu);
+		/*Edwad formula:*/
 		mEta_0forLipmansMethod_gpu.mult(mTtrasposeForLipmansMethod_gpu, mn_0forLipmansMethod_gpu);
-
-#ifdef DEBUG
-		test = mc_0forLipmansMethod_gpu;//debug
-		GMMDenseComplexColMatrix matlab3(test.nRows(), 1);
-		for (int j = 0; j < test.nRows(); ++j)
-			matlab3(j, 0) = test(j, 0);
-		MatlabGMMDataExchange::SetEngineDenseMatrix("mc_0forLipmansMethod_gpu", matlab3);
-		test2 = mEta_0forLipmansMethod_gpu;//debug
-		GMMDenseComplexColMatrix matlab4(test.nRows(), 1);
-		for (int j = 0; j < test2.nRows(); ++j)
-			matlab4(j, 0) = test2(j, 0);
-		MatlabGMMDataExchange::SetEngineDenseMatrix("mEta_0forLipmansMethod_gpu", matlab4);
-#endif
-
-		my_cforLipmansMethod_gpu.mult(mInvMForLipmansMethod_gpu, mc_0forLipmansMethod_gpu);
 		my_etaforLipmansMethod_gpu.mult(mInvMForLipmansMethod_gpu, mEta_0forLipmansMethod_gpu);
 
-#ifdef DEBUG
-		test = my_cforLipmansMethod_gpu;//debug
-		GMMDenseComplexColMatrix matlab5(test.nRows(), 1);
-		for (int j = 0; j < test.nRows(); ++j)
-			matlab5(j, 0) = test(j, 0);
-		MatlabGMMDataExchange::SetEngineDenseMatrix("my_cforLipmansMethod_gpu", matlab5);
-		test2 = my_etaforLipmansMethod_gpu;//debug
-		GMMDenseComplexColMatrix matlab6(test.nRows(), 1);
-		for (int i = 0; i < test2.nRows(); ++i)
-			matlab6(i, 0) = test2(i, 0);
-		MatlabGMMDataExchange::SetEngineDenseMatrix("my_etaforLipmansMethod_gpu", matlab6);
-#endif
-
-		Complex scalar = mn_0forLipmansMethod_gpu.dotColVec(mX_local_gpu);
-		scalar = mEta_0forLipmansMethod_gpu.dotColVec(my_cforLipmansMethod_gpu) - scalar;
-		scalar /= mEta_0forLipmansMethod_gpu.dotColVec(my_etaforLipmansMethod_gpu);
+		scalar=mEta_0forLipmansMethod_gpu.dotColVec(my_etaforLipmansMethod_gpu);
+		scalar=pow(norm_n0,2)/scalar;
 		my_etaforLipmansMethod_gpu.scale(scalar);
 
-		mKKTresult_gpu.sub(my_cforLipmansMethod_gpu , my_etaforLipmansMethod_gpu);
+		mLnu_forLipman_gpu.sub(mLnu_forLipman_gpu, my_etaforLipmansMethod_gpu);
 
-#ifdef DEBUG2
-		test = mKKTresult_gpu;//debug
-		GMMDenseComplexColMatrix matlab7(test.nRows(), 1);
-		for (int j = 0; j < test.nRows(); ++j)
-			matlab7(j, 0) = test(j, 0);
-		MatlabGMMDataExchange::SetEngineDenseMatrix("mKKTresult_gpu", matlab7);
-#endif
+		mX_gpu.mult(mTForLipmansMethod_gpu, mLnu_forLipman_gpu);
 
-		mX_gpu.mult(mTForLipmansMethod_gpu, mKKTresult_gpu);
-
-
+#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
+		duration2 = timer.toc();
+		cout << "global step took " << duration2 << endl;
+#endif //COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
 	}
 	return i;
 }
@@ -822,6 +812,9 @@ void SpaceDeformer2D::calcLvprojectionLGgpu(){
 	for (int i = 0; i < mInternalPoints.size(); i++){
 		mInternalPoints[i] = mPHI(i,0) + std::conj(mPSI(i,0));
 	}
+#ifdef DEBUG_FINAL_RESULT
+	MatlabGMMDataExchange::SetEngineDenseMatrix("mInternalPoints", mInternalPoints);
+#endif
 }
 
 void SpaceDeformer2D::calcLvprojectionHPgpu(){
@@ -844,9 +837,12 @@ void SpaceDeformer2D::calcLvprojectionHPgpu(){
 	mLog_fz_gpu.mult(mIncCageVertexCoords_gpuMat, mL_gpu);
 	mNu_f_gpu.mult(mIncCageVertexCoords_gpuMat, mNu_gpu);
 
+	mLnu_forLipman_gpu.concatenate(mL_gpu, mNu_gpu);
 	mX_gpu.concatenate(mLog_fz_gpu, mNu_f_gpu);
 
+#ifdef DEBUG2
 	ComplexDoubleCPUMatrix test = mX_gpu;//debug
+#endif
 
 	bool (SpaceDeformer2D::*localStepFunction)(ComplexDoubleGPUMatrix&) = NULL;
 	if (k == mXcoordOfIntersectionPointForCurveLv)
@@ -857,18 +853,19 @@ void SpaceDeformer2D::calcLvprojectionHPgpu(){
 	doHyperPlaneIterations(localStepFunction);
 
 #ifdef DEBUG2
-	test = mKKTresult_gpu;//debug
+	test = mLnu_forLipman_gpu;//debug
 	GMMDenseComplexColMatrix matlab1(test.nRows(), 1);
 	for (int i = 0; i < test.nRows(); ++i)
 		matlab1(i, 0) = test(i, 0);
-	MatlabGMMDataExchange::SetEngineDenseMatrix("mKKTresult_gpu", matlab1);
+	MatlabGMMDataExchange::SetEngineDenseMatrix("mLnu_forLipman_gpu", matlab1);
 #endif
 
-	mKKTresult_gpu.splitInMiddle(mL_gpu, mNu_gpu);
+	mLnu_forLipman_gpu.splitInMiddle(mL_gpu, mNu_gpu);
 
+#ifdef DEBUG2
 	ComplexDoubleCPUMatrix mL = mL_gpu;//debug
 	ComplexDoubleCPUMatrix mNu = mNu_gpu;//debug
-
+#endif
 	mLonInternalPoints_gpu.mult(mCauchyCoordinatesIncForP2P_gpuMat, mL_gpu);
 	mLonInternalPoints = mLonInternalPoints_gpu;
 
@@ -884,6 +881,9 @@ void SpaceDeformer2D::calcLvprojectionHPgpu(){
 	for (int i = 0; i < mInternalPoints.size(); i++){
 		mInternalPoints[i] = mPHI(i, 0) + std::conj(mPSI(i, 0));
 	}
+#ifdef DEBUG_FINAL_RESULT
+	MatlabGMMDataExchange::SetEngineDenseMatrix("mInternalPoints", mInternalPoints);
+#endif
 }
 
 MStatus SpaceDeformer2D::showIncVertecies(MPointArray& IncreasedCageVertecies) {
@@ -1072,13 +1072,26 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 		break;
 	case 8://projection via Lv space using local global
 		runTimeDoSetup();
+#ifdef COMPARE_TOTAL_TIMINGS
 		timer.tic();
+#endif //COMPARE_TOTAL_TIMINGS
 		matlabCalcLforLvprojectionAccel();
+#ifdef COMPARE_TOTAL_TIMINGS
 		duration = timer.toc();
+		cout << "local-global on matlab took " << duration << endl;
+#endif //COMPARE_TOTAL_TIMINGS
 		break;
 	case 9://projection via Lv space using lipman's methos
 		runTimeDoSetup();
+#ifdef COMPARE_TOTAL_TIMINGS
+		timer.tic();
+		runTimeDoSetup();
+#endif //COMPARE_TOTAL_TIMINGS
 		matlabCalcLforLvprojectionLipman();
+#ifdef COMPARE_TOTAL_TIMINGS
+		duration = timer.toc();
+		cout << "Hyperplane on matlab took " << duration << endl;
+#endif //COMPARE_TOTAL_TIMINGS
 		break;
 	case 10://projection via Lv space using Dykstra
 		runTimeDoSetup();
@@ -1086,15 +1099,25 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 		break;
 	case 11://projection via Lv space using local global on gpu
 		runTimeDoSetup();
+#ifdef COMPARE_TOTAL_TIMINGS
 		timer2.tic();
+#endif //COMPARE_TOTAL_TIMINGS
 		calcLvprojectionLGgpu();
+#ifdef COMPARE_TOTAL_TIMINGS
 		duration2 = timer2.toc();
+		cout << "local-global on gpu took " << duration2 << endl;
+#endif //COMPARE_TOTAL_TIMINGS
 		break;
 	case 12://projection via Lv space using lipman's method on gpu
 		runTimeDoSetup();
+#ifdef COMPARE_TOTAL_TIMINGS
 		timer2.tic();
+#endif //COMPARE_TOTAL_TIMINGS
 		calcLvprojectionHPgpu();
+#ifdef COMPARE_TOTAL_TIMINGS
 		duration2 = timer2.toc();
+		cout << "Hyperplane on gpu took " << duration2 << endl;
+#endif //COMPARE_TOTAL_TIMINGS
 	}
 	///////////////////////////////
 	///////////////////////////////
@@ -1666,7 +1689,7 @@ MStatus SpaceDeformer2D::runTimeDoSetup() {
 	my_cforLipmansMethod_gpu.resize(2 * mCurrentNLarge, 1);
 	my_etaforLipmansMethod_gpu.resize(2 * mCurrentNLarge, 1);
 	
-	mKKTresult_gpu.resize(2 * mCurrentNLarge, 1);
+	mLnu_forLipman_gpu.resize(2 * mCurrentNLarge, 1);
 	//*********************
 
 	cout.flush();

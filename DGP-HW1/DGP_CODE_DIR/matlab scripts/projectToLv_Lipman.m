@@ -1,6 +1,7 @@
 %********************check if mex files exists********************
-make_mex;
+% make_mex;
 %***********************start algorithm****************************
+% timerHP=tic;
 a=size(C_sizeA,1);
 n=size(C_sizeA,2);
 
@@ -20,19 +21,23 @@ v=p_inv*init_Vg;
 l_gz_first_step=C_sizeA*l;
 Vg_first_step=C_sizeA*v;
 x_first_step=[l_gz_first_step;Vg_first_step];
+L_nu=[l;v];
 
 l_gz=l_gz_first_step;
 Vg=Vg_first_step;
 
-%******preprocess******
+% ******preprocess******
 % T=blkdiag(C_sizeA,C_sizeA);
 % T_trans=T';
-% M=sparse(T_trans*T);
-% [M_L, M_U, M_p, M_q] = lu(M, 'vector');
+% M=T_trans*T;
+% [M_L, M_U] = lu(M);
+% M_inv=inv(M);
+% M_inv_T_trans=M\T_trans;
 %**********************
 % 
 % figure('position', [1220, 0, 600, 1400])
 % h=plot(0,0);
+% 
 for iter=1:max_iterations
 
     %local
@@ -51,22 +56,28 @@ for iter=1:max_iterations
     x_local=[l_gz_local;Vg_local];
         
     n0=x_prevGlobal-x_local;
-    if(norm(n0)<epsilon)%stop condition from the article
+    norm_n0=norm(n0);
+    if(norm_n0<epsilon)%stop condition from the article
         break;
     end
-
-    eta_0=T_trans*n0;
-    d_0=n0'*x_local;
-    c_0=T_trans*x_prevGlobal;
+    
+%     eta_0=T_trans*n0;
+%     d_0=n0'*x_local;
+%     c_0=T_trans*x_prevGlobal;
 %     c_0=T_trans*x_local;
+
+%     y_c = M_U\(M_L\c_0);
+%     y_eta = M_U\(M_L\eta_0);
+
+%     y_c = M_inv*c_0;
+    y_eta=M_inv_T_trans*n0;%ed method using lu
     
-    y_c = M_U\(M_L\(c_0(M_p,:)));
-    y_eta = M_U\(M_L\(eta_0(M_p,:)));
+%     L_nu=y_c-(y_eta*(eta_0'*y_c-d_0)/(eta_0'*y_eta));  
+
+    L_nu=L_nu-y_eta*((norm_n0^2)/(n0'*T*y_eta));%ed method
     
-    KKTresult=y_c-(y_eta*(eta_0'*y_c-d_0)/(eta_0'*y_eta));
-    
-    l=KKTresult(1:n);
-    v=KKTresult(n+1:2*n);%(n+1:end)
+    l=L_nu(1:n);
+    v=L_nu(n+1:2*n);%(n+1:end)
     %***
     
     l_gz=C_sizeA*l;
@@ -74,15 +85,16 @@ for iter=1:max_iterations
     
     
 end
-if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(m*abs(C_sizeA*v)+log(sigma)<=real(C_sizeA*l)+epsilon))
-    fprintf('the constraints are satisfied\n');
-end
 
-fprintf('max k = %d\n',max(abs(Vg)));
-fprintf('max SIGMA = %d\n',max(exp(real(l_gz)).*(1+abs(Vg))));
-fprintf('min sigma = %d\n',min(exp(real(l_gz)).*(1-abs(Vg))));
-fprintf('energy = %d\n',sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg));
-fprintf('iterations = %d\n\n',iter);
+% if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(m*abs(C_sizeA*v)+log(sigma)<=real(C_sizeA*l)+epsilon))
+%     fprintf('the constraints are satisfied\n');
+% end
+% 
+% fprintf('max k = %d\n',max(abs(Vg)));
+% fprintf('max SIGMA = %d\n',max(exp(real(l_gz)).*(1+abs(Vg))));
+% fprintf('min sigma = %d\n',min(exp(real(l_gz)).*(1-abs(Vg))));
+% fprintf('energy = %d\n',sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg));
+% fprintf('iterations = %d\n\n',iter);
 
 Vz=C_sizeM*v;
 lz=C_sizeM*l;
@@ -124,3 +136,4 @@ PSI=treeCumSum(uint32(Z0index), PSI_Z0, integral_on_edges, startIndices, endIndi
 
 %*************step 8:find f******************
 f=PHI+conj(PSI);
+% timerHPtime=toc(timerHP)

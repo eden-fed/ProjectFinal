@@ -167,7 +167,7 @@ protected:
 	ComplexDoubleGPUMatrix mTtrasposeForLipmansMethod_gpu;
 	ComplexDoubleGPUMatrix mTForLipmansMethod_gpu;
 	ComplexDoubleGPUMatrix mInvMForLipmansMethod_gpu;
-	ComplexDoubleGPUMatrix mKKTresult_gpu;
+	ComplexDoubleGPUMatrix mLnu_forLipman_gpu;
 
 	//****
 
