@@ -56,6 +56,7 @@ public:
 	const T* getData();
 	bool mult(const MatrixGPU<T>& A, const MatrixGPU<T>& B, char opA = 'N', char opB = 'N', double* gpuTime = NULL);
 	ComplexDouble dotColVec(const MatrixGPU<T>& v, double* gpuTime = NULL);//***
+	double norm(double* gpuTime = NULL);//***
 	bool add(const MatrixGPU<T>& A, const MatrixGPU<T>& B, double* gpuTime = NULL);
 	bool add(T alpha);
 	bool sub(const MatrixGPU<T>& A, const MatrixGPU<T>& B, double* gpuTime = NULL);
@@ -87,6 +88,7 @@ protected:
 	void cublas_gemv(const MatrixGPU<ComplexFloat>& A, const MatrixGPU<ComplexFloat>& v, int m, int n, char opA);
 	void cublas_gemv(const MatrixGPU<ComplexDouble>& A, const MatrixGPU<ComplexDouble>& v, int m, int n, char opA);
 	ComplexDouble cublas_dot(const MatrixGPU<ComplexDouble>& v, int n);
+	double cublas_norm(int n);
 
 protected:
 
@@ -674,6 +676,43 @@ ComplexDouble MatrixGPU<T>::dotColVec(const MatrixGPU<T>& v, double* gpuTime)
 	{
 		*gpuTime = timer.stopTimer();
 	}
+
+	return result;
+}
+
+template <class T>
+double MatrixGPU<T>::norm(double* gpuTime = NULL)
+{
+	double result = 0;
+
+	int n = mNumRows;
+	if (mNumColumns != 1 || n <= 0){
+		assert(0);
+		return result;
+	}
+
+	CUDATimer timer;
+	if (gpuTime)
+	{
+		*gpuTime = 0.0;
+		timer.startTimer();
+	}
+
+	result = cublas_norm(n);
+
+	if (gpuTime)
+	{
+		*gpuTime = timer.stopTimer();
+	}
+
+	return result;
+}
+
+template <class T>
+double  MatrixGPU<T>::cublas_norm(int n)
+{
+	double result = cublasDznrm2(n, (const cuDoubleComplex*)mData, 1);
+	cublasStatus err = cublasGetError();
 
 	return result;
 }

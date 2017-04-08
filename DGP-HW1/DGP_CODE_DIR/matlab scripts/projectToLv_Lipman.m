@@ -33,6 +33,11 @@ Vg=Vg_first_step;
 % [M_L, M_U] = lu(M);
 % M_inv=inv(M);
 % M_inv_T_trans=M\T_trans;
+
+%trying smaller matrix for less calculation:
+% C_trans=C_sizeA';
+% M=C_trans*C_sizeA;
+% M_inv_C_trans=M\C_trans;
 %**********************
 % 
 % figure('position', [1220, 0, 600, 1400])
@@ -61,23 +66,24 @@ for iter=1:max_iterations
         break;
     end
     
-%     eta_0=T_trans*n0;
-%     d_0=n0'*x_local;
-%     c_0=T_trans*x_prevGlobal;
-%     c_0=T_trans*x_local;
-
-%     y_c = M_U\(M_L\c_0);
-%     y_eta = M_U\(M_L\eta_0);
-
-%     y_c = M_inv*c_0;
-    y_eta=M_inv_T_trans*n0;%ed method using lu
     
-%     L_nu=y_c-(y_eta*(eta_0'*y_c-d_0)/(eta_0'*y_eta));  
-
-    L_nu=L_nu-y_eta*((norm_n0^2)/(n0'*T*y_eta));%ed method
+%trying smaller matrix for less calculation:
+    n0_l=n0(1:a);
+    n0_v=n0(a+1:end);
+    y_eta_l=M_inv_C_trans*n0_l;
+    y_eta_v=M_inv_C_trans*n0_v;
+    temp_l=C_sizeA*y_eta_l;
+    temp_v=C_sizeA*y_eta_v;
     
-    l=L_nu(1:n);
-    v=L_nu(n+1:2*n);%(n+1:end)
+    scalar=(norm_n0^2)/(n0'*[temp_l;temp_v]);
+
+    l=l-scalar*y_eta_l;
+    v=v-scalar*y_eta_v;
+
+%     y_eta=M_inv_T_trans*n0;%ed method using lu
+%     L_nu=L_nu-y_eta*((norm_n0^2)/(n0'*T*y_eta));%ed method
+%     l=L_nu(1:n);
+%     v=L_nu(n+1:end);
     %***
     
     l_gz=C_sizeA*l;

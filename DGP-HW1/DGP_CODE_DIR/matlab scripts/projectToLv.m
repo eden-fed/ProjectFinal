@@ -1,4 +1,5 @@
 % clc
+% timercvx = tic;
 a=size(C_sizeA,1);
 n=size(C_sizeA,2);
 
@@ -37,16 +38,16 @@ Vg=C_sizeA*v;
 % if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(sigma*exp(-real(l_gz))+abs(Vg)<=1+epsilon))
 %     fprintf('the constraints are satisfied\n');
 % end
-if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(log(sigma)+m*abs(C_sizeA*v)<=real(C_sizeA*l)+epsilon))
-    fprintf('the constraints are satisfied\n');
-end
-
-fprintf('max k = %d\n',max(abs(Vg)));
-fprintf('max SIGMA = %d\n',max(exp(real(l_gz)).*(1+abs(Vg))));
-fprintf('min sigma = %d\n',min(exp(real(l_gz)).*(1-abs(Vg))));
-energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
-fprintf('energy = %d\n\n',energy);
+% if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(log(sigma)+m*abs(C_sizeA*v)<=real(C_sizeA*l)+epsilon))
+%     fprintf('the constraints are satisfied\n');
+% end
 % 
+% fprintf('max k = %d\n',max(abs(Vg)));
+% fprintf('max SIGMA = %d\n',max(exp(real(l_gz)).*(1+abs(Vg))));
+% fprintf('min sigma = %d\n',min(exp(real(l_gz)).*(1-abs(Vg))));
+% energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
+% fprintf('energy = %d\n\n',energy);
+% % 
 % figure('position', [0, 0, 600, 1400])
 % convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg, energy , m, log(sigma));
 
@@ -95,3 +96,4 @@ PSI=treeCumSum(uint32(Z0index), PSI_Z0, integral_on_edges, startIndices, endIndi
 
 %*************step 8:find f******************
 f=PHI+conj(PSI);
+% timarcvxTime = toc(timercvx)
