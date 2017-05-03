@@ -10,8 +10,7 @@
 #include "GPULocalStep.h"
 
 #define EPS 0.0001
-//#define EPS 0.02
-#define CVX_INTERPOLATION 
+//#define CVX_INTERPOLATION 
 
 #define IS_NUMERIC_ZERO(a) (abs(a)<0.000001?1:0)
 
@@ -20,7 +19,7 @@
 
 //#define DEBUG
 //#define DEBUG2
-#define COMPARE_TOTAL_TIMINGS
+//#define COMPARE_TOTAL_TIMINGS
 //#define COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
 //#define DEBUG_FINAL_RESULT
 //#define CREATE_DISTORTION_MAP
@@ -83,16 +82,16 @@ MStatus SpaceDeformer2D::initialize()
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Cauchy", 0));
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Cauchy Interpolation", 1));
 	CHECK_MSTATUS(coordinateTypeAttr.addField("Point to point", 2));
-	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection H Space", 3));
-	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space Conformal", 4));
-	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space Conformal Accel", 5));
-	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space, cvx curve", 6));
-	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space, cvx", 7));
-	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space, L/G", 8));
-	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space, Lipman", 9));
-	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space, Dykstra", 10));
-	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space, L/G gpu", 11));
-	CHECK_MSTATUS(coordinateTypeAttr.addField("Projection Lv Space, Lipman gpu", 12));
+	CHECK_MSTATUS(coordinateTypeAttr.addField("H Space", 3));
+	CHECK_MSTATUS(coordinateTypeAttr.addField("Lv Space Conformal", 4));
+	CHECK_MSTATUS(coordinateTypeAttr.addField("Lv Space Conformal Accel", 5));
+	CHECK_MSTATUS(coordinateTypeAttr.addField("CVX curve", 6));
+	CHECK_MSTATUS(coordinateTypeAttr.addField("CVX", 7));
+	CHECK_MSTATUS(coordinateTypeAttr.addField("MAP", 8));
+	CHECK_MSTATUS(coordinateTypeAttr.addField("ATP", 9));
+	CHECK_MSTATUS(coordinateTypeAttr.addField("Dykstra", 10));
+	CHECK_MSTATUS(coordinateTypeAttr.addField("MAP gpu", 11));
+	CHECK_MSTATUS(coordinateTypeAttr.addField("ATP gpu", 12));
 
 
 	CHECK_MSTATUS(attributeAffects(mCoordinateTypeAttr, outputGeom));
@@ -215,8 +214,6 @@ void gmmToCpuMatrix(const GMMDenseComplexColMatrix& gmmMat, ComplexDoubleCPUMatr
 
 void SpaceDeformer2D::matlabCalcLforHprojection()
 {
-	//MatlabInterface::GetEngine().Eval("clearvars -except edgeVectors startIndices endIndices");
-
 	MatlabGMMDataExchange::SetEngineDenseMatrix("NumOfVerticesInEdges", mNumOfVerticesInEdgesSizeA);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("Ctag", mFirstDerOfIncCageVertexCoords);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C_sizeM", mCauchyCoordinatesIncForP2P);//send the matrix to matlab
@@ -238,17 +235,12 @@ void SpaceDeformer2D::matlabCalcLforHprojection()
 
 	cout.flush();
 }
-void SpaceDeformer2D::matlabCalcLforLvprojection_curve()
+void SpaceDeformer2D::matlabCalcLvprojection_CVX_curve()
 {
-
-/*	IncreaseVerteciesAfterMap(mUserCageVerticesNos, mUserCageVerticesNos_sizeA, mCurrentNumOfSegmentsA, mNumOfVerticesInEdgesSizeA);
-	IncreaseVerteciesAfterMap(mUserCageVerticesNos, mUserCageVerticesNos_sizeNLarge, mCurrentNLarge, mNumOfVerticesInEdgesSizeNlarge);
-	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMapSizeA", mUserCageVerticesNos_sizeA);//send the matrix to matlab
-	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMapSizeNLarge", mUserCageVerticesNos_sizeNLarge);//send the matrix to matlab*/
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 
-	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_curve.m").c_str());
+	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_CVX_curve.m").c_str());
 	std::cerr << res;
 
 
@@ -258,16 +250,12 @@ void SpaceDeformer2D::matlabCalcLforLvprojection_curve()
 }
 
 
-void SpaceDeformer2D::matlabCalcLforLvprojection()
+void SpaceDeformer2D::matlabCalcLvprojection_CVX()
 {
-	/*IncreaseVerteciesAfterMap(mUserCageVerticesNos, mUserCageVerticesNos_sizeA, mCurrentNumOfSegmentsA, mNumOfVerticesInEdgesSizeA);
-	IncreaseVerteciesAfterMap(mUserCageVerticesNos, mUserCageVerticesNos_sizeNLarge, mCurrentNLarge, mNumOfVerticesInEdgesSizeNlarge);
-	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMapSizeA", mUserCageVerticesNos_sizeA);//send the matrix to matlab
-	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMapSizeNLarge", mUserCageVerticesNos_sizeNLarge);//send the matrix to matlab*/
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 
-	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv.m").c_str());
+	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_CVX.m").c_str());
 	std::cerr << res;
 
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
@@ -275,11 +263,6 @@ void SpaceDeformer2D::matlabCalcLforLvprojection()
 }
 void SpaceDeformer2D::matlabCalcLforLvprojectionConformalAccel()
 {
-
-	/*IncreaseVerteciesAfterMap(mUserCageVerticesNos, mUserCageVerticesNos_sizeA, mCurrentNumOfSegmentsA, mNumOfVerticesInEdgesSizeA);
-	IncreaseVerteciesAfterMap(mUserCageVerticesNos, mUserCageVerticesNos_sizeNLarge, mCurrentNLarge, mNumOfVerticesInEdgesSizeNlarge);
-	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMapSizeA", mUserCageVerticesNos_sizeA);//send the matrix to matlab
-	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMapSizeNLarge", mUserCageVerticesNos_sizeNLarge);//send the matrix to matlab*/
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 
@@ -293,11 +276,6 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionConformalAccel()
 void SpaceDeformer2D::matlabCalcLforLvprojectionConformal()
 {
 
-	/*IncreaseVerteciesAfterMap(mUserCageVerticesNos, mUserCageVerticesNos_sizeA, mCurrentNumOfSegmentsA, mNumOfVerticesInEdgesSizeA);
-	IncreaseVerteciesAfterMap(mUserCageVerticesNos, mUserCageVerticesNos_sizeNLarge, mCurrentNLarge, mNumOfVerticesInEdgesSizeNlarge);
-	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMapSizeA", mUserCageVerticesNos_sizeA);//send the matrix to matlab
-	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMapSizeNLarge", mUserCageVerticesNos_sizeNLarge);//send the matrix to matlab*/
-
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 
 	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_comformal.m").c_str());
@@ -308,18 +286,12 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionConformal()
 	cout.flush();
 
 }
-void SpaceDeformer2D::matlabCalcLforLvprojectionAccel()
+void SpaceDeformer2D::matlabCalcLvprojection_MAP()
 {
-
-	/*IncreaseVerteciesAfterMap(mUserCageVerticesNos, mUserCageVerticesNos_sizeA, mCurrentNumOfSegmentsA, mNumOfVerticesInEdgesSizeA);
-	IncreaseVerteciesAfterMap(mUserCageVerticesNos, mUserCageVerticesNos_sizeNLarge, mCurrentNLarge, mNumOfVerticesInEdgesSizeNlarge);
-
-	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMapSizeA", mUserCageVerticesNos_sizeA);//send the matrix to matlab
-	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMapSizeNLarge", mUserCageVerticesNos_sizeNLarge);//send the matrix to matlab*/
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 
-	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_accel.m").c_str());
+	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_MAP.m").c_str());
 
 	std::cerr << res;
 
@@ -328,13 +300,8 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionAccel()
 
 	cout.flush();
 }
-void SpaceDeformer2D::matlabCalcLforLvprojectionDykstra()
+void SpaceDeformer2D::matlabCalcLvprojection_Dykstra()
 {
-
-	/*IncreaseVerteciesAfterMap(mUserCageVerticesNos, mUserCageVerticesNos_sizeA, mCurrentNumOfSegmentsA, mNumOfVerticesInEdgesSizeA);
-	IncreaseVerteciesAfterMap(mUserCageVerticesNos, mUserCageVerticesNos_sizeNLarge, mCurrentNLarge, mNumOfVerticesInEdgesSizeNlarge);
-	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMapSizeA", mUserCageVerticesNos_sizeA);//send the matrix to matlab
-	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMapSizeNLarge", mUserCageVerticesNos_sizeNLarge);//send the matrix to matlab*/
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 
@@ -344,17 +311,12 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionDykstra()
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
 	cout.flush();
 }
-void SpaceDeformer2D::matlabCalcLforLvprojectionLipman()
+void SpaceDeformer2D::matlabCalcLvprojection_ATP()
 {
-
-	/*IncreaseVerteciesAfterMap(mUserCageVerticesNos, mUserCageVerticesNos_sizeA, mCurrentNumOfSegmentsA, mNumOfVerticesInEdgesSizeA);
-	IncreaseVerteciesAfterMap(mUserCageVerticesNos, mUserCageVerticesNos_sizeNLarge, mCurrentNLarge, mNumOfVerticesInEdgesSizeNlarge);
-	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMapSizeA", mUserCageVerticesNos_sizeA);//send the matrix to matlab
-	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMapSizeNLarge", mUserCageVerticesNos_sizeNLarge);//send the matrix to matlab*/
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 
-	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_Lipman.m").c_str());
+	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_ATP.m").c_str());
 
 	std::cerr << res;
 
@@ -369,8 +331,6 @@ void SpaceDeformer2D::IncreaseVerteciesAfterMap(GMMDenseComplexColMatrix& Origin
 		gmmToCpuMatrix(OriginalCageVertecies, IncreasedCageVertecies);
 		return;
 	}
-
-	//IncreasedCageVertecies.resize(numOfIncreasedCageVertecies, 1);//move to preprocesing
 
 	int index = 0;
 	for (int i = 0; i < numOfOriginalVertecies; i++) {
@@ -472,13 +432,14 @@ void SpaceDeformer2D::logarithmExtraction(GMMDenseComplexColMatrix& cageVertices
 
 }
 void SpaceDeformer2D::find_nu_f(ComplexDoubleCPUMatrix& fz, ComplexDoubleCPUMatrix& fzBar, int a, ComplexDoubleCPUMatrix& nu_f){
-	//GMMDenseComplexColMatrix nu_f(a, 1);//return this
 	for (int i = 0; i < a; i++){
 		nu_f(i,0) = std::conj(fzBar(i,0)) / fz(i,0);
 	}
 }
+
+//cpu implementation - not used
 bool SpaceDeformer2D::checkIfInsidePolygon(double x,double y){
-	/*//using cross product
+	/*//using cross product - not working
 	for (int i = 0; i < mXvaluesOfIntersections.size()-1; i++){
 		double crossSegValue = (mXvaluesOfIntersections[i + 1] - mXvaluesOfIntersections[i])*(y - mYvaluesOfIntersections[i]) - (mYvaluesOfIntersections[i + 1] - mYvaluesOfIntersections[i])*(x - mXvaluesOfIntersections[i]);
 		if (crossSegValue > 0-EPS){
@@ -491,6 +452,7 @@ bool SpaceDeformer2D::checkIfInsidePolygon(double x,double y){
 	return ((x <= k + epsilon) && (x <= log(SigmaA) - y + epsilon) && (log(sigmaB) + mSlopeOfLineApproxForCurveInLv*x <= y + epsilon));
 
 }
+//cpu implementation - not used
 void SpaceDeformer2D::projectPointToPolygonMinSeg(double& x, double& y){//x and y are changed in this function
 	std::vector<double> closestPointsXvalues;
 	std::vector<double> closestPointsYvalues;
@@ -513,6 +475,7 @@ void SpaceDeformer2D::projectPointToPolygonMinSeg(double& x, double& y){//x and 
 
 }
 
+//cpu implementation - not used
 void SpaceDeformer2D::projectPointToPolygonWithK(double& x, double& y){
 
 	if (y >= x + log(SigmaA)){
@@ -547,6 +510,7 @@ void SpaceDeformer2D::projectPointToPolygonWithK(double& x, double& y){
 
 }
 
+//cpu implementation - not used
 void SpaceDeformer2D::projectPointToPolygonNoK(double& x, double& y){
 
 	if (y >= x + log(SigmaA)){
@@ -572,32 +536,9 @@ void SpaceDeformer2D::projectPointToPolygonNoK(double& x, double& y){
 		y = log(sigmaB);
 	}
 }
-bool SpaceDeformer2D::localStep_noK_gpu(ComplexDoubleGPUMatrix& log_fz, ComplexDoubleGPUMatrix& nu_f){
-	cuProjectPointsToPolygonNoK(log_fz.nPitchedRows()*log_fz.nCols(), (std::complex<double>*)log_fz.getData(), (std::complex<double>*)nu_f.getData(),log(SigmaA),sigmaB,k,mXcoordOfIntersectionPointForCurveLv,epsilon,mSlopeOfLineApproxForCurveInLv);
-	//cuProjectPointsToPolygonNoK(mCurrentNumOfSegmentsA, (std::complex<double>*)log_fz.getData(), (std::complex<double>*)nu_f.getData(), log(SigmaA), sigmaB, k, mXcoordOfIntersectionPointForCurveLv, epsilon, mSlopeOfLineApproxForCurveInLv);
 
-	return false;//fix
-}
-bool SpaceDeformer2D::localStep_withK_gpu(ComplexDoubleGPUMatrix& log_fz, ComplexDoubleGPUMatrix& nu_f){
-	cuProjectPointsToPolygonWithK(log_fz.nPitchedRows()*log_fz.nCols(), (std::complex<double>*)log_fz.getData(), (std::complex<double>*)nu_f.getData(), log(SigmaA), sigmaB, k, epsilon, mSlopeOfLineApproxForCurveInLv);
-	//cuProjectPointsToPolygonWithK(mCurrentNumOfSegmentsA, (std::complex<double>*)log_fz.getData(), (std::complex<double>*)nu_f.getData(), log(SigmaA), sigmaB, k, epsilon, mSlopeOfLineApproxForCurveInLv);
-	return false;//fix
-}
-bool SpaceDeformer2D::localStep_noK_HP_gpu(ComplexDoubleGPUMatrix& x_vec){
-	cuProjectPointsToPolygonNoK_HP(mCurrentNumOfSegmentsA, (std::complex<double>*)x_vec.getData(), log(SigmaA), sigmaB, k, mXcoordOfIntersectionPointForCurveLv, epsilon, mSlopeOfLineApproxForCurveInLv);//check
-	return false;//fix
-}
-bool SpaceDeformer2D::localStep_withK_HP_gpu(ComplexDoubleGPUMatrix& x_vec){
-	cuProjectPointsToPolygonWithK_HP(mCurrentNumOfSegmentsA, (std::complex<double>*)x_vec.getData(), log(SigmaA), sigmaB, k, epsilon, mSlopeOfLineApproxForCurveInLv);//check
-	return false;//fix
-}
-bool SpaceDeformer2D::localStep_minSeg_gpu(ComplexDoubleGPUMatrix& log_fz, ComplexDoubleGPUMatrix& nu_f){
-	cuProjectPointToPolygonMinSeg(log_fz.nPitchedRows()*log_fz.nCols(), (std::complex<double>*)log_fz.getData(), (std::complex<double>*)nu_f.getData(), mXvaluesOfIntersections_gpu.getData(), mYvaluesOfIntersections_gpu.getData(), mYvaluesOfIntersections_gpu.nRows() - 1,epsilon);
-	return false;//fix
-}
-bool SpaceDeformer2D::localStep_minSeg_HP_gpu(ComplexDoubleGPUMatrix& x_vec){
-	cuProjectPointToPolygonMinSeg_HP(mCurrentNumOfSegmentsA, (std::complex<double>*)x_vec.getData(), mXvaluesOfIntersections_gpu.getData(), mYvaluesOfIntersections_gpu.getData(), mYvaluesOfIntersections_gpu.nRows() - 1, epsilon);
-	return false;//fix
+void SpaceDeformer2D::localStep_minSeg_gpu(ComplexDoubleGPUMatrix& x_vec){
+	cuProjectPointToPolygonMinSeg_unsplit(mCurrentNumOfSegmentsA, (std::complex<double>*)x_vec.getData(), mXvaluesOfIntersections_gpu.getData(), mYvaluesOfIntersections_gpu.getData(), mYvaluesOfIntersections_gpu.nRows() - 1, epsilon);
 }
 bool SpaceDeformer2D::localStep(ComplexDoubleCPUMatrix& log_fz, ComplexDoubleCPUMatrix& nu_f, void (SpaceDeformer2D::*projectionFunction)(double&, double&)){
 
@@ -609,7 +550,6 @@ bool SpaceDeformer2D::localStep(ComplexDoubleCPUMatrix& log_fz, ComplexDoubleCPU
 			continue;
 		else{
 			allPointsInPolygon = false;
-			//projectPointToPolygonMinSeg(x, y);
 			(this->*projectionFunction)(x, y);
 			nu_f(i, 0) = x*exp(Complex(0, arg(nu_f(i, 0))));
 			log_fz(i, 0) = Complex(y, log_fz(i, 0).imag());
@@ -617,7 +557,7 @@ bool SpaceDeformer2D::localStep(ComplexDoubleCPUMatrix& log_fz, ComplexDoubleCPU
 	}
 	return allPointsInPolygon;
 }
-int SpaceDeformer2D::doLocalGlobalIterations(){
+int SpaceDeformer2D::doMAPiterations(){
 #ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
 	CUDATimer timer_cuda;
 	CPUTimer timer;
@@ -636,10 +576,7 @@ int SpaceDeformer2D::doLocalGlobalIterations(){
 #endif 
 
 		//local step
-
-		//bool allPointsInPolygon = (this->*localStepFunction)(mLog_fz_gpu, mNu_f_gpu);
-		//bool allPointsInPolygon = localStep_minSeg_gpu(mLog_fz_gpu, mNu_f_gpu);
-		localStep_minSeg_HP_gpu(mX_local_gpu);
+		localStep_minSeg_gpu(mX_local_gpu);
 		mX_local_gpu.splitInMiddle(mLog_fz_gpu, mNu_f_gpu);
 
 #ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
@@ -649,10 +586,9 @@ int SpaceDeformer2D::doLocalGlobalIterations(){
 		cout << "local step in cuda timer took " << gpu_duration << endl;
 #endif 
 
-		//stop condition -fix
+		//stop condition
 		mn_0forStopCondition_gpu.sub(mX_gpu, mX_local_gpu);
 		norm_n0 = mn_0forStopCondition_gpu.norm();
-		//stop condition
 		if (norm_n0 < epsilon)
 			break;
 
@@ -692,7 +628,7 @@ int SpaceDeformer2D::doLocalGlobalIterations(){
 	return i;
 }
 
-int SpaceDeformer2D::doHyperPlaneIterations(){
+int SpaceDeformer2D::doATPiterations(){
 #ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
 	CUDATimer timer_cuda;
 	CPUTimer timer;
@@ -714,9 +650,7 @@ int SpaceDeformer2D::doHyperPlaneIterations(){
 		timer.tic();
 		timer_cuda.startTimer();
 #endif 
-
-		//(this->*localStepFunction)(mX_local_gpu);
-		localStep_minSeg_HP_gpu(mX_local_gpu);
+		localStep_minSeg_gpu(mX_local_gpu);
 
 #ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
 		gpu_duration = timer_cuda.stopTimer();
@@ -736,21 +670,21 @@ int SpaceDeformer2D::doHyperPlaneIterations(){
 		timer.tic();
 		timer_cuda.startTimer();
 #endif 
-		//try split and concatecate to use less multiplications
-		mn_0forStopCondition_gpu.splitInMiddle(mn_0_l_forLipmansMethod_gpu, mn_0_nu_forLipmansMethod_gpu);
-		my_eta_l_forLipmansMethod_gpu.mult(mInvMtransCForLipmansMethod_gpu, mn_0_l_forLipmansMethod_gpu);
-		my_eta_nu_forLipmansMethod_gpu.mult(mInvMtransCForLipmansMethod_gpu, mn_0_nu_forLipmansMethod_gpu);
-		mTempCalc_l_forLipmansMethod_gpu.mult(mIncCageVertexCoords_gpuMat, my_eta_l_forLipmansMethod_gpu);
-		mTempCalc_nu_forLipmansMethod_gpu.mult(mIncCageVertexCoords_gpuMat, my_eta_nu_forLipmansMethod_gpu);
+		//split and concatecate to use less multiplications
+		mn_0forStopCondition_gpu.splitInMiddle(mn_0_l_forATP_gpu, mn_0_nu_forATP_gpu);
+		my_eta_l_forATP_gpu.mult(mInvMtransCforATP_gpu, mn_0_l_forATP_gpu);
+		my_eta_nu_forATP_gpu.mult(mInvMtransCforATP_gpu, mn_0_nu_forATP_gpu);
+		mTempCalc_l_forATP_gpu.mult(mIncCageVertexCoords_gpuMat, my_eta_l_forATP_gpu);
+		mTempCalc_nu_forATP_gpu.mult(mIncCageVertexCoords_gpuMat, my_eta_nu_forATP_gpu);
 
-		scalar = mn_0_l_forLipmansMethod_gpu.dotColVec(mTempCalc_l_forLipmansMethod_gpu) + mn_0_nu_forLipmansMethod_gpu.dotColVec(mTempCalc_nu_forLipmansMethod_gpu);
+		scalar = mn_0_l_forATP_gpu.dotColVec(mTempCalc_l_forATP_gpu) + mn_0_nu_forATP_gpu.dotColVec(mTempCalc_nu_forATP_gpu);
 		scalar=pow(norm_n0,2)/scalar;
 	
-		my_eta_l_forLipmansMethod_gpu.scale(scalar);
-		my_eta_nu_forLipmansMethod_gpu.scale(scalar);
+		my_eta_l_forATP_gpu.scale(scalar);
+		my_eta_nu_forATP_gpu.scale(scalar);
 
-		mL_gpu.sub(mL_gpu, my_eta_l_forLipmansMethod_gpu);
-		mNu_gpu.sub(mNu_gpu, my_eta_nu_forLipmansMethod_gpu);
+		mL_gpu.sub(mL_gpu, my_eta_l_forATP_gpu);
+		mNu_gpu.sub(mNu_gpu, my_eta_nu_forATP_gpu);
 		
 		mLog_fz_gpu.mult(mIncCageVertexCoords_gpuMat, mL_gpu);
 		mNu_f_gpu.mult(mIncCageVertexCoords_gpuMat, mNu_gpu);
@@ -776,9 +710,6 @@ void SpaceDeformer2D::calcIntegralUsingSpaningTree(ComplexDoubleCPUMatrix& f, Co
 
 void SpaceDeformer2D::findPHI(ComplexDoubleCPUMatrix& PHI, ComplexDoubleCPUMatrix& PHItag, ComplexDoubleCPUMatrix& LonInternalPoints){
 
-	/*for (int i = 0; i < LonInternalPoints.nRows(); i++){
-		PHItag(i, 0) = exp(LonInternalPoints(i, 0));
-	}*/
 	PHItag = LonInternalPoints;
 	PHItag.exponent();
 
@@ -801,7 +732,7 @@ void SpaceDeformer2D::findPSI(ComplexDoubleCPUMatrix& PSI, ComplexDoubleCPUMatri
 	calcIntegralUsingSpaningTree(PSI, PSItag, psi_Z0);
 }
 
-int SpaceDeformer2D::calcLvprojectionLGgpu(){
+int SpaceDeformer2D::calcLvprojectionMAPgpu(){
 
 	//eval fz and fzBar
 	IncreaseVerteciesAfterMap(mUserCageVerticesNos, mUserCageVerticesNos_sizeA, mCurrentNumOfSegmentsA, mNumOfVerticesInEdgesSizeA_stdVec);
@@ -821,13 +752,7 @@ int SpaceDeformer2D::calcLvprojectionLGgpu(){
 	mLog_fz_gpu.mult(mIncCageVertexCoords_gpuMat, mL_gpu);
 	mNu_f_gpu.mult(mIncCageVertexCoords_gpuMat, mNu_gpu);
 
-	/*bool (SpaceDeformer2D::*localStepFunction)(ComplexDoubleGPUMatrix&, ComplexDoubleGPUMatrix&) = NULL;
-	if (k == mXcoordOfIntersectionPointForCurveLv)
-		localStepFunction = &SpaceDeformer2D::localStep_withK_gpu;
-	else
-		localStepFunction = &SpaceDeformer2D::localStep_noK_gpu;*/
-
-	int iters=doLocalGlobalIterations();
+	int iters=doMAPiterations();
 
 	mLonInternalPoints_gpu.mult(mCauchyCoordinatesIncForP2P_gpuMat, mL_gpu);
 	mLonInternalPoints = mLonInternalPoints_gpu;
@@ -850,7 +775,7 @@ int SpaceDeformer2D::calcLvprojectionLGgpu(){
 	return iters;
 }
 
-int SpaceDeformer2D::calcLvprojectionHPgpu(){
+int SpaceDeformer2D::calcLvprojectionATPgpu(){
 
 	//eval fz and fzBar
 	IncreaseVerteciesAfterMap(mUserCageVerticesNos, mUserCageVerticesNos_sizeA, mCurrentNumOfSegmentsA, mNumOfVerticesInEdgesSizeA_stdVec);
@@ -870,35 +795,8 @@ int SpaceDeformer2D::calcLvprojectionHPgpu(){
 	mLog_fz_gpu.mult(mIncCageVertexCoords_gpuMat, mL_gpu);
 	mNu_f_gpu.mult(mIncCageVertexCoords_gpuMat, mNu_gpu);
 
-	//mLnu_forLipman_gpu.concatenate(mL_gpu, mNu_gpu);
-	//mX_gpu.concatenate(mLog_fz_gpu, mNu_f_gpu); //test
+	int iters=doATPiterations();
 
-#ifdef DEBUG2
-	ComplexDoubleCPUMatrix test = mX_gpu;//debug
-#endif
-
-	/*bool (SpaceDeformer2D::*localStepFunction)(ComplexDoubleGPUMatrix&) = NULL;
-	if (k == mXcoordOfIntersectionPointForCurveLv)
-		localStepFunction = &SpaceDeformer2D::localStep_withK_HP_gpu;
-	else
-		localStepFunction = &SpaceDeformer2D::localStep_noK_HP_gpu;*/
-
-	int iters=doHyperPlaneIterations();
-
-#ifdef DEBUG2
-	test = mLnu_forLipman_gpu;//debug
-	GMMDenseComplexColMatrix matlab1(test.nRows(), 1);
-	for (int i = 0; i < test.nRows(); ++i)
-		matlab1(i, 0) = test(i, 0);
-	MatlabGMMDataExchange::SetEngineDenseMatrix("mLnu_forLipman_gpu", matlab1);
-#endif
-
-	//mLnu_forLipman_gpu.splitInMiddle(mL_gpu, mNu_gpu); //test
-
-#ifdef DEBUG2
-	ComplexDoubleCPUMatrix mL = mL_gpu;//debug
-	ComplexDoubleCPUMatrix mNu = mNu_gpu;//debug
-#endif
 	mLonInternalPoints_gpu.mult(mCauchyCoordinatesIncForP2P_gpuMat, mL_gpu);
 	mLonInternalPoints = mLonInternalPoints_gpu;
 
@@ -947,7 +845,6 @@ std::string SpaceDeformer2D::RelativeToFullPath(char* relPath) {
 }
 MStatus SpaceDeformer2D::getData(IN MDataBlock& block,OUT MObject& cageMesh,OUT MObject& p2pMesh) {
 	MStatus stat;
-	//mNeedToCalcNewLine = false;
 	MDataHandle envData = block.inputValue(envelope, &stat);
 	if (MS::kSuccess != stat) return stat;
 
@@ -1011,11 +908,6 @@ MStatus SpaceDeformer2D::getData(IN MDataBlock& block,OUT MObject& cageMesh,OUT 
 	CHECK_MSTATUS_AND_RETURN_IT(stat);
 	p2pMesh = p2phandle.asMesh();
 
-	/*if (mNeedToCalcNewLine){
-		//calcSegments();
-		findLineApproximationForCurve();
-	}*/
-
 	return stat;
 }
 
@@ -1025,13 +917,13 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 	CPUTimer timer, timer2;
 	double duration, duration2;
 	MStatus stat;
-	//MObject cageMesh;
 	MObject p2pMesh;
 	stat = getData(block, mcageMesh, p2pMesh);
 	MCHECKERROR(stat, "could not get the data block");
 	if (mcageMesh.isNull() || p2pMesh.isNull()) {
 		return stat;
 	}
+
 	//*****************
 	//retriving the mesh from the data block
 	MArrayDataHandle hInput = block.outputArrayValue(input, &stat);
@@ -1055,7 +947,7 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 	int iters_num=0;
 	if (mIsFirstTime)
 	{
-		//	MatlabInterface::GetEngine().Eval("clear");
+		MatlabInterface::GetEngine().Eval("clear");
 		stat = doSetup(iter, cageMeshFn);
 		runTimeDoSetup();
 		preprocessingIntegral(fnInputMesh, oInputGeom);
@@ -1111,88 +1003,79 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 		runTimeDoSetup();
 		matlabCalcLforLvprojectionConformalAccel();
 		break;
-	case 6://projection via Lv space 
+	case 6://projection via Lv space - CVX curve
 		runTimeDoSetup();
-		matlabCalcLforLvprojection_curve();
+		matlabCalcLvprojection_CVX_curve();
 		break;
-	case 7://projection via Lv space 
+	case 7://projection via Lv space - CVX
 		runTimeDoSetup();
 #ifdef COMPARE_TOTAL_TIMINGS
 		timer.tic();
 #endif 
-		matlabCalcLforLvprojection();
+		matlabCalcLvprojection_CVX();
 #ifdef COMPARE_TOTAL_TIMINGS
 		duration = timer.toc();
 		cout << "CVX on matlab took " << duration << endl;
 #endif 
 		break;
-	case 8://projection via Lv space using local global
+	case 8://MAP
 		runTimeDoSetup();
 #ifdef COMPARE_TOTAL_TIMINGS
 		timer.tic();
 #endif 
-		matlabCalcLforLvprojectionAccel();
+		matlabCalcLvprojection_MAP();
 #ifdef COMPARE_TOTAL_TIMINGS
 		duration = timer.toc();
 		cout << "local-global on matlab took " << duration << endl;
 #endif 
 		break;
-	case 9://projection via Lv space using lipman's methos
+	case 9://ATP
 		runTimeDoSetup();
 #ifdef COMPARE_TOTAL_TIMINGS
 		timer.tic();
 		runTimeDoSetup();
 #endif 
-		matlabCalcLforLvprojectionLipman();
+		matlabCalcLvprojection_ATP();
 #ifdef COMPARE_TOTAL_TIMINGS
 		duration = timer.toc();
 		cout << "Hyperplane on matlab took " << duration << endl;
 #endif 
 		break;
-	case 10://projection via Lv space using Dykstra
+	case 10://Dykstra
 		runTimeDoSetup();
-		matlabCalcLforLvprojectionDykstra();
+		matlabCalcLvprojection_Dykstra();
 		break;
-	case 11://projection via Lv space using local global on gpu
+	case 11://MAP gpu
 		runTimeDoSetup();
 #ifdef COMPARE_TOTAL_TIMINGS
 		timer2.tic();
 #endif 
-		iters_num=calcLvprojectionLGgpu();
+		iters_num=calcLvprojectionMAPgpu();
 #ifdef COMPARE_TOTAL_TIMINGS
 		duration2 = timer2.toc();
 		cout << "local-global on gpu took " << duration2 << " for " << iters_num <<" iterations "<< endl;
 #endif 
 		break;
-	case 12://projection via Lv space using lipman's method on gpu
+	case 12://ATP gpu
 		runTimeDoSetup();
 #ifdef COMPARE_TOTAL_TIMINGS
 		timer2.tic();
 #endif 
-		iters_num = calcLvprojectionHPgpu();
+		iters_num = calcLvprojectionATPgpu();
 #ifdef COMPARE_TOTAL_TIMINGS
 		duration2 = timer2.toc();
 		cout << "Hyperplane on gpu took " << duration2 << " for " << iters_num << " iterations " << endl;
 #endif 
 	}
-	///////////////////////////////
-	///////////////////////////////
 
 	//update the new deformed position of all the internal vertices
 	for (iter.reset(); !iter.isDone(); iter.next())
 	{
 		int i = iter.index();
-
 		MPoint pt = iter.position();
 
-
-		///// add your code here //////
-		///////////////////////////////
 		//update c to be the deformed position of the i'th vertex
 		Complex c = mInternalPoints[i];
-
-		///////////////////////////////
-		///////////////////////////////
 
 		iter.setPosition(MPoint(c.real(), c.imag(), 0.0));
 	}
@@ -1243,7 +1126,6 @@ MStatus SpaceDeformer2D::updateControlPoints(MFnMesh& cageMeshFn)
 	MIntArray vertexIndices;
 	cageMeshFn.getPolygonVertices(0, vertexIndices);
 	int numV = vertexIndices.length();
-//	assert(numV >= 3);
 
 	gmm::clear(mUserP2P);
 	gmm::resize(mUserP2P, numV, 1);
@@ -1430,7 +1312,6 @@ void SpaceDeformer2D::IncreaseVertecies(Complex* OriginalCompCageVertecies, int 
 MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 {
 	MStatus stat;
-//	MatlabInterface::GetEngine().EvalToString("addpath(genpath('C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR'))");
 
 	mNumOfInternalPoints = iter.count(&stat); //num internal points (point of the triangulated cage)
 	mNumOfCageVerticies = mUserCageVerticesNos.nrows(); //num of cage vertices
@@ -1503,13 +1384,13 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 	//find the coordinates that will give us the new vertices so that the real cage point will look like interpolation
 	//we will do it using cvx
 	MatlabGMMDataExchange::SetEngineDenseMatrix("toInverse", mCauchyCoordsOfOriginalCageVertices);//send the matrix to matlab
-	//load the matlab script
-//	int res = MatlabInterface::GetEngine().LoadAndRunScript("%DGP_CODE_DIR%/matlab scripts/interpolatedCauchy.m"); -----not working
-	
+
+	//load the matlab script	
 	int res = MatlabInterface::GetEngine().LoadAndRunScript(RelativeToFullPath("\\matlab scripts\\inverse.m").c_str());
 	if (res != 0) {//error if failed to load file
 		std::cerr << "ERROR: Matlab script 'interpolatedCauchy.m' failed with error code " << res << std::endl;
 	}
+
 	MatlabGMMDataExchange::GetEngineDenseMatrix("toInverse", mCauchyCoordsOfOriginalCageVertices);//get the incersed matrix from matlab
 #endif
 
@@ -1527,7 +1408,6 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 
 	populateC(mCauchyCoordinates, mCompCageVerticesWos, mNumOfCageVerticies, this->mInternalPoints_MPoint, mNumOfInternalPoints);
 
-	//runTimeDoSetup();
 	for (int i = 0; i < mNumOfControlPoints; i++) {
 		Complex c = mUserP2P(i, 0);
 		MPoint p(c.real(), c.imag());
@@ -1621,7 +1501,6 @@ MStatus SpaceDeformer2D::runTimeDoSetup() {
 	gmm::clear(mNumOfVerticesInEdgesSizeA);
 	gmm::resize(mNumOfVerticesInEdgesSizeA, mCartCageVerticesNos.length(), 1);
 
-	//MPointArray mCartCageVerticesNos_sizeA; //dimensions are: a x 1
 	int x = mCartCageVerticesNos_sizeA.length();
 	IncreaseVertecies(IN mCartCageVerticesNos, OUT mCartCageVerticesNos_sizeA, mNumOfSegmentsA,true);
 
@@ -1673,40 +1552,19 @@ MStatus SpaceDeformer2D::runTimeDoSetup() {
 
 
 	//**********************************************
-	// calc LU prefactorization of matrix for lipman's method
-	/*gmm::clear(mLMatrixForLipmansMethod); 
-	gmm::resize(mLMatrixForLipmansMethod, 2 * mNLarge, 2 * mNLarge);
-	gmm::clear(mUMatrixForLipmansMethod);
-	gmm::resize(mUMatrixForLipmansMethod, 2 * mNLarge, 2 * mNLarge);
-	gmm::clear(mTtrasposeForLipmansMethod);
-	gmm::resize(mTtrasposeForLipmansMethod, 2 * mNLarge, 2 * mCurrentNumOfSegmentsA);*/
-	//gmm::clear(mTForLipmansMethod);
-	//gmm::resize(mTForLipmansMethod, 2 * mCurrentNumOfSegmentsA, 2 * mNLarge);
-	gmm::clear(mInvMtransCForLipmansMethod);
-	gmm::resize(mInvMtransCForLipmansMethod, 2 * mNLarge, 2 * mCurrentNumOfSegmentsA);
+	// calc prefactorization of matrix for ATP method
 
-	//res = MatlabInterface::GetEngine().EvalToString("T=blkdiag(C_sizeA,C_sizeA);T_trans=T';M=T_trans*T;[M_L, M_U] = lu(M); ");
-	//res = MatlabInterface::GetEngine().EvalToString("T=blkdiag(C_sizeA,C_sizeA);T_trans=T';M=T_trans*T;M_inv_T_trans=M\\T_trans; ");
+	gmm::clear(mInvMtransCforATP);
+	gmm::resize(mInvMtransCforATP, 2 * mNLarge, 2 * mCurrentNumOfSegmentsA);
+
 	res = MatlabInterface::GetEngine().EvalToString("C_trans=C_sizeA';M=C_trans*C_sizeA;M_inv_C_trans=M\\C_trans; ");
 	std::cerr << res << std::endl;
 
-	//MatlabGMMDataExchange::GetEngineSparseMatrix("M_L", mLMatrixForLipmansMethod);
-	//MatlabGMMDataExchange::GetEngineSparseMatrix("M_U", mUMatrixForLipmansMethod);
-	//MatlabGMMDataExchange::GetEngineDenseMatrix("T_trans", mTtrasposeForLipmansMethod);
-	//MatlabGMMDataExchange::GetEngineDenseMatrix("T", mTForLipmansMethod);
-	MatlabGMMDataExchange::GetEngineDenseMatrix("M_inv_C_trans", mInvMtransCForLipmansMethod);
+	MatlabGMMDataExchange::GetEngineDenseMatrix("M_inv_C_trans", mInvMtransCforATP);
 
-	/*ComplexDoubleCPUMatrix mTtrasposeForLipmansMethod_cpuMat(mTtrasposeForLipmansMethod.nrows(), mTtrasposeForLipmansMethod.ncols());
-	gmmToCpuMatrix(mTtrasposeForLipmansMethod, mTtrasposeForLipmansMethod_cpuMat);
-	mTtrasposeForLipmansMethod_gpu = mTtrasposeForLipmansMethod_cpuMat;*/
-
-	/*ComplexDoubleCPUMatrix mTForLipmansMethod_cpuMat(mTForLipmansMethod.nrows(), mTForLipmansMethod.ncols());
-	gmmToCpuMatrix(mTForLipmansMethod, mTForLipmansMethod_cpuMat);
-	mTForLipmansMethod_gpu = mTForLipmansMethod_cpuMat;*/
-
-	ComplexDoubleCPUMatrix mInvMtransCForLipmansMethod_cpuMat(mInvMtransCForLipmansMethod.nrows(), mInvMtransCForLipmansMethod.ncols());
-	gmmToCpuMatrix(mInvMtransCForLipmansMethod, mInvMtransCForLipmansMethod_cpuMat);
-	mInvMtransCForLipmansMethod_gpu = mInvMtransCForLipmansMethod_cpuMat;
+	ComplexDoubleCPUMatrix mInvMtransCforATP_cpuMat(mInvMtransCforATP.nrows(), mInvMtransCforATP.ncols());
+	gmmToCpuMatrix(mInvMtransCforATP, mInvMtransCforATP_cpuMat);
+	mInvMtransCforATP_gpu = mInvMtransCforATP_cpuMat;
 
 	//***************************
 	//initialize array sizes
@@ -1733,16 +1591,13 @@ MStatus SpaceDeformer2D::runTimeDoSetup() {
 	mX_gpu.resize(2*mCurrentNumOfSegmentsA, 1);
 	mX_local_gpu.resize(2 * mCurrentNumOfSegmentsA, 1);
 	mn_0forStopCondition_gpu.resize(2 * mCurrentNumOfSegmentsA, 1);
-	mn_0_nu_forLipmansMethod_gpu.resize(mCurrentNumOfSegmentsA, 1);
-	mn_0_l_forLipmansMethod_gpu.resize(mCurrentNumOfSegmentsA, 1);
-	mTempCalc_nu_forLipmansMethod_gpu.resize(mCurrentNumOfSegmentsA, 1);
-	mTempCalc_l_forLipmansMethod_gpu.resize(mCurrentNumOfSegmentsA, 1);
-	my_eta_l_forLipmansMethod_gpu.resize(mCurrentNLarge, 1);
-	my_eta_nu_forLipmansMethod_gpu.resize(mCurrentNLarge, 1);
+	mn_0_nu_forATP_gpu.resize(mCurrentNumOfSegmentsA, 1);
+	mn_0_l_forATP_gpu.resize(mCurrentNumOfSegmentsA, 1);
+	mTempCalc_nu_forATP_gpu.resize(mCurrentNumOfSegmentsA, 1);
+	mTempCalc_l_forATP_gpu.resize(mCurrentNumOfSegmentsA, 1);
+	my_eta_l_forATP_gpu.resize(mCurrentNLarge, 1);
+	my_eta_nu_forATP_gpu.resize(mCurrentNLarge, 1);
 
-	//mc_0forLipmansMethod_gpu.resize(2 * mCurrentNLarge, 1);
-	//my_cforLipmansMethod_gpu.resize(2 * mCurrentNLarge, 1);
-	//mLnu_forLipman_gpu.resize(2 * mCurrentNLarge, 1);
 	//*********************
 
 	cout.flush();
@@ -1791,11 +1646,10 @@ MStatus SpaceDeformer2D::preprocessingIntegral(MFnMesh& inputMesh, MObject Input
 	MatlabGMMDataExchange::GetEngineDenseMatrix("startIndices_double", mStartIndicesForIntegral);//get the map from matlab
 	MatlabGMMDataExchange::GetEngineDenseMatrix("edgeVectors", mEdgeVectorsForIntegral);//get the map from matlab
 
-
-	//MatlabGMMDataExchange::GetEngineDenseMatrix("adjacencyGraph", mCauchyCoordsOfOriginalCageVertices);//get the incersed matrix from matlab
 	return stat;
 }
-//unused for now- maybe change to one line calculation
+
+//unused for now
 MStatus SpaceDeformer2D::calcSegments(){
 	const int numOfSegments = 50;
 	gmm::clear(mAOfLineSegmentInLvAccelerated);

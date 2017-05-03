@@ -5,7 +5,7 @@
 
 #define MAX_GRID_DIMENSION (65535)
 
-bool cuProjectPointsToPolygonNoK(int numElements, std::complex<double>* log_fz, std::complex<double>* nu_f, const double log_SigmaA, const double sigmaB, const double k, const double xIntersection, const double epsilon, const double m){
+bool cuProjectPointsToPolygonNoK_unsplit(int numElements, std::complex<double>* log_fz, std::complex<double>* nu_f, const double log_SigmaA, const double sigmaB, const double k, const double xIntersection, const double epsilon, const double m){
 	if (numElements <= 0)
 	{
 		return false;
@@ -23,7 +23,7 @@ bool cuProjectPointsToPolygonNoK(int numElements, std::complex<double>* log_fz, 
 
 }
 
-bool cuProjectPointsToPolygonNoK_HP(int numElements, std::complex<double>* x_vec, const double log_SigmaA, const double sigmaB, const double k, const double xIntersection, const double epsilon, const double m){
+bool cuProjectPointsToPolygonNoK_split(int numElements, std::complex<double>* x_vec, const double log_SigmaA, const double sigmaB, const double k, const double xIntersection, const double epsilon, const double m){
 	if (numElements <= 0)
 	{
 		return false;
@@ -41,7 +41,7 @@ bool cuProjectPointsToPolygonNoK_HP(int numElements, std::complex<double>* x_vec
 
 }
 
-bool cuProjectPointsToPolygonWithK(int numElements, std::complex<double>* log_fz, std::complex<double>* nu_f, const double log_SigmaA, const double sigmaB, const double k, const double epsilon, const double m){
+bool cuProjectPointsToPolygonWithK_split(int numElements, std::complex<double>* log_fz, std::complex<double>* nu_f, const double log_SigmaA, const double sigmaB, const double k, const double epsilon, const double m){
 	if (numElements <= 0)
 	{
 		return false;
@@ -58,7 +58,7 @@ bool cuProjectPointsToPolygonWithK(int numElements, std::complex<double>* log_fz
 	return true;
 }
 
-bool cuProjectPointsToPolygonWithK_HP(int numElements, std::complex<double>* x_vec, const double log_SigmaA, const double sigmaB, const double k, const double epsilon, const double m){
+bool cuProjectPointsToPolygonWithK_unsplit(int numElements, std::complex<double>* x_vec, const double log_SigmaA, const double sigmaB, const double k, const double epsilon, const double m){
 	if (numElements <= 0)
 	{
 		return false;
@@ -75,7 +75,7 @@ bool cuProjectPointsToPolygonWithK_HP(int numElements, std::complex<double>* x_v
 	return true;
 }
 
-bool cuProjectPointToPolygonMinSeg(int numElements, std::complex<double>* log_fz, std::complex<double>* nu_f, const double* mXvaluesOfIntersections, const double* mYvaluesOfIntersections, const int NumOfsegments, const int epsilon){
+bool cuProjectPointToPolygonMinSeg_split(int numElements, std::complex<double>* log_fz, std::complex<double>* nu_f, const double* mXvaluesOfIntersections, const double* mYvaluesOfIntersections, const int NumOfsegments, const int epsilon){
 
 	if (numElements <= 0)
 	{
@@ -94,7 +94,7 @@ bool cuProjectPointToPolygonMinSeg(int numElements, std::complex<double>* log_fz
 
 }
 
-bool cuProjectPointToPolygonMinSeg_HP(int numElements, std::complex<double>* x_vec, const double* mXvaluesOfIntersections, const double* mYvaluesOfIntersections, const int NumOfsegments, const int epsilon){
+bool cuProjectPointToPolygonMinSeg_unsplit(int numElements, std::complex<double>* x_vec, const double* mXvaluesOfIntersections, const double* mYvaluesOfIntersections, const int NumOfsegments, const int epsilon){
 
 	if (numElements <= 0)
 	{

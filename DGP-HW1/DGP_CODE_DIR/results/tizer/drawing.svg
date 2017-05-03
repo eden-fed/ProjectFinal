@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="1281.5469mm"
+   height="331.25833mm"
+   viewBox="0 0 1281.5469 331.25833"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.1 r15371"
+   sodipodi:docname="drawing.svg">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.35"
+     inkscape:cx="2591.4166"
+     inkscape:cy="674.57143"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:window-width="2560"
+     inkscape:window-height="1378"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(781.23898,3.9446415)">
+    <g
+       id="g4531"
+       transform="translate(-92.982143,-30.238095)">
+      <image
+         width="352.95416"
+         height="309.5625"
+         preserveAspectRatio="none"
+         xlink:href="file:///U:/Desktop/ProjectFinal/DGP-HW1/DGP_CODE_DIR/results/tizer/buffalo%20nice%20result/domain.JPG"
+         id="image4493"
+         x="-688.25684"
+         y="46.212799"
+         sodipodi:absref="U:\Desktop\ProjectFinal\DGP-HW1\DGP_CODE_DIR\results\tizer\buffalo nice result\domain.JPG" />
+      <image
+         width="396.875"
+         height="305.85834"
+         preserveAspectRatio="none"
+         xlink:href="file:///U:/Desktop/ProjectFinal/DGP-HW1/DGP_CODE_DIR/results/tizer/buffalo%20nice%20result/ATP.JPG"
+         id="image4504"
+         x="-364.29349"
+         y="50.332733"
+         sodipodi:absref="U:\Desktop\ProjectFinal\DGP-HW1\DGP_CODE_DIR\results\tizer\buffalo nice result\ATP.JPG" />
+    </g>
+    <g
+       id="g4535"
+       transform="translate(-96.686364,-3.7797619)">
+      <image
+         width="253.73541"
+         height="331.25833"
+         preserveAspectRatio="none"
+         xlink:href="file:///U:/Desktop/ProjectFinal/DGP-HW1/DGP_CODE_DIR/results/tizer/hand%20skeleton/origin.JPG"
+         id="image4515"
+         x="69.679909"
+         y="-0.16487958"
+         sodipodi:absref="U:\Desktop\ProjectFinal\DGP-HW1\DGP_CODE_DIR\results\tizer\hand skeleton\origin.JPG" />
+      <image
+         width="291.57083"
+         height="240.24167"
+         preserveAspectRatio="none"
+         xlink:href="file:///U:/Desktop/ProjectFinal/DGP-HW1/DGP_CODE_DIR/results/tizer/hand%20skeleton/deformed.JPG"
+         id="image4526"
+         x="305.42337"
+         y="90.851784"
+         sodipodi:absref="U:\Desktop\ProjectFinal\DGP-HW1\DGP_CODE_DIR\results\tizer\hand skeleton\deformed.JPG" />
+    </g>
+  </g>
+</svg>

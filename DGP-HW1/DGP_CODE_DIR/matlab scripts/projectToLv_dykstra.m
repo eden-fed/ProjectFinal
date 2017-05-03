@@ -13,8 +13,6 @@ init_l_gz=logarithmExtraction(cageVerteciesB4Map_sizeA, gz_enc, cageVerteciesAft
 init_Vg=(conj(gz_gag_enc))./gz_enc;
 
 %*************step 5:solve 22 - obtain l(z), V(z)******************
-% [m,intersectionX]=findLineApproxForCurve(sigma,SIGMA,k);  %temp - create line instead of third condition
-
 l = p_inv*init_l_gz;
 v=p_inv*init_Vg;
 l_gz_first_step=C_sizeA*l;
@@ -23,27 +21,24 @@ Vg_first_step=C_sizeA*v;
 l_gz=l_gz_first_step;
 Vg=Vg_first_step;
 
-figure('position', [610, 0, 600, 1400])
-h=plot(0,0);
+% figure('position', [610, 0, 600, 1400])
+% h=plot(0,0);
 p_l=zeros(a,1);
 p_v=zeros(a,1);
 q_l=zeros(a,1);
 q_v=zeros(a,1);
 for iter=1:max_iterations
-%     
-    energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
-    delete(h);
-    h=convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg , energy, m, log(sigma));
+
+    %graph:
+%     energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
+%     delete(h);
+%     h=convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg , energy, m, log(sigma));
 	
-%     if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(log(sigma)+m*abs(C_sizeA*v)<=real(C_sizeA*l)+epsilon))
-%         fprintf('the constraints are satisfied\n');
-%         break;
-%     end
     
     p_prev=[p_l;p_v];
     q_prev=[q_l;q_v];
     
-    %local
+    %local:
     l_gz_to_project=l_gz+p_l;
     Vg_to_project=Vg+p_v;
     
@@ -54,7 +49,7 @@ for iter=1:max_iterations
     p_l=l_gz_to_project-l_gz_local;
     p_v=Vg_to_project-Vg_local;
     
-    %global
+    %global:
     l_gz_to_project=l_gz_local+q_l;
     Vg_to_project=Vg_local+q_v;
     
@@ -71,15 +66,12 @@ for iter=1:max_iterations
     end
 end
 
-if(all(abs(Vg)<=k+epsilon)) && (all(abs(Vg)<=log(SIGMA)-real(l_gz)+epsilon)) && (all(log(sigma)+m*abs(C_sizeA*v)<=real(C_sizeA*l)+epsilon))
-    fprintf('the constraints are satisfied\n');
-end
-fprintf('max k = %d\n',max(abs(Vg)));
-fprintf('max SIGMA = %d\n',max(exp(real(l_gz)).*(1+abs(Vg))));
-fprintf('min sigma = %d\n',min(exp(real(l_gz)).*(1-abs(Vg))));
-energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
-fprintf('energy = %d\n',energy);
-fprintf('iterations = %d\n\n',iter);
+% fprintf('max k = %d\n',max(abs(Vg)));
+% fprintf('max SIGMA = %d\n',max(exp(real(l_gz)).*(1+abs(Vg))));
+% fprintf('min sigma = %d\n',min(exp(real(l_gz)).*(1-abs(Vg))));
+% energy=sum_square_abs(l_gz_first_step-l_gz)+sum_square_abs(Vg_first_step-Vg);
+% fprintf('energy = %d\n',energy);
+% fprintf('iterations = %d\n\n',iter);
 
 % figure('position', [1220, 0, 600, 1400])
 % convex_graph_with_map( sigma, SIGMA, k, l_gz, Vg, energy , m, log(sigma));
@@ -97,7 +89,6 @@ PHI_Z0=Cz0*cageAfterMapSizeN;
 %calc the integral on the edges
 partialCalc=PHItag(endIndices) + PHItag(startIndices);
 integral_on_edges=partialCalc.*edgeVectors;
-% integral_on_edges=gather(integral_on_edges_gpu);
 
 % find the integral on all the spanning tree
 if (isreal(PHI_Z0))
@@ -112,7 +103,6 @@ PSI_Z0=0;
 
 partialCalc=PSItag(endIndices) + PSItag(startIndices);
 integral_on_edges=partialCalc.*edgeVectors;
-% integral_on_edges=gather(integral_on_edges_gpu);
 
 if (isreal(PSI_Z0))
     PSI_Z0=complex(PSI_Z0);
