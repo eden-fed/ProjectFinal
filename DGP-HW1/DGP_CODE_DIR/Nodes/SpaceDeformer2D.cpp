@@ -23,6 +23,7 @@
 #define COMPARE_TOTAL_TIMINGS
 //#define COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
 //#define DEBUG_FINAL_RESULT
+//#define CREATE_DISTORTION_MAP
 
 
 const MTypeId SpaceDeformer2D::mTypeId(0x6723c);
@@ -156,8 +157,6 @@ MStatus SpaceDeformer2D::initialize()
 void SpaceDeformer2D::matlabCalcNewVerticesForInterpolation() {
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C", mCauchyCoordsOfOriginalCageVertices);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("q", mUserCageVerticesNos);//send the matrix to matlab
-
-//	int res = MatlabInterface::GetEngine().LoadAndRunScript("C:/Users/eden/Documents/MySWProjects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/interpolatedCauchy.m");
 	
 	int res = MatlabInterface::GetEngine().LoadAndRunScript(RelativeToFullPath("\\matlab scripts\\interpolatedCauchy.m").c_str());
 	if (res != 0) {//error if failed to load file
@@ -249,7 +248,7 @@ void SpaceDeformer2D::matlabCalcLforLvprojection_curve()
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 
-	std::string res = MatlabInterface::GetEngine().EvalToString("projectToLv_curve;");
+	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_curve.m").c_str());
 	std::cerr << res;
 
 
@@ -268,7 +267,7 @@ void SpaceDeformer2D::matlabCalcLforLvprojection()
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 
-	std::string res = MatlabInterface::GetEngine().EvalToString("projectToLv;");
+	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv.m").c_str());
 	std::cerr << res;
 
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
@@ -284,7 +283,7 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionConformalAccel()
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 
-	std::string res = MatlabInterface::GetEngine().EvalToString("projectToLv_accel_conformal;");
+	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_accel_conformal.m").c_str());
 	std::cerr << res;
 
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
@@ -301,7 +300,8 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionConformal()
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 
-	std::string res = MatlabInterface::GetEngine().EvalToString("projectToLv_comformal;");
+	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_comformal.m").c_str());
+
 	std::cerr << res;
 
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
@@ -319,7 +319,8 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionAccel()
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 
-	std::string res = MatlabInterface::GetEngine().EvalToString("projectToLv_accel;");
+	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_accel.m").c_str());
+
 	std::cerr << res;
 
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
@@ -337,7 +338,7 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionDykstra()
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 
-	std::string res = MatlabInterface::GetEngine().EvalToString("projectToLv_dykstra;");
+	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_dykstra.m").c_str());
 	std::cerr << res;
 
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
@@ -353,7 +354,8 @@ void SpaceDeformer2D::matlabCalcLforLvprojectionLipman()
 
 	MatlabGMMDataExchange::SetEngineDenseMatrix("cageVerteciesAfterMap", mUserCageVerticesNos);//send the matrix to matlab
 
-	std::string res = MatlabInterface::GetEngine().EvalToString("projectToLv_Lipman;");
+	std::string res = MatlabInterface::GetEngine().LoadAndRunScriptToString(RelativeToFullPath("\\matlab scripts\\projectToLv_Lipman.m").c_str());
+
 	std::cerr << res;
 
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInternalPoints);//get the map from matlab
@@ -912,13 +914,12 @@ int SpaceDeformer2D::calcLvprojectionHPgpu(){
 	for (int i = 0; i < mInternalPoints.size(); i++){
 		mInternalPoints[i] = mPHI(i, 0) + std::conj(mPSI(i, 0));
 	}
-#ifdef DEBUG_FINAL_RESULT
-	MatlabGMMDataExchange::SetEngineDenseMatrix("mInternalPoints", mInternalPoints);
+#ifdef CREATE_DISTORTION_MAP
+	MatlabGMMDataExchange::SetEngineDenseMatrix("verticesOfMesh", mInternalPoints);
 #endif
 	return iters;
 }
-
-MStatus SpaceDeformer2D::showIncVertecies(MPointArray& IncreasedCageVertecies) {
+/*MStatus SpaceDeformer2D::showIncVertecies(MPointArray& IncreasedCageVertecies) {
 	int facesNum = 1;
 	int verticesNum = IncreasedCageVertecies.length();
 	MIntArray polygonCounts(facesNum, verticesNum);
@@ -933,7 +934,7 @@ MStatus SpaceDeformer2D::showIncVertecies(MPointArray& IncreasedCageVertecies) {
 	//Update the reconstructed mesh to appear in the maya GUI
 	MCHECKERROR(reconstructed.updateSurface(), "faild to update the surface.");
 
-}
+}*/
 
 
 std::string SpaceDeformer2D::RelativeToFullPath(char* relPath) {
@@ -1060,6 +1061,21 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 		preprocessingIntegral(fnInputMesh, oInputGeom);
 		CHECK_MSTATUS_AND_RETURN_IT(stat);
 		mIsFirstTime = false;
+
+#ifdef CREATE_DISTORTION_MAP
+		MItMeshPolygon meshIter(oInputGeom);
+		GMMDenseComplexColMatrix matlab1(meshIter.count(), 3);
+		while (!meshIter.isDone()) {
+			MIntArray vertices(3);
+			meshIter.getVertices(vertices);
+			for (int i = 0; i < 3; i++){
+				matlab1(meshIter.index(), i) = vertices[i] + 1;
+			}
+			meshIter.next();
+		}
+
+		MatlabGMMDataExchange::SetEngineDenseMatrix("facesOfMesh", matlab1);
+#endif
 	}
 
 	//compute the deformation of all the internal points. This is done by simply multiplying the coordinate matrix by the cage vertices vector
@@ -1408,9 +1424,6 @@ void SpaceDeformer2D::IncreaseVertecies(Complex* OriginalCompCageVertecies, int 
 		Complex c(IncreasedCageVertecies[i].x, IncreasedCageVertecies[i].y);
 		(*IncreasedCompCageVertecies)[i] = c;
 	}
-
-	//*****temp for test*****
-	showIncVertecies(IncreasedCageVertecies);
 
 }
 

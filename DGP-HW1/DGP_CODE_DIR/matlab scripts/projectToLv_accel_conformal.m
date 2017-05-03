@@ -4,7 +4,7 @@ n=size(C_sizeA,2);
 %*************step 1:Evaluate gz ******************
 sourceEdges=cageVerteciesB4Map_sizeA([2:end 1])-cageVerteciesB4Map_sizeA;
 
-cageVerteciesAfterMap_sizeA=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVerticesInEdgesSizeA );
+cageVerteciesAfterMap_sizeA=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVerticesInEdgesSizeA , a);
 destEdges=cageVerteciesAfterMap_sizeA([2:end 1])-cageVerteciesAfterMap_sizeA;
 
 % gz=destEdges/sourceEdges;
@@ -46,7 +46,7 @@ if(exist('treeCumSum', 'file') ~= 3)
 end
 
 Cz0=C_sizeM(Z0index,:);
-cageAfterMapSizeN=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVerticesInEdgesSizeNlarge );
+cageAfterMapSizeN=EmcCageVerteciesEdgeWise( cageVerteciesAfterMap, NumOfVerticesInEdgesSizeNlarge ,n);
 PHI_Z0=Cz0*cageAfterMapSizeN;
 
 %calc the integral on the edges

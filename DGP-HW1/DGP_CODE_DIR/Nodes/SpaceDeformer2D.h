@@ -193,7 +193,7 @@ private:
 	MStatus calcSegments();
 	void IncreaseVertecies(Complex* OriginalCompCageVertecies, int OrigCageSize, Complex** IncreasedCompCageVertecies, int& numOfIncreasedCageVertecies);
 	void IncreaseVertecies(MPointArray& OriginalCageVertecies, MPointArray& IncreasedCageVertecies, int numOfIncreasedCageVertecies, bool countNumOfVerticesInEdges);
-	MStatus showIncVertecies(MPointArray& IncreasedCageVertecies);
+	//MStatus showIncVertecies(MPointArray& IncreasedCageVertecies);
 	MStatus findLineApproximationForCurve();
 
 	int calcLvprojectionLGgpu();

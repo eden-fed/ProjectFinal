@@ -9,7 +9,7 @@
 //our script uses AEimagePlaneBrowser which depends on this script so we have to source it first
 //source "C:/Program Files/Autodesk/Maya2014/scripts/AETemplates/AEimagePlaneTemplate.mel";
 
-string $tempEnv=`getenv "MAYA_64_DIR"`;
+string $tempEnv=`getenv "MAYA_14_64_DIR"`;
 string $source_path = $tempEnv + "/scripts/AETemplates/AEimagePlaneTemplate.mel";
 string $command = ("source \"" + $source_path + "\";");
 eval $command;
