@@ -10,8 +10,6 @@
 #include "GPULocalStep.h"
 
 #define EPS 0.0001
-//#define CVX_INTERPOLATION 
-
 #define IS_NUMERIC_ZERO(a) (abs(a)<0.000001?1:0)
 
 #define IN
@@ -152,7 +150,7 @@ MStatus SpaceDeformer2D::initialize()
 
 	return MStatus::kSuccess;
 }
-
+/*
 void SpaceDeformer2D::matlabCalcNewVerticesForInterpolation() {
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C", mCauchyCoordsOfOriginalCageVertices);//send the matrix to matlab
 	MatlabGMMDataExchange::SetEngineDenseMatrix("q", mUserCageVerticesNos);//send the matrix to matlab
@@ -162,7 +160,7 @@ void SpaceDeformer2D::matlabCalcNewVerticesForInterpolation() {
 		std::cerr << "ERROR: Matlab script 'interpolatedCauchy.m' failed with error code " << res << std::endl;
 	}
 	MatlabGMMDataExchange::GetEngineDenseMatrix("f", mInterpolationGenCage_f);//get the incersed matrix from matlab
-}
+}*/
 
 void SpaceDeformer2D::matlabCalcNewVerticesForP2P() {
 	MatlabGMMDataExchange::SetEngineDenseMatrix("C", mCauchyCoordsOfOriginalP2P);//send the matrix to matlab
@@ -977,11 +975,9 @@ MStatus SpaceDeformer2D::deform(MDataBlock& block, MItGeometry& iter, const MMat
 		gmm::mult(mCauchyCoordinates, mUserCageVerticesNos, mInternalPoints);//multiply cauchy coordinates with the new cage vertices and insert it to the internal points
 		break;
 	case 1://Interpolating complex Cauchy coordinates
-#ifdef CVX_INTERPOLATION //calculate using cvx
-		matlabCalcNewVerticesForInterpolation();
-#else//calculate using the inverse matrix
+		//calculate using the inverse matrix
 		gmm::mult(mCauchyCoordsOfOriginalCageVertices, mUserCageVerticesNos, mInterpolationGenCage_f);
-#endif
+
 		gmm::mult(mCauchyCoordinates, mInterpolationGenCage_f, mInternalPoints);//get the new internal points 
 		break;
 	case 2://Point2Point coordinates
@@ -1379,20 +1375,17 @@ MStatus SpaceDeformer2D::doSetup(MItGeometry& iter, MFnMesh& cageMeshFn)
 	
 	populateC(mCauchyCoordsOfOriginalCageVertices, mCompCageVerticesWos, mNumOfCageVerticies, mCartCageVerticesNos, mNumOfCageVerticies);
 
-#ifndef CVX_INTERPOLATION
-
 	//find the coordinates that will give us the new vertices so that the real cage point will look like interpolation
 	//we will do it using cvx
 	MatlabGMMDataExchange::SetEngineDenseMatrix("toInverse", mCauchyCoordsOfOriginalCageVertices);//send the matrix to matlab
 
 	//load the matlab script	
-	int res = MatlabInterface::GetEngine().LoadAndRunScript(RelativeToFullPath("\\matlab scripts\\inverse.m").c_str());
+	int res = MatlabInterface::GetEngine().Eval("toInverse=inv(toInverse);");
 	if (res != 0) {//error if failed to load file
 		std::cerr << "ERROR: Matlab script 'interpolatedCauchy.m' failed with error code " << res << std::endl;
 	}
 
 	MatlabGMMDataExchange::GetEngineDenseMatrix("toInverse", mCauchyCoordsOfOriginalCageVertices);//get the incersed matrix from matlab
-#endif
 
 
 	//calculate Cj(z) the Cauchy-Green complex barycentric coordinates

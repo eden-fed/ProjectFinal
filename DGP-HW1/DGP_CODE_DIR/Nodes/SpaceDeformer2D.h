@@ -167,7 +167,7 @@ protected:
 	//****
 
 private:
-	void matlabCalcNewVerticesForInterpolation();
+	//void matlabCalcNewVerticesForInterpolation();
 	void matlabCalcNewVerticesForP2P();
 	void matlabCalcLforHprojection();
 	void matlabCalcLvprojection_CVX_curve();
