@@ -556,33 +556,43 @@ bool SpaceDeformer2D::localStep(ComplexDoubleCPUMatrix& log_fz, ComplexDoubleCPU
 	return allPointsInPolygon;
 }
 int SpaceDeformer2D::doMAPiterations(){
-#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
-	CUDATimer timer_cuda;
-	CPUTimer timer;
-	double duration1 = 0.0, duration2 = 0.0;
-	float gpu_duration = 0.0;
-#endif 
 
 	int i;
 	double norm_n0;
 	for (i = 0; i < iterationsNum; i++){
-		mX_gpu.concatenate(mLog_fz_gpu, mNu_f_gpu);//test
+		mX_gpu.concatenateColVec(mLog_fz_gpu, mNu_f_gpu);
 		mX_local_gpu = mX_gpu;
-#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
-		timer.tic();
-		timer_cuda.startTimer();
-#endif 
 
 		//local step
 		localStep_minSeg_gpu(mX_local_gpu);
-		mX_local_gpu.splitInMiddle(mLog_fz_gpu, mNu_f_gpu);
+		
+		//stop condition
+		mn_0forStopCondition_gpu.sub(mX_gpu, mX_local_gpu);
+		norm_n0 = mn_0forStopCondition_gpu.norm();
+		if (norm_n0 < epsilon)
+			break;
 
-#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
-		gpu_duration = timer_cuda.stopTimer();
-		duration1 = timer.toc();
-		cout << "local step took " << duration1 << endl;
-		cout << "local step in cuda timer took " << gpu_duration << endl;
-#endif 
+		//global step
+		mX_local_gpu.splitInMiddleColVec(mLog_fz_gpu, mNu_f_gpu);
+		mL_gpu.mult(mPinvOfIncCageVertexCoords_gpuMat, mLog_fz_gpu);
+		mNu_gpu.mult(mPinvOfIncCageVertexCoords_gpuMat, mNu_f_gpu);
+
+		mLog_fz_gpu.mult(mIncCageVertexCoords_gpuMat, mL_gpu);
+		mNu_f_gpu.mult(mIncCageVertexCoords_gpuMat, mNu_gpu);
+	}
+	return i;
+}
+
+int SpaceDeformer2D::doATPiterations(){
+
+	int i;
+	double norm_n0;
+	for (i = 0; i < iterationsNum; i++){
+		mX_gpu.concatenateColVec(mLog_fz_gpu, mNu_f_gpu);
+		mX_local_gpu = mX_gpu;
+
+		//local step
+		localStep_minSeg_gpu(mX_local_gpu);
 
 		//stop condition
 		mn_0forStopCondition_gpu.sub(mX_gpu, mX_local_gpu);
@@ -590,92 +600,14 @@ int SpaceDeformer2D::doMAPiterations(){
 		if (norm_n0 < epsilon)
 			break;
 
-#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
-		timer.tic();
-		timer_cuda.startTimer();
-#endif
-
 		//global step
-		mL_gpu.mult(mPinvOfIncCageVertexCoords_gpuMat, mLog_fz_gpu);
-		mNu_gpu.mult(mPinvOfIncCageVertexCoords_gpuMat, mNu_f_gpu);
-
-		mLog_fz_gpu.mult(mIncCageVertexCoords_gpuMat, mL_gpu);
-		mNu_f_gpu.mult(mIncCageVertexCoords_gpuMat, mNu_gpu);
-
-#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
-		gpu_duration = timer_cuda.stopTimer();
-		duration2 = timer.toc();
-		cout << "global step took " << duration2 << endl;
-		cout << "global step in cuda timer took " << gpu_duration << endl;
-#endif 
-	}
-
-#ifdef DEBUG
-	ComplexDoubleCPUMatrix test = mL_gpu;
-	GMMDenseComplexColMatrix matlab0(test.nRows(), 1);
-	for (int j = 0; j < test.nRows(); ++j)
-		matlab0(j, 0) = test(j, 0);
-	MatlabGMMDataExchange::SetEngineDenseMatrix("mL_gpu", matlab0);
-	test = mNu_gpu;
-	GMMDenseComplexColMatrix matlab1(test.nRows(), 1);
-	for (int j = 0; j < test.nRows(); ++j)
-		matlab1(j, 0) = test(j, 0);
-	MatlabGMMDataExchange::SetEngineDenseMatrix("mNu_gpu", matlab1);
-#endif
-
-	return i;
-}
-
-int SpaceDeformer2D::doATPiterations(){
-#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
-	CUDATimer timer_cuda;
-	CPUTimer timer;
-	double duration1 = 0.0, duration2 = 0.0;
-	float gpu_duration=0.0;
-#endif //COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
-
-	double gpuTime;
-
-	int i;
-	Complex scalar;
-	double norm_n0;
-	for (i = 0; i < iterationsNum; i++){
-		mX_gpu.concatenate(mLog_fz_gpu, mNu_f_gpu);//test
-		mX_local_gpu = mX_gpu;
-
-		//local step
-#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
-		timer.tic();
-		timer_cuda.startTimer();
-#endif 
-		localStep_minSeg_gpu(mX_local_gpu);
-
-#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
-		gpu_duration = timer_cuda.stopTimer();
-		duration1 = timer.toc();
-		cout << "local step took " << duration1 << endl;
-		cout << "local step in cuda timer took " << gpu_duration << endl;
-#endif
-
-		mn_0forStopCondition_gpu.sub(mX_gpu, mX_local_gpu, &gpuTime);
-		norm_n0 = mn_0forStopCondition_gpu.norm();
-		//stop condition
-		if (norm_n0 < epsilon)
-			break;
-
-		//global step
-#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
-		timer.tic();
-		timer_cuda.startTimer();
-#endif 
-		//split and concatecate to use less multiplications
-		mn_0forStopCondition_gpu.splitInMiddle(mn_0_l_forATP_gpu, mn_0_nu_forATP_gpu);
+		mn_0forStopCondition_gpu.splitInMiddleColVec(mn_0_l_forATP_gpu, mn_0_nu_forATP_gpu);
 		my_eta_l_forATP_gpu.mult(mInvMtransCforATP_gpu, mn_0_l_forATP_gpu);
 		my_eta_nu_forATP_gpu.mult(mInvMtransCforATP_gpu, mn_0_nu_forATP_gpu);
 		mTempCalc_l_forATP_gpu.mult(mIncCageVertexCoords_gpuMat, my_eta_l_forATP_gpu);
 		mTempCalc_nu_forATP_gpu.mult(mIncCageVertexCoords_gpuMat, my_eta_nu_forATP_gpu);
 
-		scalar = mn_0_l_forATP_gpu.dotColVec(mTempCalc_l_forATP_gpu) + mn_0_nu_forATP_gpu.dotColVec(mTempCalc_nu_forATP_gpu);
+		Complex scalar = mn_0_l_forATP_gpu.dotColVec(mTempCalc_l_forATP_gpu) + mn_0_nu_forATP_gpu.dotColVec(mTempCalc_nu_forATP_gpu);
 		scalar=pow(norm_n0,2)/scalar;
 	
 		my_eta_l_forATP_gpu.scale(scalar);
@@ -686,13 +618,6 @@ int SpaceDeformer2D::doATPiterations(){
 		
 		mLog_fz_gpu.mult(mIncCageVertexCoords_gpuMat, mL_gpu);
 		mNu_f_gpu.mult(mIncCageVertexCoords_gpuMat, mNu_gpu);
-
-#ifdef COMPARE_LOCAL_VS_GLOBAL_TIMIMGS
-		gpu_duration = timer_cuda.stopTimer();
-		duration2 = timer.toc();
-		cout << "global step took " << duration2 << endl;
-		cout << "global step in cuda timer took " << gpu_duration << endl;
-#endif 
 	}
 	return i;
 }
@@ -836,7 +761,7 @@ int SpaceDeformer2D::calcLvprojectionATPgpu(){
 std::string SpaceDeformer2D::RelativeToFullPath(char* relPath) {
 	//please enter path like this "\\matlab scripts\\inverse.m"
 	char *libvar;
-	libvar = getenv("DGP_CODE_DIR");
+	libvar = getenv("ATP_CODE_DIR");
 	std::string str1(libvar);
 	std::string str2(relPath);
 	return str1 + str2;

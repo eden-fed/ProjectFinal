@@ -43,8 +43,8 @@ public:
 	const MatrixGPU<T>& operator=(const MatrixGPU<T>& mat);
 	const MatrixGPU<T>& operator=(const MatrixCPU<T>& mat);
 	~MatrixGPU();
-	bool concatenate(const MatrixGPU<T>& mat1, const MatrixGPU<T>& mat2);//***
-	bool splitInMiddle(MatrixGPU<T>& mat1, MatrixGPU<T>& mat2);//***
+	bool concatenateColVec(const MatrixGPU<T>& mat1, const MatrixGPU<T>& mat2);//***
+	bool splitInMiddleColVec(MatrixGPU<T>& mat1, MatrixGPU<T>& mat2);//***
 	inline const T get_slow(int i, int j) const;
 	void set_slow(int i, int j, const T& value);
 	inline bool isValid() const;
@@ -331,11 +331,9 @@ const MatrixGPU<T>& MatrixGPU<T>::operator=(const MatrixCPU<T>& mat)
 	return *this;
 }
 
-/*concatenate vertically
-**works for vectors-not sure about matrix
-**TODO:check mNumRows vs mNumPitchedRows)*/
+/*concatenate column vectors vertically*/
 template <class T>
-bool MatrixGPU<T>::concatenate(const MatrixGPU<T>& mat1, const MatrixGPU<T>& mat2){
+bool MatrixGPU<T>::concatenateColVec(const MatrixGPU<T>& mat1, const MatrixGPU<T>& mat2){
 	if (mat1.mNumRows == 0 && mat1.mNumColumns == 0 && mat1.mNumPitchedRows == 0) //an empty matrix
 	{
 		*this = mat2;
@@ -346,19 +344,15 @@ bool MatrixGPU<T>::concatenate(const MatrixGPU<T>& mat1, const MatrixGPU<T>& mat
 		*this = mat1;
 		return true;
 	}
-	if (mat1.mNumRows <= 0 || mat1.mNumColumns <= 0 || mat1.mNumPitchedRows <= 0 || mat2.mNumRows <= 0 || mat2.mNumColumns <= 0 || mat2.mNumPitchedRows <= 0)
+	if (mat1.mNumRows <= 0 || mat1.mNumColumns != 1 || mat1.mNumPitchedRows <= 0 || mat2.mNumRows <= 0 || mat2.mNumColumns != 1 || mat2.mNumPitchedRows <= 0)
 	{
 		assert(0);
 		return false;
 	}
-	if (mat1.mNumColumns != mat2.mNumColumns)
-	{
-		assert(0);
-		return false;
-	}
+
 	int pitchRows = roundToCoalesced(mat1.mNumRows + mat2.mNumRows);
 
-	if (pitchRows*mat1.mNumColumns != mNumPitchedRows*mNumColumns)
+	if (pitchRows != mNumPitchedRows*mNumColumns)
 	{
 		if (mData)
 		{
@@ -378,24 +372,22 @@ bool MatrixGPU<T>::concatenate(const MatrixGPU<T>& mat1, const MatrixGPU<T>& mat
 			return false;
 		}
 	}
-	mNumRows = mat1.mNumRows+mat2.mNumRows;
-	mNumColumns = mat1.mNumColumns;
+	mNumRows = mat1.mNumRows + mat2.mNumRows;
+	mNumColumns = 1;
 	mNumPitchedRows = pitchRows;
 
-	checkCudaErrors(cudaMemcpy(mData, mat1.mData, mat1.mNumPitchedRows*mat1.mNumColumns*sizeof(T), cudaMemcpyDeviceToDevice));
-	checkCudaErrors(cudaMemcpy(mData + mat1.mNumColumns*mat1.mNumRows, mat2.mData, mat2.mNumRows*mat2.mNumColumns*sizeof(T), cudaMemcpyDeviceToDevice));
-	
+	checkCudaErrors(cudaMemcpy(mData, mat1.mData, mat1.mNumPitchedRows*sizeof(T), cudaMemcpyDeviceToDevice));
+	checkCudaErrors(cudaMemcpy(mData + mat1.mNumRows, mat2.mData, mat2.mNumRows*sizeof(T), cudaMemcpyDeviceToDevice));
+
 	return true;
 
 }
 
-/*split vertically class matrix to 2 matrices in the same size
-**works for vectors-not sure about matrix
-*/
+/*split vertically column vector to 2 vectors in the same size*/
 template <class T>
-bool MatrixGPU<T>::splitInMiddle(MatrixGPU<T>& mat1, MatrixGPU<T>& mat2){
+bool MatrixGPU<T>::splitInMiddleColVec(MatrixGPU<T>& mat1, MatrixGPU<T>& mat2){
 
-	if (mNumRows <= 0 || mNumColumns <= 0 || mNumPitchedRows <= 0 )
+	if (mNumRows <= 0 || mNumColumns != 1 || mNumPitchedRows <= 0)
 	{
 		assert(0);
 		return false;
@@ -407,7 +399,7 @@ bool MatrixGPU<T>::splitInMiddle(MatrixGPU<T>& mat1, MatrixGPU<T>& mat2){
 	}
 
 	int pitchRows = roundToCoalesced(mNumRows / 2);
-	if ((mat1.mNumPitchedRows)*mat1.mNumColumns != pitchRows*mNumColumns)
+	if ((mat1.mNumPitchedRows)*mat1.mNumColumns != pitchRows)
 	{
 
 		mat1.freeData();
@@ -420,10 +412,10 @@ bool MatrixGPU<T>::splitInMiddle(MatrixGPU<T>& mat1, MatrixGPU<T>& mat2){
 		}
 	}
 	mat1.mNumRows = mNumRows/2;
-	mat1.mNumColumns = mNumColumns;
+	mat1.mNumColumns = 1;
 	mat1.mNumPitchedRows = pitchRows;
 
-	if ((mat2.mNumPitchedRows)*mat2.mNumColumns != pitchRows*mNumColumns)
+	if ((mat2.mNumPitchedRows)*mat2.mNumColumns != pitchRows)
 	{
 
 		mat2.freeData();
@@ -436,11 +428,11 @@ bool MatrixGPU<T>::splitInMiddle(MatrixGPU<T>& mat1, MatrixGPU<T>& mat2){
 		}
 	}
 	mat2.mNumRows = mNumRows / 2;
-	mat2.mNumColumns = mNumColumns;
+	mat2.mNumColumns = 1;
 	mat2.mNumPitchedRows = pitchRows;
 
-	checkCudaErrors(cudaMemcpy(mat1.mData, mData, mat1.mNumRows*mat1.mNumColumns*sizeof(T), cudaMemcpyDeviceToDevice));
-	checkCudaErrors(cudaMemcpy(mat2.mData, mData + mat1.mNumColumns*mat1.mNumRows, mat2.mNumRows*mat2.mNumColumns*sizeof(T), cudaMemcpyDeviceToDevice));
+	checkCudaErrors(cudaMemcpy(mat1.mData, mData, mat1.mNumRows*sizeof(T), cudaMemcpyDeviceToDevice));
+	checkCudaErrors(cudaMemcpy(mat2.mData, mData + mat1.mNumRows, mat2.mNumRows*sizeof(T), cudaMemcpyDeviceToDevice));
 
 	return true;
 }

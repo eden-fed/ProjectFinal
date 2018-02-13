@@ -17,6 +17,10 @@ global proc shelf_DGP () {
         -align "center" 
         -label "Delete History" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.25 
@@ -43,6 +47,10 @@ global proc shelf_DGP () {
         -align "center" 
         -label "Plugin Manager" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -69,6 +77,10 @@ global proc shelf_DGP () {
         -align "center" 
         -label "Split Screen - UV/Persp/Script" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.25 
@@ -95,6 +107,10 @@ global proc shelf_DGP () {
         -align "center" 
         -label "Split Screen - UV/Persp" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.25 
@@ -121,6 +137,10 @@ global proc shelf_DGP () {
         -align "center" 
         -label "Create Polygonal Cage" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -147,6 +167,10 @@ global proc shelf_DGP () {
         -align "center" 
         -label "Triangulate Given Polygon" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -173,6 +197,10 @@ global proc shelf_DGP () {
         -align "center" 
         -label "triangulatePolygon -numWantedVertices 1000 -subsampleBoundary fa..." 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -199,6 +227,10 @@ global proc shelf_DGP () {
         -align "center" 
         -label "Create Color Sets" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -225,6 +257,10 @@ global proc shelf_DGP () {
         -align "center" 
         -label "Invert Matrix Using Matlab" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -imageOverlayLabel "Inv" 
         -overlayLabelColor 0.8 0.8 0.8 
@@ -252,6 +288,10 @@ global proc shelf_DGP () {
         -align "center" 
         -label "Create Background Image" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -imageOverlayLabel "Image" 
         -overlayLabelColor 0.8 0.8 0.8 
@@ -279,6 +319,10 @@ global proc shelf_DGP () {
         -align "center" 
         -label "triangulateCage(15000);" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -imageOverlayLabel "Tri" 
         -overlayLabelColor 0.8 0.8 0.8 
@@ -306,6 +350,10 @@ global proc shelf_DGP () {
         -align "center" 
         -label "string $code_path = `getenv \"DGP_CODE_DIR\"`; \n$source_command = ..." 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -imageOverlayLabel "1" 
         -overlayLabelColor 0.8 0.8 0.8 
@@ -333,6 +381,10 @@ global proc shelf_DGP () {
         -align "center" 
         -label "CreatePolygonTool;\n" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -imageOverlayLabel "2" 
         -overlayLabelColor 0.8 0.8 0.8 
@@ -360,6 +412,10 @@ global proc shelf_DGP () {
         -align "center" 
         -label "spaceLocator -p 0 0 0;\n" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -imageOverlayLabel "3" 
         -overlayLabelColor 0.8 0.8 0.8 
@@ -387,6 +443,10 @@ global proc shelf_DGP () {
         -align "center" 
         -label "triangulateCage(5000);\n" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -imageOverlayLabel "4" 
         -overlayLabelColor 0.8 0.8 0.8 
@@ -396,7 +456,7 @@ global proc shelf_DGP () {
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "triangulateCage(5000);\n" 
+        -command "string $code_path = `getenv \"DGP_CODE_DIR\"`; \n$source_command = \"source \\\"\" + $code_path + \"/MEL/DGP.mel\" + \"\\\";\"; \neval $source_command; \ntriangulateCage(5000);\n" 
         -sourceType "mel" 
         -commandRepeatable 1
         -flat 1
@@ -404,8 +464,8 @@ global proc shelf_DGP () {
     shelfButton
         -enableCommandRepeat 1
         -enable 1
-        -width 35
-        -height 35
+        -width 39
+        -height 39
         -manage 1
         -visible 1
         -preventOverride 0
@@ -414,11 +474,15 @@ global proc shelf_DGP () {
         -align "center" 
         -label "\nsetAttr \"polySurfaceShape4.vertexSize\" 12;\nsetAttr \"polySurface..." 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
-        -overlayLabelBackColor 0 0 0 0.25 
-        -image "C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/images/icons/rsz_sampled_square_on35.png" 
-        -image1 "C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/images/icons/rsz_sampled_square_on35.png" 
+        -overlayLabelBackColor 0 0 0 0.2 
+        -image "vacantCell.png" 
+        -image1 "vacantCell.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
@@ -430,8 +494,8 @@ global proc shelf_DGP () {
     shelfButton
         -enableCommandRepeat 1
         -enable 1
-        -width 35
-        -height 35
+        -width 9
+        -height 16
         -manage 1
         -visible 1
         -preventOverride 0
@@ -440,11 +504,13 @@ global proc shelf_DGP () {
         -align "center" 
         -label "setAttr \"polySurfaceShape4.displayVertices\" 0;//off" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.25 
-        -image "C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/images/icons/rsz_sampled_square_off35.png" 
-        -image1 "C:/Users/Ben-PC/Documents/MySWprojects/ProjectFinal/DGP-HW1/DGP_CODE_DIR/images/icons/rsz_sampled_square_off35.png" 
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1

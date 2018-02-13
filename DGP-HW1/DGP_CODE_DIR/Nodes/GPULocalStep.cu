@@ -5,7 +5,7 @@
 
 #define MAX_GRID_DIMENSION (65535)
 
-bool cuProjectPointsToPolygonNoK_unsplit(int numElements, std::complex<double>* log_fz, std::complex<double>* nu_f, const double log_SigmaA, const double sigmaB, const double k, const double xIntersection, const double epsilon, const double m){
+bool cuProjectPointsToPolygonNoK_split(int numElements, std::complex<double>* log_fz, std::complex<double>* nu_f, const double log_SigmaA, const double sigmaB, const double k, const double xIntersection, const double epsilon, const double m){
 	if (numElements <= 0)
 	{
 		return false;
@@ -23,7 +23,7 @@ bool cuProjectPointsToPolygonNoK_unsplit(int numElements, std::complex<double>* 
 
 }
 
-bool cuProjectPointsToPolygonNoK_split(int numElements, std::complex<double>* x_vec, const double log_SigmaA, const double sigmaB, const double k, const double xIntersection, const double epsilon, const double m){
+bool cuProjectPointsToPolygonNoK_unsplit(int numElements, std::complex<double>* x_vec, const double log_SigmaA, const double sigmaB, const double k, const double xIntersection, const double epsilon, const double m){
 	if (numElements <= 0)
 	{
 		return false;
@@ -35,7 +35,7 @@ bool cuProjectPointsToPolygonNoK_split(int numElements, std::complex<double>* x_
 
 	dim3 threads(blockSize, 1);
 	dim3 grid(numBlocks, 1);
-	projectPointsToPolygonNokKernel_HP << <grid, threads >> >(numElements, (double2*)x_vec, log_SigmaA, sigmaB, k, xIntersection, epsilon, m);
+	projectPointsToPolygonNokKernel_unsplit << <grid, threads >> >(numElements, (double2*)x_vec, log_SigmaA, sigmaB, k, xIntersection, epsilon, m);
 
 	return true;
 
@@ -70,7 +70,7 @@ bool cuProjectPointsToPolygonWithK_unsplit(int numElements, std::complex<double>
 
 	dim3 threads(blockSize, 1);
 	dim3 grid(numBlocks, 1);
-	projectPointsToPolygonWithkKernel_HP << <grid, threads >> >(numElements, (double2*)x_vec, log_SigmaA, sigmaB, k, epsilon, m);
+	projectPointsToPolygonWithkKernel_unsplit << <grid, threads >> >(numElements, (double2*)x_vec, log_SigmaA, sigmaB, k, epsilon, m);
 
 	return true;
 }
@@ -107,7 +107,7 @@ bool cuProjectPointToPolygonMinSeg_unsplit(int numElements, std::complex<double>
 
 	dim3 threads(blockSize, 1);
 	dim3 grid(numBlocks, 1);
-	projectPointToPolygonMinSegKernel_HP << <grid, threads >> >(numElements, (double2*)x_vec, mXvaluesOfIntersections, mYvaluesOfIntersections, NumOfsegments, epsilon);
+	projectPointToPolygonMinSegKernel_unsplit << <grid, threads >> >(numElements, (double2*)x_vec, mXvaluesOfIntersections, mYvaluesOfIntersections, NumOfsegments, epsilon);
 
 	return true;
 

@@ -18,11 +18,15 @@ Vg_first_step=C_sizeA*v;
 cvx_begin quiet
     variable  l(n) complex;
     variable v(n) complex;
-    minimize sum_square_abs(C_sizeA*l-l_gz_first_step)+lambda*sum_square_abs(C_sizeA*v-Vg_first_step);
+	
+	l_gz=C_sizeA*l;
+	Vg=C_sizeA*v;
+	
+    minimize sum_square_abs(l_gz-l_gz_first_step)+lambda*sum_square_abs(Vg-Vg_first_step);
     subject to
-        abs(C_sizeA*v)<=k;
-        abs(C_sizeA*v)<=log(SIGMA)-real(C_sizeA*l);
-        log(sigma)+m*abs(C_sizeA*v)<=real(C_sizeA*l);
+        abs(Vg)<=k;
+        abs(Vg)<=log(SIGMA)-real(l_gz);
+        log(sigma)+m*abs(Vg)<=real(l_gz);
 cvx_end
 
 % l_gz=C_sizeA*l;

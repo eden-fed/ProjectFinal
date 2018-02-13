@@ -56,7 +56,7 @@ __global__ void projectPointsToPolygonNokKernel(const int numElements, double2* 
 
 }
 
-__global__ void projectPointsToPolygonNokKernel_HP(const int numElements, double2* x_vec, const double log_SigmaA, const double sigmaB, const double k, const double xIntersection, const double epsilon, const double m)
+__global__ void projectPointsToPolygonNokKernel_unsplit(const int numElements, double2* x_vec, const double log_SigmaA, const double sigmaB, const double k, const double xIntersection, const double epsilon, const double m)
 {
 	const int index = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -157,7 +157,7 @@ __global__ void projectPointsToPolygonWithkKernel(const int numElements, double2
 	}
 }
 
-__global__ void projectPointsToPolygonWithkKernel_HP(const int numElements, double2* x_vec, const double log_SigmaA, const double sigmaB, const double k, const double epsilon, const double m)
+__global__ void projectPointsToPolygonWithkKernel_unsplit(const int numElements, double2* x_vec, const double log_SigmaA, const double sigmaB, const double k, const double epsilon, const double m)
 {
 	const int index = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -269,7 +269,7 @@ __global__ void projectPointToPolygonMinSegKernel(const int numElements, double2
 	}
 }
 
-__global__ void projectPointToPolygonMinSegKernel_HP(const int numElements, double2* x_vec, const double* mXvaluesOfIntersections, const double* mYvaluesOfIntersections, const int NumOfsegments, const int epsilon){
+__global__ void projectPointToPolygonMinSegKernel_unsplit(const int numElements, double2* x_vec, const double* mXvaluesOfIntersections, const double* mYvaluesOfIntersections, const int NumOfsegments, const int epsilon){
 
 	const int index = blockIdx.x * blockDim.x + threadIdx.x;
 
