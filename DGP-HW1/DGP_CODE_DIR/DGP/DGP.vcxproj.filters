@@ -60,11 +60,14 @@
     <ClCompile Include="..\Utils\Limit_Util.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\Commands\colorMeshVerticesCmd.cpp">
-      <Filter>Maya Commands</Filter>
+    <ClCompile Include="..\Utils\MatrixCPU.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\Commands\inverseMatrixCmd.cpp">
-      <Filter>Maya Commands</Filter>
+    <ClCompile Include="..\Utils\MatrixGPU.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Utils\Timer.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -110,11 +113,23 @@
     <ClInclude Include="..\Utils\Limit_Util.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\Commands\colorMeshVerticesCmd.h">
-      <Filter>Maya Commands</Filter>
+    <ClInclude Include="..\Nodes\GPULocalStep.h">
+      <Filter>Maya Nodes</Filter>
     </ClInclude>
-    <ClInclude Include="..\Commands\inverseMatrixCmd.h">
-      <Filter>Maya Commands</Filter>
+    <ClInclude Include="..\Utils\CudaMatrixGPU.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utils\FastMatrix.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utils\MatrixCPU.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utils\MatrixGPU.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Utils\Timer.h">
+      <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -124,5 +139,19 @@
     <None Include="..\MEL\DGP.mel">
       <Filter>Scripts</Filter>
     </None>
+    <None Include="..\Nodes\GPULocalStepKernel.cu">
+      <Filter>Maya Nodes</Filter>
+    </None>
+    <None Include="..\Utils\CudaMatrixGPUKernel.cu">
+      <Filter>Utils</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\Nodes\GPULocalStep.cu">
+      <Filter>Maya Nodes</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\Utils\CudaMatrixGPU.cu">
+      <Filter>Utils</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>
